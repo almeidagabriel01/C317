@@ -5,11 +5,8 @@ module.exports = {
     "./components/**/*.jsx",
     "./src/**/*.jsx"
   ],
-  purge: [],
-  darkMode: false, // or 'media' or 'class'
-  theme: {
-    extend: {},
-  },
+  darkMode: false,
+  theme: {},
   variants: {
     extend: {},
   },
