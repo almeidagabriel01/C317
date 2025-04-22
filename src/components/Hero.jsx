@@ -3,30 +3,31 @@ import Image from "next/image";
 
 export default function Hero() {
   return (
-    <section className="flex flex-col md:flex-row h-screen overflow-hidden">
-      {/* imagem ocupa metade esquerda */}
-      <div className="md:w-1/2 w-full relative">
+    <section className="flex flex-col md:flex-row min-h-screen overflow-hidden">
+      {/* imagem ocupa toda a largura em mobile e metade em desktop */}
+      <div className="w-full md:w-1/2 relative h-80 sm:h-96 md:h-auto">
         <Image
           src="/assets/hero.jpg"
           alt="Drink sendo servido"
           fill
+          priority
           style={{ objectFit: "cover" }}
         />
       </div>
 
-      {/* texto ocupa metade direita */}
+      {/* texto ocupa toda a largura em mobile e metade em desktop */}
       <div
-        className="md:w-1/2 w-full flex flex-col justify-center p-8"
+        className="w-full md:w-1/2 flex flex-col justify-center p-6 md:p-8 flex-1"
         style={{ backgroundColor: "#101820" }}
       >
         <h1
-          className="text-5xl mb-4 font-croissant"
+          className="text-3xl md:text-4xl lg:text-5xl mb-4 font-croissant"
           style={{ color: "#E0CEAA" }}
         >
           Eleve seus eventos
         </h1>
         <p
-          className="mb-6 text-lg font-spline"
+          className="mb-6 text-base md:text-lg font-spline"
           style={{ color: "#F7F6F3" }}
         >
           Trabalhamos com os melhores produtos do mercado, insumos frescos e
@@ -37,11 +38,12 @@ export default function Hero() {
           className="
             flex items-center justify-center
             bg-primary text-accent
-            px-6 py-3 rounded-full
-            text-lg font-medium
+            px-4 md:px-6 py-2 md:py-3 rounded-full
+            text-base md:text-lg font-medium
             shadow-lg
             hover:opacity-90
             transition
+            w-full sm:w-auto sm:self-start
           "
         >
           Faça um orçamento
