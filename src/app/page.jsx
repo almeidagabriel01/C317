@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion";
 
-import Navbar   from "../components/Navbar";
-import Hero     from "../components/Hero";
-import Carousel from "../components/Carousel";
+import Navbar   from "../components/home/Navbar";
+import Hero     from "../components/home/Hero";
+import Carousel from "../components/home/Carousel";
 
 const fadeVariants = {
   hidden: { opacity: 0, y: 50 },
