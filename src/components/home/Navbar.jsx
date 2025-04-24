@@ -13,6 +13,7 @@ export default function Navbar() {
           alt="Elo Drinks"
           width={110}
           height={32}
+          priority
           className="w-24 sm:w-auto h-auto"
         />
 

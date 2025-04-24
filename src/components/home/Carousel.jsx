@@ -1,4 +1,6 @@
+// components/home/Carousel.jsx
 "use client";
+
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import Image from "next/image";
@@ -32,7 +34,6 @@ export default function Carousel() {
   const ref = useRef(null);
   const [slidesPerView, setSlidesPerView] = useState(4);
 
-  // Função para ajustar o número de slides por visualização com base na largura da janela
   const handleResize = () => {
     if (typeof window !== "undefined") {
       if (window.innerWidth < 640) {
@@ -48,7 +49,6 @@ export default function Carousel() {
   };
 
   useEffect(() => {
-    // Configurar o Observer de interseção
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) controls.start("visible");
@@ -59,11 +59,9 @@ export default function Carousel() {
     const el = ref.current;
     if (el) obs.observe(el);
 
-    // Configurar o listener de redimensionamento
     handleResize();
     window.addEventListener("resize", handleResize);
-    
-    // Cleanup
+
     return () => {
       if (el) obs.unobserve(el);
       obs.disconnect();
@@ -101,25 +99,28 @@ export default function Carousel() {
             <Swiper
               modules={[Navigation]}
               navigation={{
-                prevEl: '.swiper-button-prev-custom',
-                nextEl: '.swiper-button-next-custom',
+                prevEl: ".swiper-button-prev-custom",
+                nextEl: ".swiper-button-next-custom",
               }}
               spaceBetween={20}
               slidesPerView={slidesPerView}
               centeredSlides={slidesPerView === 1}
-              initialSlide={0}
               loop={true}
               className="w-full px-4 md:px-12"
             >
               {drinks.map((d, i) => (
-                <SwiperSlide key={i} className="flex flex-col items-center justify-center text-center">
-                  <div className="w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full overflow-hidden mb-3 md:mb-4 mx-auto">
+                <SwiperSlide
+                  key={i}
+                  className="flex flex-col items-center justify-center text-center"
+                >
+                  {/* === Parent posicionado === */}
+                  <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full overflow-hidden mb-3 md:mb-4 mx-auto">
                     <Image
                       src={`/assets/${d.img}`}
                       alt={d.name}
-                      width={160}
-                      height={160}
-                      style={{ objectFit: "cover" }}
+                      fill
+                      sizes="(min-width:1024px) 12vw, (min-width:768px) 15vw, 30vw"
+                      className="object-cover"
                     />
                   </div>
                   <div className="w-full text-center">
@@ -133,37 +134,37 @@ export default function Carousel() {
                 </SwiperSlide>
               ))}
             </Swiper>
-            
-            <div 
-              className="swiper-button-prev-custom flex" 
-              style={{ 
-                position: 'absolute', 
-                left: '10px', 
-                top: '50%', 
-                transform: 'translateY(-50%)',
+
+            <div
+              className="swiper-button-prev-custom flex"
+              style={{
+                position: "absolute",
+                left: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
                 zIndex: 10,
-                cursor: 'pointer',
-                color: '#9D4815',
+                cursor: "pointer",
+                color: "#9D4815",
               }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15 18L9 12L15 6" stroke="#9D4815" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <div 
-              className="swiper-button-next-custom flex" 
-              style={{ 
-                position: 'absolute', 
-                right: '10px', 
-                top: '50%', 
-                transform: 'translateY(-50%)',
+            <div
+              className="swiper-button-next-custom flex"
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
                 zIndex: 10,
-                cursor: 'pointer',
-                color: '#9D4815',
+                cursor: "pointer",
+                color: "#9D4815",
               }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 6L15 12L9 18" stroke="#9D4815" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 6L15 12L9 18" stroke="#9D4815" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
