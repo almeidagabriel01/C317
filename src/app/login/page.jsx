@@ -1,33 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import FloatingLabelInput from "@/components/Input/Input";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Removemos authError e setAuthError daqui, pois o contexto usa toasts
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
+
+  // Redireciona se já estiver autenticado
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      await new Promise((r) => setTimeout(r, 1000));
-      router.push("/");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    await login(email, senha);
+    setIsSubmitting(false); // Reseta o botão após a tentativa
   };
+
+  // Mostra loader durante verificação inicial ou se já logado (antes do redirect)
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <p className="text-white text-xl">Carregando...</p>
+      </div>
+    );
+  }
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <AuthLayout type="login">
       <form onSubmit={handleSubmit} className="h-full flex flex-col">
-        {/* inputs centrados */}
         <div className="flex-1 flex flex-col justify-center space-y-8">
           <FloatingLabelInput
             id="email"
@@ -36,6 +53,7 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isSubmitting}
           />
           <FloatingLabelInput
             id="senha"
@@ -44,17 +62,17 @@ export default function Login() {
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
             required
+            disabled={isSubmitting}
           />
         </div>
 
-        {/* botão sempre no rodapé */}
         <div className="pt-5">
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-amber-700 hover:bg-amber-600 text-white py-4 rounded-full transition-colors text-lg"
+            disabled={isSubmitting}
+            className={`w-full bg-amber-700 hover:bg-amber-600 text-white py-4 rounded-full transition-colors text-lg ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {loading ? "Entrando..." : "Entrar"}
+            {isSubmitting ? "Entrando..." : "Entrar"}
           </button>
         </div>
       </form>
