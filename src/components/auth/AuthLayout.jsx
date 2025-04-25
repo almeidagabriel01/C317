@@ -63,7 +63,7 @@ const AuthLayout = ({ children, type }) => {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -20, opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="w-5/6 bg-white/90 backdrop-blur-sm rounded-xl p-4 px-5"
+                className="w-5/6 bg-[#fff3d6] backdrop-blur-sm rounded-xl p-4 px-5"
                 style={{
                   paddingTop: isRegister ? '1.25rem' : '1.5rem',
                   paddingBottom: isRegister ? '1.25rem' : '1.5rem',
@@ -103,7 +103,7 @@ const AuthLayout = ({ children, type }) => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: type === "login" ? 50 : -50, opacity: 0 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="w-full md:w-1/2 bg-white p-12 flex flex-col"
+              className="w-full md:w-1/2 bg-[#fff3d6] p-12 flex flex-col"
               style={{ height: 650 }}
             >
               <h2
