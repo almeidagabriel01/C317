@@ -37,7 +37,6 @@ const getErrorMessage = (error) => {
 };
 
 
-// Função para Login (/auth/token) - Envia como FormData
 export const loginUser = async (email, password) => {
   try {
     const formData = new URLSearchParams();
@@ -49,7 +48,8 @@ export const loginUser = async (email, password) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
-    if (!response.data.access_token) {
+    
+    if (!response.data.acess_token) {
       console.warn("Resposta da API de login não continha 'access_token'. Resposta:", response.data);
     }
     return response.data;

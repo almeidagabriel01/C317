@@ -7,6 +7,8 @@ import { toast } from 'react-toastify';
 
 const AuthContext = createContext(null);
 
+const PRIVATE_ROUTES = ['/orcamento', '/profile'];
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
@@ -14,6 +16,14 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Verificar se a rota atual é privada
+  const isPrivateRoute = useCallback((path) => {
+    return PRIVATE_ROUTES.some(route => 
+      path === route || path.startsWith(`${route}/`)
+    );
+  }, []);
+
+  // Inicializar autenticação do localStorage
   useEffect(() => {
     try {
       const storedToken = localStorage.getItem('authToken');
@@ -23,8 +33,6 @@ export const AuthProvider = ({ children }) => {
         setToken(storedToken);
         if (storedUser) {
           setUser(JSON.parse(storedUser));
-        } else {
-          setUser(null);
         }
       }
     } catch (error) {
@@ -36,54 +44,77 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Verificar acesso à rota atual
+  useEffect(() => {
+    if (!loading) {
+      const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
+      
+      if (isPrivateRoute(pathname) && !token) {
+        if (!isVoluntaryLogout) {
+          // Apenas mostrar mensagem se não for um logout voluntário
+          toast.warning('Você precisa estar logado para acessar esta página.');
+        } else {
+          // Limpar a flag após usar
+          sessionStorage.removeItem('voluntaryLogout');
+        }
+        
+        if (pathname !== '/login') {
+          router.push('/login');
+        }
+      }
+    }
+  }, [pathname, token, loading, router, isPrivateRoute]);
+
   const login = async (email, password) => {
     const toastId = toast.loading("Tentando fazer login...");
     try {
       const data = await loginUser(email, password);
-
-      // Verifica se 'access_token' existe (use 'acess_token' se for o caso no seu backend)
       const currentToken = data.access_token || data.acess_token;
 
       if (currentToken) {
         const userData = { email: email };
-
         setToken(currentToken);
         setUser(userData);
         localStorage.setItem('authToken', currentToken);
         localStorage.setItem('authUser', JSON.stringify(userData));
 
-        toast.update(toastId, { render: "Login realizado com sucesso!", type: "success", isLoading: false, autoClose: 3000 });
+        toast.update(toastId, { 
+          render: "Login realizado com sucesso!", 
+          type: "success", 
+          isLoading: false, 
+          autoClose: 3000 
+        });
         router.push('/');
       } else {
         throw new Error('Token de acesso não recebido da API.');
       }
     } catch (error) {
       console.error("Erro no login:", error);
-      toast.update(toastId, { render: `Erro no login: ${error.message}`, type: "error", isLoading: false, autoClose: 5000 });
-      setToken(null);
-      setUser(null);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
+      toast.update(toastId, { 
+        render: `Erro no login: ${error.message}`, 
+        type: "error", 
+        isLoading: false, 
+        autoClose: 5000 
+      });
     }
   };
 
   const logout = useCallback(() => {
+    // flag para logout voluntário para evitar redirecionamentos desnecessários
+    sessionStorage.setItem('voluntaryLogout', 'true');
+    
+    // Limpar dados de autenticação
     setUser(null);
     setToken(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
-    toast.info('Logout realizado.');
+    
+    // Mostrar mensagem de sucesso
+    toast.info('Logout realizado com sucesso.');
+    
+    // Redirecionar para a página de login
     router.push('/login');
   }, [router]);
-
-  // Efeito para redirecionar se logado tentando acessar /login ou /cadastro
-  useEffect(() => {
-    if (!loading && token) {
-      if (pathname === '/login' || pathname === '/cadastro') {
-        router.push('/');
-      }
-    }
-  }, [pathname, token, loading, router]);
 
   const value = {
     user,
@@ -92,12 +123,12 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
+    isPrivateRoute
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook customizado
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
