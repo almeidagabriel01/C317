@@ -34,7 +34,6 @@ const AuthLayout = ({ children, type }) => {
               fill
               sizes="(max-width: 767px) 100vw"
               className="object-cover filter brightness-70"
-              priority
             />
           </div>
 
@@ -133,7 +132,6 @@ const AuthLayout = ({ children, type }) => {
               fill
               sizes="(min-width: 768px) 50vw, 100vw"
               className="object-cover filter brightness-70"
-              priority
             />
 
             <div className="absolute inset-0 flex items-center justify-center">
