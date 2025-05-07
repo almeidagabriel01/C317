@@ -24,11 +24,8 @@
     --font-croissant: 'Croissant One', cursive;
     --font-spline: 'Spline Sans', sans-serif;
     --font-code: 'Source Code Pro', monospace;
+
     --color-primary: #9D4815;
-    --color-secondary: #5A5040;
-    --color-dark: #101820;
-    --color-accent: #E0CEAA;
-    --color-light: #F7F6F3;
   }
 
   @media (max-width: 768px) {
