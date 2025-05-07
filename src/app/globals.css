@@ -26,13 +26,6 @@
     --font-code: 'Source Code Pro', monospace;
 
     --color-primary: #9D4815;
-    --color-secondary: #5A5040;
-    --color-dark: #101820;
-    --color-accent: #E0CEAA;
-    --color-light: #F7F6F3;
-
-    --color-primary-dark: #8D4113;
-    --color-secondary-light: #6A6153;
   }
 
   @media (max-width: 768px) {
