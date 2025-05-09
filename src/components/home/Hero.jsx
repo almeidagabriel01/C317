@@ -10,7 +10,7 @@ export default function Hero() {
 
   const handleOrcamentoClick = () => {
     if (isAuthenticated) {
-      router.push("/orcamento");
+      router.push("/pacotes");
     } else {
       router.push("/login");
     }

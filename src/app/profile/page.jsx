@@ -209,7 +209,7 @@ export default function Perfil() {
               </p>
 
               <button
-                onClick={() => router.push('/orcamento')}
+                onClick={() => router.push('/pacotes')}
                 className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-medium py-2 px-5 rounded-lg flex items-center shadow-lg transition-colors"
               >
                 <FiFileText className="mr-2" />

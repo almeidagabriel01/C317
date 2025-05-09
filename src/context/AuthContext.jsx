@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 
 const AuthContext = createContext(null);
 
-const PRIVATE_ROUTES = ['/orcamento', '/profile', '/pagamento', '/personalizar', '/pacotes'];
+const PRIVATE_ROUTES = ['/profile', '/pagamento', '/personalizar', '/pacotes'];
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
