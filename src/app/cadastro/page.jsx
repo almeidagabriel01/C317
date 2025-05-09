@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import FloatingLabelInput from "@/components/Input/Input";
+import FloatingLabelInput from "@/components/input/Input";
 import { registerUser } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from 'react-toastify';

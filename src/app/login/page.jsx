@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
-import FloatingLabelInput from "@/components/Input/Input";
+import FloatingLabelInput from "@/components/input/Input";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
