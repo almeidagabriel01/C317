@@ -3,6 +3,7 @@
 import Navbar from "../../components/home/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 const events = [
   { img: "casamento.jpg", name: "Casamento" },
@@ -12,6 +13,11 @@ const events = [
 
 export default function App() {
   const { user, isAuthenticated, logout, loading } = useAuth();
+  const router = useRouter();
+
+  const handleClick = (eventName) => {
+    router.push(`/personalizar-1?`);
+  };
 
   return (
     <div className="bg-[#101820] text-white h-full">
@@ -35,7 +41,7 @@ export default function App() {
           {events.map((event, idx) => (
             <button
               key={idx}
-              onClick={() => handleClick(event.name)}
+              onClick={handleClick}
               className="flex flex-col items-center focus:outline-none"
             >
               <div>
