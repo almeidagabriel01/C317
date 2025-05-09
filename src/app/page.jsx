@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Navbar from "../components/home/Navbar";
+import Navbar from "../components/navbar/Navbar";
 import Hero from "../components/home/Hero";
 import Carousel from "../components/home/Carousel";
 import { useAuth } from "@/context/AuthContext";

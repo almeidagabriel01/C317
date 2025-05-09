@@ -1,7 +1,21 @@
 "use client";
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Hero() {
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  const handleOrcamentoClick = () => {
+    if (isAuthenticated) {
+      router.push("/orcamento");
+    } else {
+      router.push("/login");
+    }
+  };
+
   return (
     <section className="flex flex-col md:flex-row min-h-screen overflow-hidden">
       {/* imagem ocupa toda a largura em mobile e metade em desktop */}
@@ -36,20 +50,14 @@ export default function Hero() {
           ingredientes artesanais. Somos especializados em serviços de
           coquetelaria para eventos sociais e eventos corporativos.
         </p>
-        <button
-          className="
-            flex items-center justify-center
-            bg-primary text-accent
-            px-4 md:px-6 py-2 md:py-3 rounded-full
-            text-base md:text-lg font-medium
-            shadow-lg
-            hover:opacity-90
-            transition
-            w-full sm:w-auto sm:self-start
-          "
-        >
-          Faça um orçamento
-        </button>
+        <motion.button
+            whileHover={{ scale: 1.05, backgroundColor: "#b45309" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleOrcamentoClick}
+            className="bg-amber-700 text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-amber-600 transition-colors"
+          >
+            Faça um orçamento
+          </motion.button>
       </div>
     </section>
   );
