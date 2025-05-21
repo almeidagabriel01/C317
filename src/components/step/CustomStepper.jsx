@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function CustomStepper({ steps, currentStep, direction }) {
   return (
-    <div className="flex justify-center mt-4 pt-4 sm:pt-6 pb-2 px-4 sm:px-0 w-full">
+    <div className="flex justify-center mt-4 pt-4 sm:pt-6 pb-4 px-4 sm:px-0 w-full">
       <div className="flex items-center">
         {steps.map((step, i) => (
           <div key={i} className="flex items-center">

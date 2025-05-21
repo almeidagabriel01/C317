@@ -4,26 +4,22 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../step/FormStepLayout";
 
-const drinks = [
-  { name: "COSMOPOLITAN", description: "vodka, licor de laranja, suco de cranberry e suco de limão", image: "cosmopolitan.jpg" },
-  { name: "MOJITO", description: "rum, o açúcar, hortelã, limão e água gaseificada", image: "mojito.jpg" },
-  { name: "BELLINI", description: "suco de pêssego e espumante", image: "bellini.jpg" },
-  { name: "DRY MARTINI", description: "vodka, licor de laranja, suco de cranberry e suco de limão", image: "dry-martini.jpeg" },
-  { name: "BLOOD MARY", description: "vodka, licor de laranja, suco de cranberry e suco de limão", image: "bloody-mary.jpg" },
-  { name: "PINA COLADA", description: "vodka, licor de laranja, suco de cranberry e suco de limão", image: "pina-colada.jpg" },
-  { name: "MARGARITA TRADICIONAL", description: "tequila, licor de laranja e suco de limão", image: "pina-colada.jpg" },
-  { name: "NEGRONI", description: "gin, vermute rosso e Campari", image: "pina-colada.jpg" },
-  { name: "CLERICOT", description: "vinho, frutas frescas e refrigerante", image: "pina-colada.jpg" },
-  { name: "OLD FASHIONED", description: "whisky, açúcar, angostura e água", image: "pina-colada.jpg" },
-  { name: "WHISKY SOUR", description: "whisky, limão, açúcar e clara de ovo", image: "pina-colada.jpg" },
-  { name: "TOM COLLINS", description: "gin, limão, açúcar e água com gás", image: "pina-colada.jpg" },
-  { name: "SEX ON THE BEACH", description: "vodka, licor de pêssego, suco de laranja e grenadine", image: "sexonthebeach.jpg" },
-  { name: "MOSCOW MULE", description: "vodka, limão e cerveja de gengibre", image: "moscowmule.jpg" },
-  { name: "GIN TÔNICA", description: "gin e água tônica", image: "gintonica.jpg" },
-  { name: "CAIPIRINHAS", description: "cachaça, limão e açúcar", image: "caipirinha.jpg" },
+const nonAlcoholicDrinks = [
+  { name: "LIMONADA SUÍÇA", description: "água, limão e açúcar batidos com gelo", image: "limonada.jpg" },
+  { name: "SUCO DE LARANJA", description: "laranja natural espremida", image: "laranja.jpg" },
+  { name: "SUCO DE ABACAXI", description: "abacaxi, hortelã, limão e água", image: "abacaxi.jpg" },
+  { name: "SUCO DE MORANGO", description: "morango, limão e água", image: "morango.jpg" },
+  { name: "ICE TEA", description: "chá gelado com limão e hortelã", image: "icetea.jpg" },
+  { name: "ÁGUA DE COCO", description: "água de coco natural", image: "agua-coco.jpg" },
+  { name: "MOJITO SEM ÁLCOOL", description: "limão, hortelã, açúcar e água gaseificada", image: "mojito.jpg" },
+  { name: "SHIRLEY TEMPLE", description: "ginger ale e grenadine", image: "gintonica.jpg" },
+  { name: "PIÑA COLADA SEM ÁLCOOL", description: "leite de coco, suco de abacaxi e açúcar", image: "pina-colada.jpg" },
+  { name: "COQUETEL DE FRUTAS", description: "mix de sucos de frutas, xarope de açúcar e água gaseificada", image: "frutas.jpg" },
+  { name: "SMOOTHIE DE FRUTAS VERMELHAS", description: "frutas vermelhas, iogurte e mel", image: "frutas-vermelhas.jpg" },
+  { name: "MATE COM LIMÃO", description: "chá mate gelado com limão e açúcar", image: "mate.jpg" },
 ];
 
-export default function DrinkSelector({ selectedDrinks, toggleDrink, onNext, onBack, direction }) {
+export default function NonAlcoholicDrinkSelector({ selectedDrinks, toggleDrink, onNext, onBack, direction }) {
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: { 
@@ -40,16 +36,16 @@ export default function DrinkSelector({ selectedDrinks, toggleDrink, onNext, onB
 
   return (
     <FormStepLayout
-      stepKey="step2"
+      stepKey="step3"
       direction={direction}
-      title="BEBIDAS ALCOÓLICAS"
-      subtitle="SELECIONE OS DRINKS ESPECIAIS PARA O SEU EVENTO"
+      title="BEBIDAS NÃO ALCOÓLICAS"
+      subtitle="SELECIONE AS BEBIDAS NÃO ALCOÓLICAS PARA O SEU EVENTO"
       onBack={onBack}
       onNext={onNext}
       isValid={true}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 px-2 md:px-0 mt-4">
-        {drinks.map((drink) => (
+        {nonAlcoholicDrinks.map((drink) => (
           <div
             key={drink.name}
             className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
@@ -94,7 +90,7 @@ export default function DrinkSelector({ selectedDrinks, toggleDrink, onNext, onB
         ))}
       </div>
 
-      {/* Resumo dos drinks selecionados */}
+      {/* Resumo das bebidas não alcoólicas selecionadas */}
       {selectedDrinks.length > 0 && (
         <motion.div 
           className="mt-8 bg-[#1A222F] p-5 rounded-lg border border-[#E0CEAA]/20"
@@ -102,7 +98,7 @@ export default function DrinkSelector({ selectedDrinks, toggleDrink, onNext, onB
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h3 className="text-[#E0CEAA] font-semibold mb-3">Resumo das bebidas selecionadas:</h3>
+          <h3 className="text-[#E0CEAA] font-semibold mb-3">Resumo das bebidas sem álcool selecionadas:</h3>
           <div className="space-y-2 mb-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               {selectedDrinks.map(drinkName => (
@@ -114,7 +110,7 @@ export default function DrinkSelector({ selectedDrinks, toggleDrink, onNext, onB
             </div>
           </div>
           <div className="flex justify-between text-lg font-bold text-[#E0CEAA] pt-3 border-t border-gray-700/40">
-            <span>Total de bebidas alcoólicas</span>
+            <span>Total de bebidas sem álcool</span>
             <span>{selectedDrinks.length}</span>
           </div>
         </motion.div>
