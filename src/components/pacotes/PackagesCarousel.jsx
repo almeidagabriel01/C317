@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import Image from "next/image";
+import PackageModal from "./PackageModal";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -12,6 +13,8 @@ const PackagesCarousel = ({ packages }) => {
   const [slidesPerView, setSlidesPerView] = useState(4);
   const [prevEl, setPrevEl] = useState(null);
   const [nextEl, setNextEl] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
 
   // Ajusta slidesPerView conforme largura
   useEffect(() => {
@@ -29,6 +32,15 @@ const PackagesCarousel = ({ packages }) => {
 
   // Só ativa loop quando realmente há mais slides que o slidesPerView
   const loopEnabled = packages.length > slidesPerView;
+
+  const handleShowDetails = (pkg) => {
+    setSelectedPackage(pkg);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+  };
 
   return (
     <div className="relative overflow-hidden px-4">
@@ -69,7 +81,10 @@ const PackagesCarousel = ({ packages }) => {
                   <p className="flex items-center gap-2">
                     <span>⏱ {pkg.hours} horas de open bar</span>
                   </p>
-                  <p className="text-[#a85532] mt-2 mb-4 cursor-pointer hover:underline">
+                  <p 
+                    className="text-[#a85532] mt-2 mb-4 cursor-pointer hover:underline"
+                    onClick={() => handleShowDetails(pkg)}
+                  >
                     + informações
                   </p>
                   <p className="text-xl font-bold">{pkg.price}</p>
@@ -115,6 +130,13 @@ const PackagesCarousel = ({ packages }) => {
           </svg>
         </div>
       </div>
+
+      {/* Modal para exibir detalhes do pacote */}
+      <PackageModal 
+        isOpen={modalOpen} 
+        onClose={closeModal} 
+        packageInfo={selectedPackage} 
+      />
     </div>
   );
 };

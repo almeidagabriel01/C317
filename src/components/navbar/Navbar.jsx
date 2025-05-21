@@ -17,14 +17,14 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
         setDropdownOpen(false);
       }
     }
-    
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Formatar o nome de usuário para exibição
-  const userDisplay = user?.email 
-    ? user.email.split('@')[0] 
+  const userDisplay = user?.email
+    ? user.email.split('@')[0]
     : 'Usuário';
 
   return (
@@ -96,7 +96,15 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
           ) : (
             <Link
               href="/login"
-              className="flex items-center space-x-2 border-2 border-light text-light bg-transparent px-3 py-1.5 rounded-full shadow-md hover:bg-light hover:text-primary transition"
+              className="
+              flex items-center space-x-2 
+              border-2 border-light text-light 
+              bg-transparent px-3 py-1.5 
+              rounded-full shadow-md 
+              transition
+              hover:bg-amber-400 hover:text-primary
+              focus:bg-amber-400 focus:text-primary
+              active:bg-amber-500 active:text-primary"
             >
               <FiLogIn size={16} />
               <span className="font-medium">Login</span>
