@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import Navbar from "@/components/Navbar/Navbar";
+import Navbar from "@/components/navbar/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import HeaderSection from "@/components/pacotes/HeaderSection";
 import PackagesCarousel from "@/components/pacotes/PackagesCarousel";
