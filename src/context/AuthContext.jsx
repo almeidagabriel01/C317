@@ -7,21 +7,42 @@ import { toast } from 'react-toastify';
 
 const AuthContext = createContext(null);
 
-const PRIVATE_ROUTES = ['/profile', '/pagamento', '/personalizar', '/pacotes'];
+// Rotas privadas por tipo de usuário
+const BUYER_ROUTES = ['/profile', '/pagamento', '/personalizar', '/pacotes'];
+const ORGANIZER_ROUTES = ['/dashboard', '/users'];
+// Rotas restritas para organizadores (incluindo a página inicial)
+const ORGANIZER_RESTRICTED = [...BUYER_ROUTES, '/'];
+// Rotas restritas para compradores
+const BUYER_RESTRICTED = ORGANIZER_ROUTES;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Verificar se a rota atual é privada
+  // Verificar se a rota atual é privada e se o usuário pode acessá-la
   const isPrivateRoute = useCallback((path) => {
-    return PRIVATE_ROUTES.some(route => 
+    return [...BUYER_ROUTES, ...ORGANIZER_ROUTES].some(route => 
       path === route || path.startsWith(`${route}/`)
     );
   }, []);
+
+  // Verificar se a rota é restrita ao tipo de usuário
+  const isRestrictedRoute = useCallback((path) => {
+    if (role === 'Comprador') {
+      return BUYER_RESTRICTED.some(route => 
+        path === route || path.startsWith(`${route}/`)
+      );
+    } else if (role === 'Organizador') {
+      return ORGANIZER_RESTRICTED.some(route => 
+        path === route || path.startsWith(`${route}/`)
+      );
+    }
+    return false;
+  }, [role]);
 
   // Inicializar autenticação do localStorage
   useEffect(() => {
@@ -32,7 +53,9 @@ export const AuthProvider = ({ children }) => {
       if (storedToken) {
         setToken(storedToken);
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setRole(parsedUser.role);
         }
       }
     } catch (error) {
@@ -49,12 +72,23 @@ export const AuthProvider = ({ children }) => {
     if (!loading) {
       const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
       
+      // Verificar se o usuário está tentando acessar uma rota que não pode
+      if (isRestrictedRoute(pathname) && token) {
+        
+        // Redirecionar para a página adequada com base no papel
+        if (role === 'Organizador') {
+          router.push('/dashboard');
+        } else {
+          router.push('/');
+        }
+        return;
+      }
+      
+      // Verificar se a rota é privada e o usuário não está autenticado
       if (isPrivateRoute(pathname) && !token) {
         if (!isVoluntaryLogout) {
-          // Apenas mostrar mensagem se não for um logout voluntário
           toast.warning('Você precisa estar logado para acessar esta página.');
         } else {
-          // Limpar a flag após usar
           sessionStorage.removeItem('voluntaryLogout');
         }
         
@@ -63,7 +97,7 @@ export const AuthProvider = ({ children }) => {
         }
       }
     }
-  }, [pathname, token, loading, router, isPrivateRoute]);
+  }, [pathname, token, role, loading, router, isPrivateRoute, isRestrictedRoute]);
 
   const login = async (email, password) => {
     const toastId = toast.loading("Tentando fazer login...");
@@ -72,9 +106,17 @@ export const AuthProvider = ({ children }) => {
       const currentToken = data.access_token || data.acess_token;
 
       if (currentToken) {
-        const userData = { email: email };
+        // Usar o papel retornado da API
+        const userRole = data.role || 'Comprador';
+
+        const userData = { 
+          email: email,
+          role: userRole
+        };
+        
         setToken(currentToken);
         setUser(userData);
+        setRole(userRole);
         localStorage.setItem('authToken', currentToken);
         localStorage.setItem('authUser', JSON.stringify(userData));
 
@@ -84,7 +126,13 @@ export const AuthProvider = ({ children }) => {
           isLoading: false, 
           autoClose: 3000 
         });
-        router.push('/');
+        
+        // Redirecionar com base no papel do usuário
+        if (userRole === 'Organizador') {
+          router.push('/dashboard');
+        } else {
+          router.push('/');
+        }
       } else {
         throw new Error('Token de acesso não recebido da API.');
       }
@@ -100,30 +148,28 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = useCallback(() => {
-    // flag para logout voluntário para evitar redirecionamentos desnecessários
     sessionStorage.setItem('voluntaryLogout', 'true');
     
-    // Limpar dados de autenticação
     setUser(null);
     setToken(null);
+    setRole(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
     
-    // Mostrar mensagem de sucesso
     toast.info('Logout realizado com sucesso.');
-    
-    // Redirecionar para a página de login
     router.push('/login');
   }, [router]);
 
   const value = {
     user,
     token,
+    role,
     isAuthenticated: !!token,
     loading,
     login,
     logout,
-    isPrivateRoute
+    isPrivateRoute,
+    isRestrictedRoute
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
