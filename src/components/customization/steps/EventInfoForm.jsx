@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import TimeSelector from "../input/TimeSelector";
+import TimeSelector from "../../input/TimeSelector";
 
 export default function EventInfoForm({
   formData,

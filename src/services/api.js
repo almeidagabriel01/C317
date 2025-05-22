@@ -1,9 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://127.0.0.1:8000';
-
-// true = 'Organizador', false = 'Comprador'
-const MOCK_ORGANIZER_ROLE = false;
+const BASE_URL = 'http://127.0.0.1:8002';
 
 // Cria uma instância do Axios
 const apiClient = axios.create({
@@ -25,6 +22,17 @@ const getErrorMessage = (error) => {
   }
 };
 
+// Função auxiliar para normalizar o role vindo do backend
+const normalizeRole = (role) => {
+  if (!role) return 'Comprador'; // Default
+  
+  const lowerRole = role.toLowerCase();
+  if (lowerRole === 'organizador') return 'Organizador';
+  if (lowerRole === 'comprador') return 'Comprador';
+  
+  // Caso venha com primeira letra maiúscula
+  return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+};
 
 export const loginUser = async (email, password) => {
   try {
@@ -38,14 +46,24 @@ export const loginUser = async (email, password) => {
       },
     });
 
-    if (!response.data.acess_token && !response.data.access_token) {
-      console.warn("Resposta da API de login não continha 'access_token'. Resposta:", response.data);
+    // Verificar se a resposta contém o token e o user
+    if (!response.data.access_token) {
+      throw new Error('Token de acesso não recebido da API.');
     }
 
-    // adicionando role manualmente até o backend retornar essa informação
+    if (!response.data.user) {
+      throw new Error('Dados do usuário não recebidos da API.');
+    }
+
+    // Normalizar o role do usuário
+    const normalizedUser = {
+      ...response.data.user,
+      role: normalizeRole(response.data.user.role)
+    };
+
     return {
       ...response.data,
-      role: MOCK_ORGANIZER_ROLE ? 'Organizador' : 'Comprador'
+      user: normalizedUser
     };
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -66,19 +84,38 @@ export const registerUser = async (userData) => {
   }
 };
 
+// Função auxiliar para formatar telefone
+const formatPhoneForDisplay = (phone) => {
+  if (!phone) return '';
+  
+  // Remove caracteres não numéricos
+  const digits = phone.replace(/\D/g, '');
+  
+  // Formata com base no número de dígitos
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  } else if (digits.length === 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  }
+  
+  return phone; // Retorna sem formatação se não tiver o tamanho esperado
+};
+
 export const fetchUsers = async () => {
   try {
-    // Dados mockados para teste
-    return [
-      { id: 1, name: "João Silva", email: "joao@example.com", phone: "(11) 98765-4321", role: "Comprador", status: "Ativo", lastLogin: "18/05/2025" },
-      { id: 2, name: "Maria Oliveira", email: "maria@example.com", phone: "(11) 91234-5678", role: "Comprador", status: "Ativo", lastLogin: "17/05/2025" },
-      { id: 3, name: "Pedro Santos", email: "pedro@example.com", phone: "(11) 99876-5432", role: "Comprador", status: "Inativo", lastLogin: "10/05/2025" },
-      { id: 4, name: "Ana Ferreira", email: "ana@example.com", phone: "(11) 95555-4444", role: "Comprador", status: "Ativo", lastLogin: "16/05/2025" },
-      { id: 5, name: "Carlos Costa", email: "carlos@example.com", phone: "(11) 96666-7777", role: "Organizador", status: "Ativo", lastLogin: "19/05/2025" },
-      { id: 6, name: "Luciana Mendes", email: "luciana@example.com", phone: "(11) 97777-8888", role: "Comprador", status: "Ativo", lastLogin: "15/05/2025" },
-      { id: 7, name: "Roberto Alves", email: "roberto@example.com", phone: "(11) 98888-9999", role: "Comprador", status: "Inativo", lastLogin: "01/05/2025" },
-      { id: 8, name: "Juliana Rocha", email: "juliana@example.com", phone: "(11) 99999-0000", role: "Comprador", status: "Ativo", lastLogin: "14/05/2025" },
-    ];
+    const response = await apiClient.get('/users/all');
+    
+    // Mapear dados da API para o formato esperado pela interface
+    return response.data.map(user => ({
+      id: user.ID,
+      name: user.userName,
+      email: user.Email,
+      phone: formatPhoneForDisplay(user.NumCel),
+      role: normalizeRole(user.role),
+      status: user.Ativo ? 'Ativo' : 'Inativo',
+      // Campos originais da API para referência
+      originalData: user
+    }));
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -86,8 +123,26 @@ export const fetchUsers = async () => {
 
 export const updateUser = async (userId, userData) => {
   try {
-    // Simular sucesso para teste
-    return { success: true, userId, ...userData };
+    // Mapear dados da interface para o formato da API
+    const apiData = {
+      ID: userId,
+      userName: userData.name,
+      role: userData.role.toLowerCase(), // API espera em lowercase
+      NumCel: userData.phone.replace(/\D/g, '') // Remove formatação
+    };
+
+    const response = await apiClient.put('/users/update/Adm/Role', apiData, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    // Se retorna 202, significa sucesso
+    if (response.status === 202) {
+      return { success: true };
+    }
+    
+    return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -95,8 +150,27 @@ export const updateUser = async (userId, userData) => {
 
 export const updateUserStatus = async (userId, status) => {
   try {
-    // Simular sucesso para teste
-    return { success: true, userId, status };
+    const apiData = {
+      Ativo: status === 'Ativo'
+    };
+
+    const response = await apiClient.patch(`/users/${userId}/status`, apiData, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Função para buscar todos os itens
+export const fetchItems = async () => {
+  try {
+    const response = await apiClient.get('/item/all');
+    return response.data.Itens;
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

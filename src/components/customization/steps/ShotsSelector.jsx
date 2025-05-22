@@ -2,25 +2,13 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
-import FormStepLayout from "../step/FormStepLayout";
+import FormStepLayout from "../../step/FormStepLayout";
 
-const otherBeverages = [
-  { id: 1, name: "ÁGUA MINERAL (500ml)", description: "Água mineral sem gás", image: "agua.jpg", price: 3.5 },
-  { id: 2, name: "ÁGUA COM GÁS (500ml)", description: "Água mineral com gás", image: "agua-gas.jpg", price: 4.0 },
-  { id: 3, name: "REFRIGERANTE (LATA)", description: "Sabores: Cola, Guaraná, Limão", image: "refrigerante.jpg", price: 5.0 },
-  { id: 4, name: "ENERGÉTICO (LATA)", description: "Energy drink tradicional", image: "energetico.jpg", price: 12.0 },
-  { id: 5, name: "TÔNICA (LATA)", description: "Água tônica tradicional", image: "tonica.jpg", price: 6.0 },
-  { id: 6, name: "CERVEJA (LONG NECK)", description: "Cerveja pilsen premium", image: "cerveja.jpg", price: 8.0 },
-  { id: 7, name: "GARRAFA DE VINHO", description: "Vinho tinto ou branco", image: "vinho.jpg", price: 70.0 },
-  { id: 8, name: "ESPUMANTE", description: "Espumante brut ou demi-sec", image: "espumante.jpg", price: 80.0 },
-];
-
-export default function OtherBeveragesSelector({ beverageQuantities, setBeverageQuantity, onNext, onBack, direction }) {
-  // Função para atualizar a quantidade de uma bebida
+export default function ShotsSelector({ items, shotQuantities, setShotQuantity, onNext, onBack, direction }) {
+  // Função para atualizar a quantidade de um shot
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 0) return;
-    setBeverageQuantity(id, newQuantity);
+    setShotQuantity(id, newQuantity);
   };
 
   // Função para formatar o preço em reais
@@ -44,21 +32,21 @@ export default function OtherBeveragesSelector({ beverageQuantities, setBeverage
 
   return (
     <FormStepLayout
-      stepKey="step4"
+      stepKey="step5"
       direction={direction}
-      title="OUTRAS BEBIDAS"
-      subtitle="INFORME A QUANTIDADE DE CADA BEBIDA ADICIONAL DESEJADA"
+      title="SHOTS"
+      subtitle="INFORME A QUANTIDADE DE CADA SHOT DESEJADO"
       onBack={onBack}
       onNext={onNext}
       isValid={true}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 md:px-0 mt-4">
-        {otherBeverages.map((beverage) => {
-          const quantity = beverageQuantities[beverage.id] || 0;
+        {items.map((item) => {
+          const quantity = shotQuantities[item.item.ID] || 0;
           
           return (
             <motion.div
-              key={beverage.id}
+              key={item.item.ID}
               variants={itemVariants}
               className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 ${
                 quantity > 0 
@@ -67,25 +55,32 @@ export default function OtherBeveragesSelector({ beverageQuantities, setBeverage
               }`}
             >
               <div className="relative w-16 h-16 min-w-[64px] rounded-lg overflow-hidden border-2 border-[#E0CEAA] shadow-md">
-                <Image
-                  src={`/assets/${beverage.image}`}
-                  alt={beverage.name}
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-lg"
-                />
+                {item.imageURL ? (
+                  <Image
+                    src={item.imageURL}
+                    alt={item.item.Descricao}
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-lg"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#1C2431] text-[#E0CEAA]">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                    </svg>
+                  </div>
+                )}
               </div>
               
               <div className="flex-1">
-                <div className="font-bold text-[#E0CEAA] text-sm md:text-base">{beverage.name}</div>
-                <div className="text-xs text-gray-300/80">{beverage.description}</div>
-                <div className="text-sm text-[#9D4815] font-semibold mt-1">{formatPrice(beverage.price)} / unidade</div>
+                <div className="font-bold text-[#E0CEAA] text-sm md:text-base">{item.item.Descricao}</div>
+                <div className="text-sm text-[#9D4815] font-semibold mt-1">{formatPrice(item.item.Preco)} / unidade</div>
               </div>
               
               <div className="flex items-center bg-[#1A222F] rounded-full border border-[#E0CEAA]/30 overflow-hidden">
                 <motion.button
                   type="button"
-                  onClick={() => updateQuantity(beverage.id, quantity - 1)}
+                  onClick={() => updateQuantity(item.item.ID, quantity - 1)}
                   className={`w-8 h-8 flex items-center justify-center text-[#E0CEAA] hover:bg-[#9D4815]/20 ${
                     quantity === 0 ? "opacity-50 cursor-not-allowed" : ""
                   }`}
@@ -109,7 +104,7 @@ export default function OtherBeveragesSelector({ beverageQuantities, setBeverage
                 
                 <motion.button
                   type="button"
-                  onClick={() => updateQuantity(beverage.id, quantity + 1)}
+                  onClick={() => updateQuantity(item.item.ID, quantity + 1)}
                   className="w-8 h-8 flex items-center justify-center text-[#E0CEAA] hover:bg-[#9D4815]/20"
                   whileTap={{ scale: 0.9 }}
                 >
@@ -124,28 +119,30 @@ export default function OtherBeveragesSelector({ beverageQuantities, setBeverage
       </div>
       
       {/* Total calculado */}
-      {Object.keys(beverageQuantities).length > 0 && (
+      {Object.keys(shotQuantities).length > 0 && (
         <motion.div 
           className="mt-8 bg-[#1A222F] p-5 rounded-lg border border-[#E0CEAA]/20"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h3 className="text-[#E0CEAA] font-semibold mb-3">Resumo das bebidas adicionais:</h3>
+          <h3 className="text-[#E0CEAA] font-semibold mb-3">Resumo dos shots selecionados:</h3>
           <div className="space-y-2 mb-4">
-            {otherBeverages.filter(b => beverageQuantities[b.id] > 0).map(beverage => (
-              <div key={beverage.id} className="flex justify-between text-white">
-                <span>{beverage.name} <span className="text-gray-400">x {beverageQuantities[beverage.id]}</span></span>
-                <span>{formatPrice(beverage.price * beverageQuantities[beverage.id])}</span>
-              </div>
-            ))}
+            {items
+              .filter(item => shotQuantities[item.item.ID] > 0)
+              .map(item => (
+                <div key={item.item.ID} className="flex justify-between text-white">
+                  <span>{item.item.Descricao} <span className="text-gray-400">x {shotQuantities[item.item.ID]}</span></span>
+                  <span>{formatPrice(item.item.Preco * shotQuantities[item.item.ID])}</span>
+                </div>
+              ))}
           </div>
           <div className="flex justify-between text-lg font-bold text-[#E0CEAA] pt-3 border-t border-gray-700/40">
             <span>Total</span>
             <span>
               {formatPrice(
-                otherBeverages.reduce((sum, beverage) => {
-                  return sum + (beverage.price * (beverageQuantities[beverage.id] || 0));
+                items.reduce((sum, item) => {
+                  return sum + (item.item.Preco * (shotQuantities[item.item.ID] || 0));
                 }, 0)
               )}
             </span>
