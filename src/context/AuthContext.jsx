@@ -48,20 +48,32 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     try {
       const storedToken = localStorage.getItem('authToken');
-      const storedUser = localStorage.getItem('authUser');
+      const storedUserName = localStorage.getItem('userName');
+      const storedUserData = sessionStorage.getItem('userData');
 
       if (storedToken) {
         setToken(storedToken);
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
+        
+        // Se temos dados completos na sessionStorage, use-os
+        if (storedUserData) {
+          const parsedUser = JSON.parse(storedUserData);
           setUser(parsedUser);
           setRole(parsedUser.role);
+        } 
+        // Se não, crie um objeto de usuário temporário apenas com o nome
+        else if (storedUserName) {
+          // Criamos um objeto de usuário temporário com o nome
+          // O restante das informações serão preenchidas quando necessário
+          setUser({ userName: storedUserName });
+          // Note: o role não está disponível aqui, pode ser necessário
+          // uma chamada à API para obter os dados completos do usuário
         }
       }
     } catch (error) {
       console.error("Erro ao ler autenticação do localStorage:", error);
       localStorage.removeItem('authToken');
-      localStorage.removeItem('authUser');
+      localStorage.removeItem('userName');
+      sessionStorage.removeItem('userData');
     } finally {
       setLoading(false);
     }
@@ -119,8 +131,13 @@ export const AuthProvider = ({ children }) => {
         setToken(currentToken);
         setUser(userData);
         setRole(userData.role);
+        
+        // Armazenar apenas o nome do usuário no localStorage
         localStorage.setItem('authToken', currentToken);
-        localStorage.setItem('authUser', JSON.stringify(userData));
+        localStorage.setItem('userName', userData.userName);
+        
+        // Armazenar dados completos na sessionStorage para uso interno
+        sessionStorage.setItem('userData', JSON.stringify(userData));
 
         toast.update(toastId, { 
           render: "Login realizado com sucesso!", 
@@ -155,8 +172,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     setRole(null);
+    
     localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
+    localStorage.removeItem('userName');
+    sessionStorage.removeItem('userData');
     
     toast.info('Logout realizado com sucesso.');
     router.push('/login');

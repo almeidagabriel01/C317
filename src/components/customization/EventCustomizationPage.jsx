@@ -4,12 +4,16 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/navbar/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { AnimatePresence } from "framer-motion";
+import { fetchItems } from "@/services/api";
 
 import EventTypeSelector from "@/components/customization/EventTypeSelector";
-import EventInfoForm from "@/components/customization/EventInfoForm";
-import DrinkSelector from "@/components/customization/DrinkSelector";
-import NonAlcoholicDrinkSelector from "@/components/customization/NonAlcoholicDrinkSelector";
-import OtherBeveragesSelector from "@/components/customization/OtherBeveragesSelector";
+import EventInfoForm from "@/components/customization/steps/EventInfoForm";
+import DrinkSelector from "@/components/customization/steps/DrinkSelector";
+import NonAlcoholicDrinkSelector from "@/components/customization/steps/NonAlcoholicDrinkSelector";
+import OtherBeveragesSelector from "@/components/customization/steps/OtherBeveragesSelector";
+import ShotsSelector from "@/components/customization/steps/ShotsSelector";
+import StructureSelector from "@/components/customization/steps/StructureSelector";
+import StaffSelector from "@/components/customization/steps/StaffSelector";
 import CustomStepper from "@/components/step/CustomStepper";
 
 const STEPS = [
@@ -22,6 +26,27 @@ const STEPS = [
   { label: "Bartender" },
 ];
 
+// Agrupar itens por categoria
+const groupItemsByCategory = (items) => {
+  const categorized = {
+    alcoolicos: [],
+    nao_alcoolicos: [],
+    outras_bebidas: [],
+    shots: [],
+    estrutura: [],
+    funcionarios: []
+  };
+
+  items.forEach(item => {
+    const category = item.item.Categoria;
+    if (categorized[category] !== undefined) {
+      categorized[category].push(item);
+    }
+  });
+
+  return categorized;
+};
+
 export default function EventCustomizationPage() {
   const { user, isAuthenticated, logout } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
@@ -30,13 +55,44 @@ export default function EventCustomizationPage() {
     name: "",
     date: "",
     guestCount: "",
-    eventDuration: "", // Inicializado com string vazia
+    eventDuration: "",
     eventAddress: ""
   });
   const [selectedDrinks, setSelectedDrinks] = useState([]);
   const [selectedNonAlcoholicDrinks, setSelectedNonAlcoholicDrinks] = useState([]);
   const [beverageQuantities, setBeverageQuantities] = useState({});
+  const [shotQuantities, setShotQuantities] = useState({});
+  const [selectedStructure, setSelectedStructure] = useState(null);
+  const [staffQuantities, setStaffQuantities] = useState({});
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categorizedItems, setCategorizedItems] = useState({
+    alcoolicos: [],
+    nao_alcoolicos: [],
+    outras_bebidas: [],
+    shots: [],
+    estrutura: [],
+    funcionarios: []
+  });
+
+  // Buscar itens da API
+  useEffect(() => {
+    const getItems = async () => {
+      try {
+        setLoading(true);
+        const itemsData = await fetchItems();
+        setItems(itemsData);
+        setCategorizedItems(groupItemsByCategory(itemsData));
+      } catch (error) {
+        console.error("Erro ao buscar itens:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getItems();
+  }, []);
 
   const handleEventSelection = (evt) => {
     if (isTransitioning) return;
@@ -45,7 +101,7 @@ export default function EventCustomizationPage() {
     setTimeout(() => {
       setCurrentStep(1);
       setIsTransitioning(false);
-    }, 100); // Tempo reduzido
+    }, 100);
   };
 
   const handleInputChange = (e) => {
@@ -59,7 +115,7 @@ export default function EventCustomizationPage() {
     setTimeout(() => {
       setCurrentStep(prev => prev + 1);
       setIsTransitioning(false);
-    }, 100); // Tempo reduzido
+    }, 100);
   };
 
   const handleBack = () => {
@@ -69,7 +125,7 @@ export default function EventCustomizationPage() {
     setTimeout(() => {
       setCurrentStep(prev => Math.max(0, prev - 1));
       setIsTransitioning(false);
-    }, 100); // Tempo reduzido
+    }, 100);
   };
 
   const toggleDrink = (d) => {
@@ -84,7 +140,15 @@ export default function EventCustomizationPage() {
     setBeverageQuantities(prev => ({ ...prev, [id]: quantity }));
   };
 
-  // Verifica se todos os campos estão preenchidos, incluindo a duração
+  const setShotQuantity = (id, quantity) => {
+    setShotQuantities(prev => ({ ...prev, [id]: quantity }));
+  };
+
+  const setStaffQuantity = (id, quantity) => {
+    setStaffQuantities(prev => ({ ...prev, [id]: quantity }));
+  };
+
+  // Verifica se todos os campos estão preenchidos
   const isFormValid = () => {
     const { name, date, guestCount, eventDuration, eventAddress } = formData;
     return (
@@ -98,6 +162,14 @@ export default function EventCustomizationPage() {
   };
 
   const renderStepContent = () => {
+    if (loading && currentStep > 1) {
+      return (
+        <div className="flex-grow flex items-center justify-center p-8">
+          <div className="text-[#E0CEAA] text-lg">Carregando...</div>
+        </div>
+      );
+    }
+
     switch (currentStep) {
       case 0: return (
         <EventTypeSelector
@@ -124,6 +196,7 @@ export default function EventCustomizationPage() {
           onNext={handleNext}
           onBack={handleBack}
           direction={direction}
+          items={categorizedItems.alcoolicos}
           key="step2"
         />
       );
@@ -134,6 +207,7 @@ export default function EventCustomizationPage() {
           onNext={handleNext}
           onBack={handleBack}
           direction={direction}
+          items={categorizedItems.nao_alcoolicos}
           key="step3"
         />
       );
@@ -144,7 +218,41 @@ export default function EventCustomizationPage() {
           onNext={handleNext}
           onBack={handleBack}
           direction={direction}
+          items={categorizedItems.outras_bebidas}
           key="step4"
+        />
+      );
+      case 5: return (
+        <ShotsSelector
+          shotQuantities={shotQuantities}
+          setShotQuantity={setShotQuantity}
+          onNext={handleNext}
+          onBack={handleBack}
+          direction={direction}
+          items={categorizedItems.shots}
+          key="step5"
+        />
+      );
+      case 6: return (
+        <StructureSelector
+          selectedStructure={selectedStructure}
+          setSelectedStructure={setSelectedStructure}
+          onNext={handleNext}
+          onBack={handleBack}
+          direction={direction}
+          items={categorizedItems.estrutura}
+          key="step6"
+        />
+      );
+      case 7: return (
+        <StaffSelector
+          staffQuantities={staffQuantities}
+          setStaffQuantity={setStaffQuantity}
+          onNext={handleNext}
+          onBack={handleBack}
+          direction={direction}
+          items={categorizedItems.funcionarios}
+          key="step7"
         />
       );
       default: return null;

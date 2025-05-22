@@ -165,3 +165,13 @@ export const updateUserStatus = async (userId, status) => {
     throw new Error(getErrorMessage(error));
   }
 };
+
+// Função para buscar todos os itens
+export const fetchItems = async () => {
+  try {
+    const response = await apiClient.get('/item/all');
+    return response.data.Itens;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};

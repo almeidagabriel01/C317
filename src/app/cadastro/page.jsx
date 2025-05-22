@@ -60,7 +60,6 @@ export default function Register() {
         userName: formData.nomeCompleto,
         Email: formData.email,
         password: formData.senha,
-        role: "Comprador",
         NumCel: formData.celular,
       };
 
