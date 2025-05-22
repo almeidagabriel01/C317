@@ -48,8 +48,8 @@ const UserTableRow = ({ user, index, onEdit, onToggleStatus }) => {
           </span>
         </div>
       </td>
-      <td className="px-6 py-4 text-center">
-        <div className="flex justify-center items-center space-x-3">
+      <td className="px-2 md:px-4 py-4 text-center align-middle min-w-[120px]">
+        <div className="flex justify-center items-center gap-2">
           <button
             onClick={() => onEdit(user)}
             className="p-2 text-amber-400 hover:text-amber-300 hover:bg-gray-700 rounded-full"
