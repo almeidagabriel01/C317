@@ -148,18 +148,9 @@ export const updateUser = async (userId, userData) => {
   }
 };
 
-export const updateUserStatus = async (userId, status) => {
+export const updateUserStatus = async (userId) => {
   try {
-    const apiData = {
-      Ativo: status === 'Ativo'
-    };
-
-    const response = await apiClient.patch(`/users/${userId}/status`, apiData, {
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-    
+    const response = await apiClient.put(`/users/toogle/Status?user_id=${userId}`);
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
