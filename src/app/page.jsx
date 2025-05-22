@@ -39,10 +39,14 @@ export default function Home() {
         <div className="text-center py-10 px-4">
           {loading ? (
             <p>Verificando autenticação...</p>
-          ) : isAuthenticated && user?.email ? (
-            <p className="text-lg text-green-400">Bem-vindo(a) de volta, {user.email}!</p>
+          ) : isAuthenticated && user ? (
+            <p className="text-lg text-green-400">
+              Bem-vindo(a) de volta, {user.userName || user.Email}!
+            </p>
           ) : !isAuthenticated ? (
-            <p className="text-lg text-amber-400">Faça <Link href="/login" className="underline hover:text-amber-300">login</Link> ou <Link href="/cadastro" className="underline hover:text-amber-300">cadastre-se</Link> para aproveitar mais.</p>
+            <p className="text-lg text-amber-400">
+              Faça <Link href="/login" className="underline hover:text-amber-300">login</Link> ou <Link href="/cadastro" className="underline hover:text-amber-300">cadastre-se</Link> para aproveitar mais.
+            </p>
           ) : null}
         </div>
       </main>

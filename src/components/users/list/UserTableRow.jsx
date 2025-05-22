@@ -61,7 +61,7 @@ const UserTableRow = ({ user, index, onEdit, onToggleStatus }) => {
           </button>
           <StatusToggle 
             isActive={user.status === 'Ativo'} 
-            onChange={(isActive) => onToggleStatus(user.id, isActive)}
+            onChange={(isActive) => onToggleStatus(user)}
           />
         </div>
       </td>

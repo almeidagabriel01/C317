@@ -1,9 +1,6 @@
 "use client";
-
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 
-// Componente de toggle para status
 const StatusToggle = ({ isActive, onChange, disabled = false }) => {
   const [active, setActive] = useState(isActive);
 
@@ -27,10 +24,8 @@ const StatusToggle = ({ isActive, onChange, disabled = false }) => {
       onClick={handleToggle}
     >
       <span className="sr-only">{active ? "Ativo" : "Inativo"}</span>
-      <motion.span
-        layout
-        transition={{ type: "spring", stiffness: 700, damping: 30 }}
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ${
+      <span
+        className={`inline-block h-4 w-4 rounded-full bg-white shadow-lg transition-transform duration-150 ${
           active ? "translate-x-6" : "translate-x-1"
         }`}
       />

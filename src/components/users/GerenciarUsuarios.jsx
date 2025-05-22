@@ -4,31 +4,22 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
+import { fetchUsers, updateUser, updateUserStatus } from "@/services/api";
 import Navbar from "../navbar/Navbar";
 import EditUserModal from "./modals/EditUserModal";
 import ConfirmationModal from "./modals/ConfirmationModal";
 import UserSearchBar from "./list/UserSearchBar";
 import UserTable from "./list/UserTable";
 
-// Sample user data
-const SAMPLE_USERS = [
-  { id: 1, name: "João Silva", email: "joao@example.com", phone: "(11) 98765-4321", role: "Comprador", status: "Ativo" },
-  { id: 2, name: "Maria Oliveira", email: "maria@example.com", phone: "(11) 91234-5678", role: "Comprador", status: "Ativo" },
-  { id: 3, name: "Pedro Santos", email: "pedro@example.com", phone: "(11) 99876-5432", role: "Comprador", status: "Inativo" },
-  { id: 4, name: "Ana Ferreira", email: "ana@example.com", phone: "(11) 95555-4444", role: "Comprador", status: "Ativo" },
-  { id: 5, name: "Carlos Costa", email: "carlos@example.com", phone: "(11) 96666-7777", role: "Organizador", status: "Ativo" },
-  { id: 6, name: "Luciana Mendes", email: "luciana@example.com", phone: "(11) 97777-8888", role: "Comprador", status: "Ativo" },
-  { id: 7, name: "Roberto Alves", email: "roberto@example.com", phone: "(11) 98888-9999", role: "Comprador", status: "Inativo" },
-  { id: 8, name: "Juliana Rocha", email: "juliana@example.com", phone: "(11) 99999-0000", role: "Comprador", status: "Ativo" },
-];
-
 export default function GerenciarUsuarios() {
-  const { user, role, isAuthenticated, logout, loading } = useAuth();
+  const { user, role, isAuthenticated, logout, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [users, setUsers] = useState(SAMPLE_USERS);
+  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [toggleUser, setToggleUser] = useState(null);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [error, setError] = useState(null);
   
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -36,19 +27,44 @@ export default function GerenciarUsuarios() {
   
   // Authentication check
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!loading && isAuthenticated && role !== 'Organizador') {
+    } else if (!authLoading && isAuthenticated && role !== 'Organizador') {
       router.push('/');
     }
-  }, [isAuthenticated, loading, router, role]);
+  }, [isAuthenticated, authLoading, router, role]);
+
+  // Load users from API
+  useEffect(() => {
+    const loadUsers = async () => {
+      if (!authLoading && isAuthenticated && role === 'Organizador') {
+        try {
+          setLoadingUsers(true);
+          setError(null);
+          const usersData = await fetchUsers();
+          setUsers(usersData);
+        } catch (err) {
+          console.error('Erro ao carregar usuários:', err);
+          setError(err.message);
+          toast.error(`Erro ao carregar usuários: ${err.message}`);
+        } finally {
+          setLoadingUsers(false);
+        }
+      }
+    };
+
+    loadUsers();
+  }, [authLoading, isAuthenticated, role]);
 
   // Filter users based on search term
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.phone.includes(searchTerm)
-  );
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      user.phone.includes(searchTerm)
+    );
+  });
 
   // Handle edit user
   const handleEditUser = (user) => {
@@ -57,48 +73,90 @@ export default function GerenciarUsuarios() {
   };
 
   // Handle user status toggle
-  const handleToggleStatus = (userId, isActive) => {
-    setUsers(prevUsers => 
-      prevUsers.map(u => 
-        u.id === userId 
-          ? { ...u, status: isActive ? 'Ativo' : 'Inativo' } 
-          : u
-      )
-    );
-    toast.success(`Status do usuário alterado com sucesso!`);
-  };
-
-  // Save user changes
-  const handleSaveUser = (updatedData) => {
-    setUsers(prevUsers => 
-      prevUsers.map(u => 
-        u.id === editingUser.id 
-          ? { ...u, ...updatedData } 
-          : u
-      )
-    );
-    toast.success('Usuário atualizado com sucesso!');
-  };
-
-  // Confirm toggle
-  const handleConfirmToggle = () => {
-    if (toggleUser) {
+  const handleToggleStatus = async (userId, isActive) => {
+    try {
+      await updateUserStatus(userId, isActive ? 'Ativo' : 'Inativo');
+      
       setUsers(prevUsers => 
         prevUsers.map(u => 
-          u.id === toggleUser.id 
-            ? { ...u, status: u.status === 'Ativo' ? 'Inativo' : 'Ativo' } 
+          u.id === userId 
+            ? { ...u, status: isActive ? 'Ativo' : 'Inativo' } 
             : u
         )
       );
-      toast.success(`Usuário ${toggleUser.status === 'Ativo' ? 'desativado' : 'ativado'} com sucesso!`);
+      toast.success(`Status do usuário alterado com sucesso!`);
+    } catch (err) {
+      console.error('Erro ao alterar status:', err);
+      toast.error(`Erro ao alterar status: ${err.message}`);
     }
   };
 
-  // Show loader during verification
-  if (loading || !isAuthenticated) {
+  // Save user changes
+  const handleSaveUser = async (updatedData) => {
+    try {
+      // Passa o ID do usuário e os dados atualizados
+      await updateUser(editingUser.id, updatedData);
+      
+      // Atualiza a lista local de usuários
+      setUsers(prevUsers => 
+        prevUsers.map(u => 
+          u.id === editingUser.id 
+            ? { ...u, name: updatedData.name, phone: updatedData.phone, role: updatedData.role } 
+            : u
+        )
+      );
+      toast.success('Usuário atualizado com sucesso!');
+    } catch (err) {
+      console.error('Erro ao atualizar usuário:', err);
+      toast.error(`Erro ao atualizar usuário: ${err.message}`);
+    }
+  };
+
+  // Handle toggle confirmation
+  const handleToggleConfirmation = (user) => {
+    setToggleUser(user);
+    setIsConfirmModalOpen(true);
+  };
+
+  // Confirm toggle
+  const handleConfirmToggle = async () => {
+    if (toggleUser) {
+      const newStatus = toggleUser.status === 'Ativo' ? 'Inativo' : 'Ativo';
+      await handleToggleStatus(toggleUser.id, newStatus === 'Ativo');
+    }
+  };
+
+  // Show loader during verification or loading users
+  if (authLoading || !isAuthenticated || loadingUsers) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <p className="text-white text-xl">Carregando...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+          <p className="text-white text-xl">
+            {authLoading ? "Verificando autenticação..." : "Carregando usuários..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !loadingUsers) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={logout} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-red-400 mb-4">Erro ao Carregar</h1>
+            <p className="text-gray-300 mb-6">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-amber-700 hover:bg-amber-600 text-white px-6 py-2 rounded-full transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </main>
       </div>
     );
   }
@@ -109,7 +167,9 @@ export default function GerenciarUsuarios() {
       
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <h1 className="text-3xl font-bold text-amber-400 mb-4 md:mb-0 font-serif">Gerenciar Usuários</h1>
+          <h1 className="text-3xl font-bold text-amber-400 mb-4 md:mb-0 font-serif">
+            Gerenciar Usuários ({users.length})
+          </h1>
           
           {/* Search bar component */}
           <UserSearchBar 
@@ -122,7 +182,7 @@ export default function GerenciarUsuarios() {
         <UserTable 
           users={filteredUsers} 
           onEditUser={handleEditUser} 
-          onToggleStatus={handleToggleStatus}
+          onToggleStatus={handleToggleConfirmation}
         />
       </main>
       

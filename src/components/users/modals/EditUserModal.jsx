@@ -7,8 +7,7 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
     name: "",
     email: "",
     phone: "",
-    role: "",
-    status: ""
+    role: ""
   });
 
   // Reseta o formulário quando o modal abre/fecha ou quando o usuário muda
@@ -19,8 +18,7 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        role: user.role,
-        status: user.status
+        role: user.role
       });
     }
   }, [isOpen, user]);
@@ -37,15 +35,15 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
       // Apenas DDD ou parte dele
       return maxNumbers.length === 0 ? '' : `(${maxNumbers}`;
     } else if (maxNumbers.length <= 7) {
-      // DDD + parte do número
-      return `(${maxNumbers.substring(0, 2)})${maxNumbers.substring(2)}`;
+      // DDD + parte do número com espaço após o parêntese
+      return `(${maxNumbers.substring(0, 2)}) ${maxNumbers.substring(2)}`;
     } else {
-      // Número completo com hífen
+      // Número completo com hífen e espaço após o parêntese
       const hasDDI = maxNumbers.length > 10;
       const baseIndex = 2; // Posição após o DDD
       const hyphenIndex = hasDDI ? 7 : 6; // Posição do hífen (5 ou 4 dígitos antes)
       
-      return `(${maxNumbers.substring(0, 2)})${maxNumbers.substring(baseIndex, hyphenIndex)}-${maxNumbers.substring(hyphenIndex)}`;
+      return `(${maxNumbers.substring(0, 2)}) ${maxNumbers.substring(baseIndex, hyphenIndex)}-${maxNumbers.substring(hyphenIndex)}`;
     }
   };
 
@@ -110,7 +108,7 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
         onClick={handleClose}
       >
         <motion.div
-          className="relative bg-[#1C2431] w-full max-w-md rounded-xl overflow-hidden shadow-2xl"
+          className="relative bg-[#1C2431] w-full max-w-xl rounded-xl overflow-hidden shadow-2xl"
           variants={contentVariants}
           onClick={(e) => e.stopPropagation()}
         >
@@ -141,9 +139,9 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
                     id="email"
                     name="email"
                     value={userData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans"
+                    readOnly
+                    disabled
+                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 cursor-not-allowed font-sans"
                   />
                 </div>
                 <div>
@@ -162,7 +160,7 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
                 </div>
                 <div>
                   <label htmlFor="role" className="block text-sm font-medium text-gray-300 mb-1 font-sans">
-                    Papel
+                    Função
                   </label>
                   <select
                     id="role"
@@ -174,22 +172,6 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
                   >
                     <option value="Comprador">Comprador</option>
                     <option value="Organizador">Organizador</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-1 font-sans">
-                    Status
-                  </label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={userData.status}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans"
-                  >
-                    <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
                   </select>
                 </div>
               </div>

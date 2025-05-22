@@ -103,20 +103,22 @@ export const AuthProvider = ({ children }) => {
     const toastId = toast.loading("Tentando fazer login...");
     try {
       const data = await loginUser(email, password);
-      const currentToken = data.access_token || data.acess_token;
+      const currentToken = data.access_token;
 
-      if (currentToken) {
-        // Usar o papel retornado da API
-        const userRole = data.role || 'Comprador';
-
-        const userData = { 
-          email: email,
-          role: userRole
+      if (currentToken && data.user) {
+        // Usar os dados completos do usuário retornados pela API
+        const userData = {
+          ID: data.user.ID,
+          userName: data.user.userName,
+          Email: data.user.Email,
+          role: data.user.role,
+          NumCel: data.user.NumCel,
+          Ativo: data.user.Ativo
         };
         
         setToken(currentToken);
         setUser(userData);
-        setRole(userRole);
+        setRole(userData.role);
         localStorage.setItem('authToken', currentToken);
         localStorage.setItem('authUser', JSON.stringify(userData));
 
@@ -128,13 +130,13 @@ export const AuthProvider = ({ children }) => {
         });
         
         // Redirecionar com base no papel do usuário
-        if (userRole === 'Organizador') {
+        if (userData.role === 'Organizador') {
           router.push('/dashboard');
         } else {
           router.push('/');
         }
       } else {
-        throw new Error('Token de acesso não recebido da API.');
+        throw new Error('Token de acesso ou dados do usuário não recebidos da API.');
       }
     } catch (error) {
       console.error("Erro no login:", error);

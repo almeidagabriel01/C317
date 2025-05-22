@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import UserTableRow from "./UserTableRow";
 
 const UserTable = ({ users, onEditUser, onToggleStatus }) => {
@@ -18,22 +18,30 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
               <th scope="col" className="px-6 py-4 text-center">Nome</th>
               <th scope="col" className="px-6 py-4 text-center">Email</th>
               <th scope="col" className="px-6 py-4 text-center">Telefone</th>
-              <th scope="col" className="px-6 py-4 text-center">Papel</th>
+              <th scope="col" className="px-6 py-4 text-center">Função</th>
               <th scope="col" className="px-6 py-4 text-center">Status</th>
               <th scope="col" className="px-6 py-4 text-center">Ações</th>
             </tr>
           </thead>
-          <tbody>
-            {users.map((user, index) => (
-              <UserTableRow 
-                key={user.id}
-                user={user}
-                index={index}
-                onEdit={onEditUser}
-                onToggleStatus={onToggleStatus}
-              />
-            ))}
-          </tbody>
+          <AnimatePresence mode="wait">
+            <motion.tbody
+              key={users.length}
+              initial={{ opacity: 0.8, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0.8, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+            >
+              {users.map((user, index) => (
+                <UserTableRow 
+                  key={user.id}
+                  user={user}
+                  index={index}
+                  onEdit={onEditUser}
+                  onToggleStatus={onToggleStatus}
+                />
+              ))}
+            </motion.tbody>
+          </AnimatePresence>
         </table>
       </div>
       
