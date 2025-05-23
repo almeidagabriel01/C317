@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import FormStepLayout from "../../step/FormStepLayout";
+import FormStepLayout from "../stepIndicator/FormStepLayout";
 
 export default function StructureSelector({ items, selectedStructure, setSelectedStructure, onNext, onBack, direction }) {
   // Função para formatar o preço em reais
@@ -12,15 +12,15 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
 
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { 
-        type: "spring", 
-        stiffness: 120, 
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 120,
         damping: 10,
         duration: 0.2
-      } 
+      }
     },
   };
 
@@ -44,29 +44,27 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
             <motion.div
               key={item.item.ID}
               variants={itemVariants}
-              className={`flex flex-col items-center cursor-pointer transition-all duration-300 transform ${
-                selectedStructure === item.item.ID 
-                  ? "scale-105" 
+              className={`flex flex-col items-center cursor-pointer transition-all duration-300 transform ${selectedStructure === item.item.ID
+                  ? "scale-105"
                   : "hover:scale-102"
-              }`}
+                }`}
               onClick={() => handleSelectStructure(item.item.ID)}
             >
-              <div className={`relative w-full aspect-video rounded-xl overflow-hidden border-4 transition-all duration-300 ${
-                selectedStructure === item.item.ID 
-                  ? "border-[#9D4815] shadow-lg shadow-[#9D4815]/20" 
+              <div className={`relative w-full aspect-video rounded-xl overflow-hidden border-4 transition-all duration-300 ${selectedStructure === item.item.ID
+                  ? "border-[#9D4815] shadow-lg shadow-[#9D4815]/20"
                   : "border-[#E0CEAA]/30 hover:border-[#E0CEAA]/60"
-              }`}>
+                }`}>
                 {item.imageURL ? (
                   <Image
                     src={item.imageURL}
                     alt={item.item.Descricao}
-                    layout="fill"
-                    objectFit="cover"
-                    className={`transition-all duration-300 ${
-                      selectedStructure === item.item.ID 
-                        ? "brightness-110" 
+                    fill
+                    style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    className={`transition-all duration-300 ${selectedStructure === item.item.ID
+                        ? "brightness-110"
                         : "brightness-90 hover:brightness-100"
-                    }`}
+                      }`}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-[#1C2431] text-[#E0CEAA]">
@@ -75,7 +73,7 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
                     </svg>
                   </div>
                 )}
-                
+
                 {selectedStructure === item.item.ID && (
                   <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#9D4815] flex items-center justify-center">
                     <motion.div
@@ -89,30 +87,28 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
                   </div>
                 )}
               </div>
-              
+
               <div className="mt-4 text-center">
-                <h3 className={`text-xl font-bold transition-colors duration-300 ${
-                  selectedStructure === item.item.ID 
-                    ? "text-[#E0CEAA]" 
+                <h3 className={`text-xl font-bold transition-colors duration-300 ${selectedStructure === item.item.ID
+                    ? "text-[#E0CEAA]"
                     : "text-white"
-                }`}>
+                  }`}>
                   {item.item.Descricao}
                 </h3>
-                <p className={`mt-1 text-lg font-semibold transition-colors duration-300 ${
-                  selectedStructure === item.item.ID 
-                    ? "text-[#9D4815]" 
+                <p className={`mt-1 text-lg font-semibold transition-colors duration-300 ${selectedStructure === item.item.ID
+                    ? "text-[#9D4815]"
                     : "text-[#E0CEAA]/70"
-                }`}>
+                  }`}>
                   {formatPrice(item.item.Preco)}
                 </p>
               </div>
             </motion.div>
           ))}
         </div>
-        
+
         {/* Resumo da estrutura selecionada */}
         {selectedStructure && (
-          <motion.div 
+          <motion.div
             className="mt-8 bg-[#1A222F] p-5 rounded-lg border border-[#E0CEAA]/20 w-full max-w-4xl"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

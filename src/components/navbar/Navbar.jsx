@@ -196,7 +196,7 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
               >
                 <div className="flex flex-col items-end mr-2">
                   <span className="text-sm text-amber-200 font-medium truncate max-w-[100px] sm:max-w-[120px] md:max-w-[150px]">
-                    {user.userName}
+                    {user?.userName}
                   </span>
                   <span className="text-xs text-amber-100/70">
                     {isOrganizer ? 'Organizador' : 'Minha conta'}
@@ -224,7 +224,6 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
                     animate="visible"
                     exit="hidden"
                   >
-                    {/* Only show profile link for regular users */}
                     {!isOrganizer && (
                       <motion.div variants={dropdownItemVariants}>
                         <Link
@@ -266,14 +265,14 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
             <Link
               href="/login"
               className="
-              flex items-center space-x-2 
-              border-2 border-light text-light 
-              bg-transparent px-3 py-1.5 
-              rounded-full shadow-md 
-              transition
-              hover:bg-amber-400 hover:text-primary
-              focus:bg-amber-400 focus:text-primary
-              active:bg-amber-500 active:text-primary"
+                flex items-center space-x-2 
+                border-2 border-light text-light 
+                bg-transparent px-3 py-1.5 
+                rounded-full shadow-md 
+                transition
+                hover:bg-amber-400 hover:text-primary
+                focus:bg-amber-400 focus:text-primary
+                active:bg-amber-500 active:text-primary"
             >
               <FiLogIn size={16} />
               <span className="font-medium">Login</span>

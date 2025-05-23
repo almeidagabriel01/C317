@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import FormStepLayout from "../../step/FormStepLayout";
+import FormStepLayout from "../stepIndicator/FormStepLayout";
 
 export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink, onNext, onBack, direction }) {
   const itemVariants = {
@@ -88,8 +88,9 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
                 <Image
                   src={item.imageURL}
                   alt={item.item.Descricao}
-                  layout="fill"
-                  objectFit="cover"
+                  fill
+                  style={{ objectFit: "cover" }}
+                  sizes="(max-width: 768px) 100vw, 400px"
                   className="rounded-lg"
                 />
               ) : (
