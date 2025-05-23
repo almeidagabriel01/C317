@@ -2,6 +2,31 @@
 
 import { motion } from "framer-motion";
 import TimeSelector from "../../input/TimeSelector";
+import { useState } from "react";
+
+// Função para validar data no formato yyyy-mm-dd
+function isValidDate(input) {
+  if (!input) return false;
+  const [year, month, day] = input.split('-').map(Number);
+  if (!year || !month || !day) return false;
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() + 1 === month &&
+    date.getDate() === day
+  );
+}
+
+// Valida hora (hh:mm)
+function isValidTime(input) {
+  if (!input) return false;
+  const [hh, mm] = input.split(':').map(Number);
+  return (
+    !isNaN(hh) && !isNaN(mm) &&
+    hh >= 0 && hh <= 23 &&
+    mm >= 0 && mm <= 59
+  );
+}
 
 export default function EventInfoForm({
   formData,
@@ -11,6 +36,9 @@ export default function EventInfoForm({
   isValid,
   direction
 }) {
+  const [dateTouched, setDateTouched] = useState(false);
+  const [timeTouched, setTimeTouched] = useState(false);
+
   const containerVariants = {
     hidden: (direction) => ({
       opacity: 0,
@@ -71,11 +99,23 @@ export default function EventInfoForm({
   const handleChange = (e) => {
     const { name, value } = e.target;
     onChange({ target: { name, value } });
+    if (name === "date") setDateTouched(true);
+    if (name === "startTime") setTimeTouched(true);
   };
 
   const handleDurationChange = (value) => {
     onChange({ target: { name: 'eventDuration', value } });
   };
+
+  const showDateError =
+    dateTouched &&
+    formData.date &&
+    !isValidDate(formData.date);
+
+  const showTimeError =
+    timeTouched &&
+    formData.startTime &&
+    !isValidTime(formData.startTime);
 
   return (
     <motion.div
@@ -136,16 +176,35 @@ export default function EventInfoForm({
                 />
               </motion.div>
 
-              <motion.div className="relative" variants={itemVariants}>
-                <label className="text-sm text-[#E0CEAA] mb-1 block">Data do Evento</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  className="bg-[#F7F6F3] text-black h-12 px-4 py-2 rounded-md w-full border-2 border-transparent focus:border-[#9D4815] transition-colors focus:outline-none"
-                  placeholder="Data do evento"
-                />
+              <motion.div className="relative flex gap-4" variants={itemVariants}>
+                <div className="flex-1">
+                  <label className="text-sm text-[#E0CEAA] mb-1 block">Data do Evento</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleChange}
+                    className={`bg-[#F7F6F3] text-black h-12 px-4 py-2 rounded-md w-full border-2 transition-colors focus:outline-none ${showDateError ? "border-red-500" : "border-transparent focus:border-[#9D4815]"}`}
+                    placeholder="Data do evento"
+                  />
+                  {showDateError && (
+                    <span className="block text-red-500 text-xs mt-1 ml-1">Data inválida.</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <label className="text-sm text-[#E0CEAA] mb-1 block">Hora de Início</label>
+                  <input
+                    type="time"
+                    name="startTime"
+                    value={formData.startTime || ""}
+                    onChange={handleChange}
+                    className={`bg-[#F7F6F3] text-black h-12 px-4 py-2 rounded-md w-full border-2 transition-colors focus:outline-none ${showTimeError ? "border-red-500" : "border-transparent focus:border-[#9D4815]"}`}
+                    placeholder="HH:MM"
+                  />
+                  {showTimeError && (
+                    <span className="block text-red-500 text-xs mt-1 ml-1">Hora inválida.</span>
+                  )}
+                </div>
               </motion.div>
 
               <motion.div className="relative" variants={itemVariants}>
@@ -202,14 +261,14 @@ export default function EventInfoForm({
               <motion.button
                 type="button"
                 onClick={onNext}
-                disabled={!isValid}
-                className={`rounded-full w-12 h-12 font-bold border-2 flex items-center justify-center transition-all duration-200 ${isValid
+                disabled={!isValid || showDateError || showTimeError}
+                className={`rounded-full w-12 h-12 font-bold border-2 flex items-center justify-center transition-all duration-200 ${isValid && !showDateError && !showTimeError
                   ? "border-[#E0CEAA] text-[#E0CEAA]"
                   : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
                   }`}
-                variants={isValid ? buttonVariants : {}}
-                whileHover={isValid ? "hover" : undefined}
-                whileTap={isValid ? "tap" : undefined}
+                variants={isValid && !showDateError && !showTimeError ? buttonVariants : {}}
+                whileHover={isValid && !showDateError && !showTimeError ? "hover" : undefined}
+                whileTap={isValid && !showDateError && !showTimeError ? "tap" : undefined}
               >
                 <span className="text-xl">→</span>
               </motion.button>

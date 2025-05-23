@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import FormStepLayout from "../../step/FormStepLayout";
+import FormStepLayout from "../stepIndicator/FormStepLayout";
 
 export default function ShotsSelector({ items, shotQuantities, setShotQuantity, onNext, onBack, direction }) {
   // Função para atualizar a quantidade de um shot
@@ -18,15 +18,15 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
 
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { 
-        type: "spring", 
-        stiffness: 120, 
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 120,
         damping: 10,
         duration: 0.2
-      } 
+      }
     },
   };
 
@@ -43,24 +43,24 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 md:px-0 mt-4">
         {items.map((item) => {
           const quantity = shotQuantities[item.item.ID] || 0;
-          
+
           return (
             <motion.div
               key={item.item.ID}
               variants={itemVariants}
-              className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 ${
-                quantity > 0 
-                  ? "border-[#9D4815] bg-[#FFF8E7]/5 shadow-md" 
+              className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 ${quantity > 0
+                  ? "border-[#9D4815] bg-[#FFF8E7]/5 shadow-md"
                   : "border-gray-700/40 hover:border-gray-600/60"
-              }`}
+                }`}
             >
               <div className="relative w-16 h-16 min-w-[64px] rounded-lg overflow-hidden border-2 border-[#E0CEAA] shadow-md">
                 {item.imageURL ? (
                   <Image
                     src={item.imageURL}
                     alt={item.item.Descricao}
-                    layout="fill"
-                    objectFit="cover"
+                    fill
+                    style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 100vw, 400px"
                     className="rounded-lg"
                   />
                 ) : (
@@ -71,37 +71,35 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
                   </div>
                 )}
               </div>
-              
+
               <div className="flex-1">
                 <div className="font-bold text-[#E0CEAA] text-sm md:text-base">{item.item.Descricao}</div>
                 <div className="text-sm text-[#9D4815] font-semibold mt-1">{formatPrice(item.item.Preco)} / unidade</div>
               </div>
-              
+
               <div className="flex items-center bg-[#1A222F] rounded-full border border-[#E0CEAA]/30 overflow-hidden">
                 <motion.button
                   type="button"
                   onClick={() => updateQuantity(item.item.ID, quantity - 1)}
-                  className={`w-8 h-8 flex items-center justify-center text-[#E0CEAA] hover:bg-[#9D4815]/20 ${
-                    quantity === 0 ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  className={`w-8 h-8 flex items-center justify-center text-[#E0CEAA] hover:bg-[#9D4815]/20 ${quantity === 0 ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   disabled={quantity === 0}
                   whileTap={quantity > 0 ? { scale: 0.9 } : {}}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </motion.button>
-                
-                <div 
-                  className={`w-10 h-8 flex items-center justify-center font-semibold border-l border-r transition-colors duration-300 ${
-                    quantity > 0 
-                      ? "text-[#E0CEAA] border-[#E0CEAA]/30" 
+
+                <div
+                  className={`w-10 h-8 flex items-center justify-center font-semibold border-l border-r transition-colors duration-300 ${quantity > 0
+                      ? "text-[#E0CEAA] border-[#E0CEAA]/30"
                       : "text-gray-400 border-gray-700/40"
-                  }`}
+                    }`}
                 >
                   {quantity}
                 </div>
-                
+
                 <motion.button
                   type="button"
                   onClick={() => updateQuantity(item.item.ID, quantity + 1)}
@@ -109,7 +107,7 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
                   whileTap={{ scale: 0.9 }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </motion.button>
               </div>
@@ -117,10 +115,10 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
           );
         })}
       </div>
-      
+
       {/* Total calculado */}
       {Object.keys(shotQuantities).length > 0 && (
-        <motion.div 
+        <motion.div
           className="mt-8 bg-[#1A222F] p-5 rounded-lg border border-[#E0CEAA]/20"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
