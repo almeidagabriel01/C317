@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
 
-export default function StaffSelector({ items, staffQuantities, setStaffQuantity, onNext, onBack, direction }) {
+export default function StaffSelector({ items, staffQuantities, setStaffQuantity, onNext, onBack, direction, isValid }) {
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 0) return;
     setStaffQuantity(id, newQuantity);
@@ -22,6 +22,25 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
     },
   };
 
+  // Se não há itens ainda, mostrar um indicador de carregamento
+  if (items.length === 0) {
+    return (
+      <FormStepLayout
+        stepKey="step7"
+        direction={direction}
+        title="BARTENDERS & STAFF"
+        subtitle="SELECIONE A EQUIPE PARA O SEU EVENTO"
+        onBack={onBack}
+        onNext={onNext}
+        isValid={typeof isValid === "boolean" ? isValid : true}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="text-[#E0CEAA] text-lg">Carregando as opções de equipe...</div>
+        </div>
+      </FormStepLayout>
+    );
+  }
+
   return (
     <FormStepLayout
       stepKey="step7"
@@ -30,7 +49,7 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
       subtitle="SELECIONE A EQUIPE PARA O SEU EVENTO"
       onBack={onBack}
       onNext={onNext}
-      isValid={true}
+      isValid={typeof isValid === "boolean" ? isValid : true}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-2 md:px-0 mt-4">
         {items.map((item) => {
@@ -41,8 +60,8 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
               key={item.item.ID}
               variants={itemVariants}
               className={`flex flex-col border rounded-xl overflow-hidden transition-all duration-300 ${quantity > 0
-                  ? "border-[#9D4815] shadow-lg bg-[#FFF8E7]/5"
-                  : "border-gray-700/40 hover:border-gray-600/60"
+                ? "border-[#9D4815] shadow-lg bg-[#FFF8E7]/5"
+                : "border-gray-700/40 hover:border-gray-600/60"
                 }`}
             >
               {/* imagem com altura reduzida */}
@@ -55,8 +74,8 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
                     style={{ objectFit: "cover" }}
                     sizes="(max-width: 768px) 100vw, 400px"
                     className={`transition-all duration-300 ${quantity > 0
-                        ? "brightness-110"
-                        : "brightness-90 hover:brightness-100"
+                      ? "brightness-110"
+                      : "brightness-90 hover:brightness-100"
                       }`}
                   />
                 ) : (

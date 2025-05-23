@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
 
-export default function StructureSelector({ items, selectedStructure, setSelectedStructure, onNext, onBack, direction }) {
+export default function StructureSelector({ items, selectedStructure, setSelectedStructure, onNext, onBack, direction, isValid }) {
   // Função para formatar o preço em reais
   const formatPrice = (price) => {
     return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -28,6 +28,25 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
     setSelectedStructure(id);
   };
 
+  // Se não há itens ainda, mostrar um indicador de carregamento
+  if (items.length === 0) {
+    return (
+      <FormStepLayout
+        stepKey="step6"
+        direction={direction}
+        title="ESTRUTURA"
+        subtitle="SELECIONE A ESTRUTURA DESEJADA PARA O SEU EVENTO"
+        onBack={onBack}
+        onNext={onNext}
+        isValid={typeof isValid === "boolean" ? isValid : true}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="text-[#E0CEAA] text-lg">Carregando as opções de estrutura...</div>
+        </div>
+      </FormStepLayout>
+    );
+  }
+
   return (
     <FormStepLayout
       stepKey="step6"
@@ -36,7 +55,7 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
       subtitle="SELECIONE A ESTRUTURA DESEJADA PARA O SEU EVENTO"
       onBack={onBack}
       onNext={onNext}
-      isValid={true}
+      isValid={typeof isValid === "boolean" ? isValid : true}
     >
       <div className="flex flex-col items-center px-2 md:px-0 mt-4 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">

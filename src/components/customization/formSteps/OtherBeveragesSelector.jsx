@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
 
-export default function OtherBeveragesSelector({ items = [], beverageQuantities, setBeverageQuantity, onNext, onBack, direction }) {
+export default function OtherBeveragesSelector({ items = [], beverageQuantities, setBeverageQuantity, onNext, onBack, direction, isValid }) {
   // Função para atualizar a quantidade de uma bebida
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 0) return;
@@ -40,7 +40,7 @@ export default function OtherBeveragesSelector({ items = [], beverageQuantities,
         subtitle="INFORME A QUANTIDADE DE CADA BEBIDA ADICIONAL DESEJADA"
         onBack={onBack}
         onNext={onNext}
-        isValid={true}
+        isValid={typeof isValid === "boolean" ? isValid : true}
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-[#E0CEAA] text-lg">Carregando as opções de outras bebidas...</div>
@@ -57,7 +57,7 @@ export default function OtherBeveragesSelector({ items = [], beverageQuantities,
       subtitle="INFORME A QUANTIDADE DE CADA BEBIDA ADICIONAL DESEJADA"
       onBack={onBack}
       onNext={onNext}
-      isValid={true}
+      isValid={typeof isValid === "boolean" ? isValid : true}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 md:px-0 mt-4">
         {items.map((item) => {

@@ -137,7 +137,7 @@ export function useEventCustomizationFlow(STEPS, toast) {
       toast && toast.error("Preencha este passo antes de avançar!");
       return;
     }
-    if (currentStep < STEPS.length - 1) {
+    if (currentStep < STEPS.length) {
       setDirection(1);
       animateStepChange(currentStep, currentStep + 1);
     }
