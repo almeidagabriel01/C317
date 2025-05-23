@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
 
-export default function ShotsSelector({ items, shotQuantities, setShotQuantity, onNext, onBack, direction }) {
+export default function ShotsSelector({ items, shotQuantities, setShotQuantity, onNext, onBack, direction, isValid }) {
   // Função para atualizar a quantidade de um shot
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 0) return;
@@ -30,6 +30,25 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
     },
   };
 
+  // Se não há itens ainda, mostrar um indicador de carregamento
+  if (items.length === 0) {
+    return (
+      <FormStepLayout
+        stepKey="step5"
+        direction={direction}
+        title="SHOTS"
+        subtitle="INFORME A QUANTIDADE DE CADA SHOT DESEJADO"
+        onBack={onBack}
+        onNext={onNext}
+        isValid={typeof isValid === "boolean" ? isValid : true}
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="text-[#E0CEAA] text-lg">Carregando as opções de shots...</div>
+        </div>
+      </FormStepLayout>
+    );
+  }
+
   return (
     <FormStepLayout
       stepKey="step5"
@@ -38,7 +57,7 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
       subtitle="INFORME A QUANTIDADE DE CADA SHOT DESEJADO"
       onBack={onBack}
       onNext={onNext}
-      isValid={true}
+      isValid={typeof isValid === "boolean" ? isValid : true}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2 md:px-0 mt-4">
         {items.map((item) => {

@@ -6,8 +6,10 @@ import { useAuth } from "@/context/AuthContext";
 import OrcamentoResumo from "../OrcamentoResumo";
 import { createPedido } from "@/services/api";
 import { toast } from "react-toastify";
+import { motion } from "framer-motion";
+import { containerVariants } from "@/components/customization/stepIndicator/FormStepLayout";
 
-export default function OrcamentoStep({ resumo, onBack }) {
+export default function OrcamentoStep({ resumo, onBack, direction }) {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -69,7 +71,14 @@ export default function OrcamentoStep({ resumo, onBack }) {
   };
 
   return (
-    <div className="bg-[#101820] flex justify-center py-8 px-4">
+    <motion.div
+      className="bg-[#101820] flex justify-center py-8 px-4"
+      custom={direction}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+    >
       <div className="w-full max-w-3xl bg-[#1C2431] rounded-lg shadow-lg flex flex-col max-h-[75vh] overflow-hidden">
         {/* Cabeçalho */}
         <div className="px-6 py-4 bg-[#1A222F] border-b border-gray-700">
@@ -103,6 +112,6 @@ export default function OrcamentoStep({ resumo, onBack }) {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -139,6 +139,7 @@ export default function StepRenderer({
           resumo={getResumo()}
           onBack={actions.handleBack}
           key="step8"
+          direction={direction}
         />
       );
     default:

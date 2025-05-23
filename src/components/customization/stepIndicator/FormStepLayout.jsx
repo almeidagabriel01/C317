@@ -78,7 +78,7 @@ export default function FormStepLayout({
               <button
                 type="button"
                 onClick={onBack}
-                className="rounded-full w-10 h-10 sm:w-12 sm:h-12 bg-transparent font-bold border-2 border-[#E0CEAA] text-[#E0CEAA] flex items-center justify-center"
+                className="rounded-full w-10 h-10 sm:w-12 sm:h-12 bg-transparent font-bold border-2 border-[#E0CEAA] text-[#E0CEAA] flex items-center justify-center transition-all duration-200 hover:bg-[#9D4815] hover:text-white"
               >
                 <span className="text-lg">←</span>
               </button>
@@ -86,7 +86,9 @@ export default function FormStepLayout({
                 type="button"
                 onClick={onNext}
                 disabled={!isValid}
-                className={`rounded-full w-10 h-10 sm:w-12 sm:h-12 font-bold border-2 flex items-center justify-center transition-all duration-200 ${isValid ? "border-[#E0CEAA] text-[#E0CEAA]" : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
+                className={`rounded-full w-10 h-10 sm:w-12 sm:h-12 font-bold border-2 flex items-center justify-center transition-all duration-200 ${isValid
+                    ? "border-[#E0CEAA] text-[#E0CEAA] hover:bg-[#9D4815] hover:text-white"
+                    : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
                   }`}
               >
                 <span className="text-lg">→</span>

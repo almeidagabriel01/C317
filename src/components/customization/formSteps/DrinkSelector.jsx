@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
 
-export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink, onNext, onBack, direction }) {
+export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink, onNext, onBack, direction, isValid }) {
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: {
@@ -37,7 +37,7 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
         subtitle="SELECIONE OS DRINKS ESPECIAIS PARA O SEU EVENTO"
         onBack={onBack}
         onNext={onNext}
-        isValid={true}
+        isValid={typeof isValid === "boolean" ? isValid : true}
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-[#E0CEAA] text-lg">Carregando as opções de bebidas...</div>
@@ -54,7 +54,7 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
       subtitle="SELECIONE OS DRINKS ESPECIAIS PARA O SEU EVENTO"
       onBack={onBack}
       onNext={onNext}
-      isValid={true}
+      isValid={typeof isValid === "boolean" ? isValid : true}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 px-2 md:px-0 mt-4">
         {items.map((item) => (
