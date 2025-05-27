@@ -16,7 +16,6 @@ export default function OrcamentoResumo({ resumo, backendPrice = NaN }) {
         <Info label="Evento" value={resumo.tipoEvento} />
         <Info label="Nome" value={resumo.nome} />
         <Info label="Data" value={resumo.data} />
-        <Info label="Endereço" value={resumo.eventAddress} />
         <Info label="Convidados" value={resumo.numConvidados} />
         <Info label="Horário" value={`${resumo.horarioInicio} – ${resumo.horarioFim}`} />
       </div>

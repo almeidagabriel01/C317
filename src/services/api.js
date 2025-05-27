@@ -305,9 +305,37 @@ export const calculateOrderPrice = async (itens) => {
   }
 };
 
+// Função para criar pedido customizado (sem campo de endereço)
 export const createPedido = async (payload) => {
   try {
+    // Remove o campo eventAddress se existir no payload
+    if (payload.pedido && payload.pedido.eventAddress) {
+      delete payload.pedido.eventAddress;
+    }
+    
     const response = await apiClient.post('/pedido/create/', payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Função para buscar itens de um pacote pronto
+export const fetchPackageItems = async (packageId) => {
+  try {
+    const response = await apiClient.get('/pedido/packages/all', {
+      params: { id: packageId }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Função para criar pedido a partir de pacote pronto
+export const createPackageOrder = async (payload) => {
+  try {
+    const response = await apiClient.post('/pedido/update/packages/', payload);
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));

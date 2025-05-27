@@ -38,8 +38,8 @@ export default function EventCustomizationPage() {
 
   function getResumo() {
     const { selectedEventType, formData, selectedDrinks, selectedNonAlcoholicDrinks, beverageQuantities, shotQuantities, selectedStructure, staffQuantities, categorizedItems, items } = flow;
+
     const calcularHorarioFim = () => {
-      const start = "18:00";
       const [h, m] = formData.eventDuration.split(":").map(Number);
       let total = Number(h) * 60 + Number(m);
       let nh = 18 + Math.floor(total / 60);
@@ -47,6 +47,7 @@ export default function EventCustomizationPage() {
       nh = nh >= 24 ? nh - 24 : nh;
       return `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`;
     };
+
     const calcularValorTotal = () => {
       let total = 0;
       total += categorizedItems.alcoolicos
@@ -67,11 +68,12 @@ export default function EventCustomizationPage() {
       }
       return total;
     };
+
     return {
       tipoEvento: selectedEventType,
       nome: formData.name,
       data: formatDateToDDMMYYYY(formData.date),
-      eventAddress: formData.eventAddress,
+      // Removido eventAddress
       numConvidados: formData.guestCount,
       horarioInicio: formData.startTime,
       horarioFim: calcularHorarioFim(),

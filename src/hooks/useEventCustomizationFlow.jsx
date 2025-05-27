@@ -54,8 +54,7 @@ export function useEventCustomizationFlow(STEPS, toast) {
     date: saved.formData?.date ?? "",
     startTime: saved.formData?.startTime ?? "",
     guestCount: saved.formData?.guestCount ?? "",
-    eventDuration: saved.formData?.eventDuration ?? "",
-    eventAddress: saved.formData?.eventAddress ?? ""
+    eventDuration: saved.formData?.eventDuration ?? ""
   });
   const [selectedDrinks, setSelectedDrinks] = useState(saved.selectedDrinks ?? []);
   const [selectedNonAlcoholicDrinks, setSelectedNonAlcoholicDrinks] = useState(saved.selectedNonAlcoholicDrinks ?? []);
@@ -115,15 +114,9 @@ export function useEventCustomizationFlow(STEPS, toast) {
       setBackendPrice(NaN);
       return NaN;
     }
-
-    console.log("Enviando para cálculo de preço:", itens);
-
     setCalculatingPrice(true);
     try {
       const price = await calculateOrderPrice(itens);
-      console.log("Preço retornado pelo backend:", price);
-
-      // Verificar se o preço é válido
       const validPrice = typeof price === 'number' && !isNaN(price) ? price : NaN;
       setBackendPrice(validPrice);
       return validPrice;
@@ -141,17 +134,18 @@ export function useEventCustomizationFlow(STEPS, toast) {
 
   // Função de validação do formulário
   function isFormValid() {
-    const { name, date, startTime, guestCount, eventDuration, eventAddress } = formData;
+    const { name, date, startTime, guestCount, eventDuration } = formData;
     const dateOk = date && /^\d{4}-\d{2}-\d{2}$/.test(date);
     const timeOk = startTime && /^\d{2}:\d{2}$/.test(startTime);
+    // Permite que a duração seja vazia ou "00:00" inicialmente, mas valida se preenchida
+    const durationOk = eventDuration && /^\d{2}:\d{2}$/.test(eventDuration) && eventDuration !== "00:00";
+
     return (
       name.trim() !== "" &&
       dateOk &&
       timeOk &&
       guestCount.trim() !== "" &&
-      eventDuration.trim() !== "" &&
-      eventDuration !== "00:00" &&
-      eventAddress.trim() !== ""
+      durationOk
     );
   }
 
@@ -220,8 +214,6 @@ export function useEventCustomizationFlow(STEPS, toast) {
         .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
       ...(selectedStructure ? [{ ID: selectedStructure, quantidade: 1 }] : []),
     ];
-
-    console.log("Itens gerados:", itemsList);
     return itemsList;
   };
 
@@ -233,13 +225,10 @@ export function useEventCustomizationFlow(STEPS, toast) {
       }
       return;
     }
-
-    // Se estamos no step 7 (staff) indo para o step 8 (orçamento), calcular preço
     if (currentStep === 7) {
       const itens = generateOrderItems();
       calculateBackendPrice(itens);
     }
-
     if (currentStep < STEPS.length) {
       setDirection(1);
       animateStepChange(currentStep, currentStep + 1);
@@ -257,7 +246,6 @@ export function useEventCustomizationFlow(STEPS, toast) {
   // Função para lidar com seleção de evento
   const handleEventSelection = (type) => {
     setSelectedEventType(type);
-
     setDirection(1);
     animateStepChange(currentStep, currentStep + 1);
   };
@@ -280,10 +268,8 @@ export function useEventCustomizationFlow(STEPS, toast) {
   // Funções para definir quantidades
   const setBeverageQty = (id, q) =>
     setBeverageQuantities((prev) => ({ ...prev, [id]: q }));
-
   const setShotQty = (id, q) =>
     setShotQuantities((prev) => ({ ...prev, [id]: q }));
-
   const setStaffQty = (id, q) =>
     setStaffQuantities((prev) => ({ ...prev, [id]: q }));
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import TimeSelector from "../../input/TimeSelector";
 import { useState } from "react";
 
 // Função para validar data no formato yyyy-mm-dd
@@ -101,10 +100,6 @@ export default function EventInfoForm({
     onChange({ target: { name, value } });
     if (name === "date") setDateTouched(true);
     if (name === "startTime") setTimeTouched(true);
-  };
-
-  const handleDurationChange = (value) => {
-    onChange({ target: { name: 'eventDuration', value } });
   };
 
   const showDateError =
@@ -208,18 +203,6 @@ export default function EventInfoForm({
               </motion.div>
 
               <motion.div className="relative" variants={itemVariants}>
-                <label className="text-sm text-[#E0CEAA] mb-1 block">Endereço do Evento</label>
-                <input
-                  type="text"
-                  name="eventAddress"
-                  placeholder="Ex: Rua das Flores, 123"
-                  value={formData.eventAddress}
-                  onChange={handleChange}
-                  className="bg-[#F7F6F3] text-black h-12 px-4 py-2 rounded-md w-full border-2 border-transparent focus:border-[#9D4815] transition-colors focus:outline-none"
-                />
-              </motion.div>
-
-              <motion.div className="relative" variants={itemVariants}>
                 <label className="text-sm text-[#E0CEAA] mb-1 block">Número de Convidados</label>
                 <input
                   type="number"
@@ -233,9 +216,13 @@ export default function EventInfoForm({
 
               <motion.div className="relative" variants={itemVariants}>
                 <label className="text-sm text-[#E0CEAA] mb-1 block">Duração do Evento</label>
-                <TimeSelector
-                  value={formData.eventDuration}
-                  onChange={handleDurationChange}
+                <input
+                  type="time"
+                  name="eventDuration"
+                  value={formData.eventDuration || ""}
+                  onChange={handleChange}
+                  className="bg-[#F7F6F3] text-black h-12 px-4 py-2 rounded-md w-full border-2 border-transparent focus:border-[#9D4815] transition-colors focus:outline-none"
+                  placeholder="Duração (HH:MM)"
                 />
               </motion.div>
             </form>
