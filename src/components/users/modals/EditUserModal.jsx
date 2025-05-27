@@ -170,8 +170,8 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
                     required
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans"
                   >
-                    <option value="Comprador">Comprador</option>
-                    <option value="Organizador">Organizador</option>
+                    <option value="cliente">cliente</option>
+                    <option value="Administrador">Administrador</option>
                   </select>
                 </div>
               </div>

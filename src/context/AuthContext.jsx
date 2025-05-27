@@ -32,10 +32,10 @@ export const AuthProvider = ({ children }) => {
   [],);
 
   const isRestrictedRoute = useCallback(path => {
-    if (role === 'Comprador') {
+    if (role === 'Cliente') {
       return BUYER_RESTRICTED.some(r => path === r || path.startsWith(`${r}/`));
     }
-    if (role === 'Organizador') {
+    if (role === 'Administrador') {
       return ORGANIZER_RESTRICTED.some(r => path === r || path.startsWith(`${r}/`));
     }
     return false;
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
 
     if (isRestrictedRoute(pathname) && token) {
-      router.push(role === 'Organizador' ? '/dashboard' : '/');
+      router.push(role === 'Administrador' ? '/dashboard' : '/');
       return;
     }
     if (isPrivateRoute(pathname) && !token) {
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
         autoClose: 2000
       });
 
-      router.push(me.role === 'Organizador' ? '/dashboard' : '/');
+      router.push(me.role === 'Administrador' ? '/dashboard' : '/');
     } catch (err) {
       toast.update(idToast, {
         render: `Erro: ${err.message}`,

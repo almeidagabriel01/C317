@@ -15,7 +15,7 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
   const pathname = usePathname();
   
   // Determine user role for conditional rendering
-  const isOrganizer = user?.role === 'Organizador';
+  const isOrganizer = user?.role === 'Administrador';
 
   // Animation variants for mobile menu
   const mobileMenuVariants = {
@@ -199,7 +199,7 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
                     {user?.userName}
                   </span>
                   <span className="text-xs text-amber-100/70">
-                    {isOrganizer ? 'Organizador' : 'Minha conta'}
+                    {isOrganizer ? 'Administrador' : 'Minha conta'}
                   </span>
                 </div>
 

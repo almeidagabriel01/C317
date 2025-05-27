@@ -22,10 +22,10 @@ const getErrorMessage = (error) => {
 };
 
 const normalizeRole = (role) => {
-  if (!role) return 'Comprador';
+  if (!role) return 'Cliente';
   const lower = role.toLowerCase();
-  if (lower === 'organizador') return 'Organizador';
-  if (lower === 'comprador') return 'Comprador';
+  if (lower === 'Administrador') return 'Administrador';
+  if (lower === 'cliente') return 'Cliente';
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 };
 

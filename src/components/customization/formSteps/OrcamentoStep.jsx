@@ -14,7 +14,7 @@ export default function OrcamentoStep({ resumo, onBack, direction }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const compradorId = user?.ID;
+  const clienteId = user?.ID;
 
   function formatDateToYYYYMMDD(dateStr) {
     if (!dateStr) return "";
@@ -36,7 +36,7 @@ export default function OrcamentoStep({ resumo, onBack, direction }) {
   }
 
   const handleContratar = async () => {
-    if (!compradorId) {
+    if (!clienteId) {
       toast.error("Não foi possível identificar o usuário.");
       return;
     }
@@ -45,7 +45,7 @@ export default function OrcamentoStep({ resumo, onBack, direction }) {
 
     const payload = {
       pedido: {
-        ID_Comprador: compradorId,
+        ID_Comprador: clienteId,
         Num_Convidado: Number(resumo.numConvidados),
         Nome_Evento: resumo.nome,
         Horario_Inicio: resumo.horarioInicio,

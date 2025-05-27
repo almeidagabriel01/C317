@@ -29,7 +29,7 @@ const UserTableRow = ({ user, index, onEdit, onToggleStatus }) => {
       <td className="px-6 py-4 text-center">
         <div className="flex items-center justify-center">
           <FiTag className="mr-2" />
-          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${user.role === 'Organizador'
+          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${user.role === 'Administrador'
             ? 'bg-purple-900 text-purple-300'
             : 'bg-blue-900 text-blue-300'
             }`}>

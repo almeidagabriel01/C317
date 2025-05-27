@@ -29,7 +29,7 @@ export default function GerenciarUsuarios() {
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!authLoading && isAuthenticated && role !== 'Organizador') {
+    } else if (!authLoading && isAuthenticated && role !== 'Administrador') {
       router.push('/');
     }
   }, [isAuthenticated, authLoading, router, role]);
@@ -37,7 +37,7 @@ export default function GerenciarUsuarios() {
   // Load users from API
   useEffect(() => {
     const loadUsers = async () => {
-      if (!authLoading && isAuthenticated && role === 'Organizador') {
+      if (!authLoading && isAuthenticated && role === 'Administrador') {
         try {
           setLoadingUsers(true);
           setError(null);
