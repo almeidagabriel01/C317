@@ -4,7 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import Navbar from "@/components/navbar/Navbar";
 import CustomStepper from "@/components/customization/stepIndicator/CustomStepper";
 import StepRenderer from "./stepIndicator/StepRenderer";
-import { useEventCustomizationFlow } from "./useEventCustomizationFlow";
+import { useEventCustomizationFlow } from "../../hooks/useEventCustomizationFlow";
 import { toast } from "react-toastify";
 import { formatDateToDDMMYYYY } from "@/utils/formatUtils";
 

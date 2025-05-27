@@ -5,7 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FiPlus } from "react-icons/fi";
-import { fetchItemsForAdmin, createItem, updateItem, toggleItemStatus } from "@/services/api";
+import { createItem, updateItem, toggleItemStatus } from "@/services/api";
+import { useItems } from "@/hooks/useAdminData";
 import Navbar from "../navbar/Navbar";
 import CreateItemModal from "./modals/CreateItemModal";
 import EditItemModal from "./modals/EditItemModal";
@@ -16,12 +17,20 @@ import ItemTable from "./list/ItemTable";
 export default function GerenciarItens() {
   const { user, role, isAuthenticated, logout, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [items, setItems] = useState([]);
+
+  // Usar o hook personalizado para dados de itens
+  const {
+    data: items,
+    loading: loadingItems,
+    error,
+    refreshData,
+    updateItemInCache,
+    addItemToCache
+  } = useItems();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [editingItem, setEditingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
-  const [loadingItems, setLoadingItems] = useState(true);
-  const [error, setError] = useState(null);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -37,28 +46,6 @@ export default function GerenciarItens() {
     }
   }, [isAuthenticated, authLoading, router, role]);
 
-  // Load items from API
-  useEffect(() => {
-    const loadItems = async () => {
-      if (!authLoading && isAuthenticated && role === 'Administrador') {
-        try {
-          setLoadingItems(true);
-          setError(null);
-          const itemsData = await fetchItemsForAdmin();
-          setItems(itemsData);
-        } catch (err) {
-          console.error('Erro ao carregar itens:', err);
-          setError(err.message);
-          toast.error(`Erro ao carregar itens: ${err.message}`);
-        } finally {
-          setLoadingItems(false);
-        }
-      }
-    };
-
-    loadItems();
-  }, [authLoading, isAuthenticated, role]);
-
   // Filter items based on search term
   const filteredItems = items.filter(
     (item) =>
@@ -70,12 +57,11 @@ export default function GerenciarItens() {
   // Handle create new item
   const handleCreateItem = async (newItemData) => {
     try {
-      await createItem(newItemData);
+      const createdItem = await createItem(newItemData);
       toast.success("Item criado com sucesso!");
-      
-      // Recarregar lista de itens
-      const itemsData = await fetchItemsForAdmin();
-      setItems(itemsData);
+
+      // Refresh data to get the complete item data with ID
+      await refreshData();
     } catch (err) {
       console.error('Erro ao criar item:', err);
       toast.error(`Erro ao criar item: ${err.message}`);
@@ -100,9 +86,8 @@ export default function GerenciarItens() {
       await toggleItemStatus(itemId);
       toast.success(`Status do item alterado com sucesso!`);
 
-      // Recarregar lista de itens
-      const itemsData = await fetchItemsForAdmin();
-      setItems(itemsData);
+      // Refresh data to get updated status
+      await refreshData();
     } catch (err) {
       console.error('Erro ao alterar status:', err);
       toast.error(`Erro ao alterar status: ${err.message}`);
@@ -115,9 +100,18 @@ export default function GerenciarItens() {
       await updateItem(editingItem.id, updatedData);
       toast.success("Item atualizado com sucesso!");
 
-      // Recarregar lista de itens
-      const itemsData = await fetchItemsForAdmin();
-      setItems(itemsData);
+      // Atualiza o item no cache local (apenas se não há nova imagem)
+      if (!updatedData.image || typeof updatedData.image === 'string') {
+        updateItemInCache(editingItem.id, {
+          name: updatedData.name,
+          description: updatedData.description,
+          category: updatedData.category,
+          price: updatedData.price
+        });
+      } else {
+        // Se há nova imagem, refresh completo para obter nova URL
+        await refreshData();
+      }
     } catch (err) {
       console.error('Erro ao atualizar item:', err);
       toast.error(`Erro ao atualizar item: ${err.message}`);
@@ -148,7 +142,7 @@ export default function GerenciarItens() {
             <h1 className="text-3xl font-bold text-red-400 mb-4">Erro ao Carregar</h1>
             <p className="text-gray-300 mb-6">{error}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={refreshData}
               className="bg-amber-700 hover:bg-amber-600 text-white px-6 py-2 rounded-full transition-colors"
             >
               Tentar Novamente

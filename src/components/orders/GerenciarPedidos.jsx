@@ -4,276 +4,161 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { FiList, FiCheckCircle } from "react-icons/fi";
-import Navbar from "@/components//navbar/Navbar";
-import OrderDetailsModal from "@/components/orders/modals/OrderDetailsModal";
-import ConfirmationModal from "@/components/orders/modals/ConfirmationModal";
+import { FiChevronDown } from "react-icons/fi";
+import { updateOrderStatus } from "@/services/api";
+import { useOrders } from "@/hooks/useAdminData";
+import Navbar from "@/components/navbar/Navbar";
 import OrderSearchBar from "@/components/orders/list/OrderSearchBar";
 import OrderTable from "@/components/orders/list/OrderTable";
+import OrderDetailsModal from "@/components/orders/modals/OrderDetailsModal";
 
-// Sample order data
-const SAMPLE_ORDERS = [
-  {
-    id: 1001,
-    customerName: "João Silva",
-    customerEmail: "joao@example.com",
-    customerPhone: "(11) 98765-4321",
-    date: "2024-05-20T10:30:00",
-    convidados: 80,
-    total: 27327.25,
-    status: "Pendente",
-    deliveryAddress: "Rua das Flores, 123 - São Paulo, SP",
-    items: [
-      { name: "Moscow mule", price: 2000, total: 2000 },
-      { name: "Sex on the beach", price: 2000, total: 2000 },
-      { name: "Mojito", price: 2000, total: 2000 },
-      { name: "Bellini", price: 2000, total: 2000 },
-      { name: "Blood Mary", price: 2000, total: 2000 },
-      { name: "Gin Tônica", price: 2000, total: 2000 },
-      { name: "Caipirinhas", price: 2000, total: 2000 },
-      { name: "Pink Lemonade", price: 1250.75, total: 1250.75 },
-      { name: "Sonho brilhante", price: 1250.75, total: 1250.75 },
-      { name: "Pina descolada", price: 1250.75, total: 1250.75 },
-      { name: "Cerveja", quantity: 500, price: 12.15, total: 6075 },
-      { name: "Espumante Salton Brut", quantity: 5, price: 40, total: 200 },
-      { name: "Mini beer", quantity: 3, price: 600, total: 1800 },
-      { name: "Bartender", quantity: 5, price: 300, total: 1500 },
-    ],
-    notes: "Pedido para casamento.",
-  },
-  {
-    id: 1002,
-    customerName: "Maria Oliveira",
-    customerEmail: "maria@example.com",
-    customerPhone: "(11) 91234-5678",
-    date: "2024-05-19T14:15:00",
-    convidados: 80,
-    total: 27327.25,
-    status: "Pendente",
-    deliveryAddress: "Av. Paulista, 456 - São Paulo, SP",
-    item: [
-      { name: "Moscow mule", price: 2000, total: 2000 },
-      { name: "Sex on the beach", price: 2000, total: 2000 },
-      { name: "Mojito", price: 2000, total: 2000 },
-      { name: "Bellini", price: 2000, total: 2000 },
-      { name: "Blood Mary", price: 2000, total: 2000 },
-      { name: "Gin Tônica", price: 2000, total: 2000 },
-      { name: "Caipirinhas", price: 2000, total: 2000 },
-      { name: "Pink Lemonade", price: 1250.75, total: 1250.75 },
-      { name: "Sonho brilhante", price: 1250.75, total: 1250.75 },
-      { name: "Pina descolada", price: 1250.75, total: 1250.75 },
-      { name: "Cerveja", quantity: 500, price: 12.15, total: 6075 },
-      { name: "Espumante Salton Brut", quantity: 5, price: 40, total: 200 },
-      { name: "Mini beer", quantity: 3, price: 600, total: 1800 },
-      { name: "Bartender", quantity: 5, price: 300, total: 1500 },
-    ],
-    notes: "Pedido para aniversário.",
-  },
-  {
-    id: 1003,
-    customerName: "Pedro Santos",
-    customerEmail: "pedro@example.com",
-    customerPhone: "(11) 99876-5432",
-    date: "2024-05-18T09:45:00",
-    convidados: 80,
-    total: 27327.25,
-    status: "Revisado",
-    deliveryAddress: "Rua do Comércio, 789 - São Paulo, SP",
-    items: [
-      { name: "Moscow mule", price: 2000, total: 2000 },
-      { name: "Sex on the beach", price: 2000, total: 2000 },
-      { name: "Mojito", price: 2000, total: 2000 },
-      { name: "Bellini", price: 2000, total: 2000 },
-      { name: "Blood Mary", price: 2000, total: 2000 },
-      { name: "Gin Tônica", price: 2000, total: 2000 },
-      { name: "Caipirinhas", price: 2000, total: 2000 },
-      { name: "Pink Lemonade", price: 1250.75, total: 1250.75 },
-      { name: "Sonho brilhante", price: 1250.75, total: 1250.75 },
-      { name: "Pina descolada", price: 1250.75, total: 1250.75 },
-      { name: "Cerveja", quantity: 500, price: 12.15, total: 6075 },
-      { name: "Espumante Salton Brut", quantity: 5, price: 40, total: 200 },
-      { name: "Mini beer", quantity: 3, price: 600, total: 1800 },
-      { name: "Bartender", quantity: 5, price: 300, total: 1500 },
-    ],
-    notes: "Pedido para casamento",
-  },
-  {
-    id: 1004,
-    customerName: "Ana Ferreira",
-    customerEmail: "ana@example.com",
-    customerPhone: "(11) 95555-4444",
-    date: "2024-05-17T16:20:00",
-    convidados: 80,
-    total: 27327.25,
-    status: "Pendente",
-    deliveryAddress: "Praça da República, 321 - São Paulo, SP",
-    items: [
-      { name: "Moscow mule", price: 2000, total: 2000 },
-      { name: "Sex on the beach", price: 2000, total: 2000 },
-      { name: "Mojito", price: 2000, total: 2000 },
-      { name: "Bellini", price: 2000, total: 2000 },
-      { name: "Blood Mary", price: 2000, total: 2000 },
-      { name: "Gin Tônica", price: 2000, total: 2000 },
-      { name: "Caipirinhas", price: 2000, total: 2000 },
-      { name: "Pink Lemonade", price: 1250.75, total: 1250.75 },
-      { name: "Sonho brilhante", price: 1250.75, total: 1250.75 },
-      { name: "Pina descolada", price: 1250.75, total: 1250.75 },
-      { name: "Cerveja", quantity: 500, price: 12.15, total: 6075 },
-      { name: "Espumante Salton Brut", quantity: 5, price: 40, total: 200 },
-      { name: "Mini beer", quantity: 3, price: 600, total: 1800 },
-      { name: "Bartender", quantity: 5, price: 300, total: 1500 },
-    ],
-    notes: "Pedido para casamento",
-  },
-  {
-    id: 1005,
-    customerName: "Carlos Costa",
-    customerEmail: "carlos@example.com",
-    customerPhone: "(11) 96666-7777",
-    date: "2024-05-16T11:10:00",
-    convidados: 80,
-    total: 27327.25,
-    status: "Revisado",
-    deliveryAddress: "Rua Augusta, 654 - São Paulo, SP",
-    items: [
-      { name: "Moscow mule", price: 2000, total: 2000 },
-      { name: "Sex on the beach", price: 2000, total: 2000 },
-      { name: "Mojito", price: 2000, total: 2000 },
-      { name: "Bellini", price: 2000, total: 2000 },
-      { name: "Blood Mary", price: 2000, total: 2000 },
-      { name: "Gin Tônica", price: 2000, total: 2000 },
-      { name: "Caipirinhas", price: 2000, total: 2000 },
-      { name: "Pink Lemonade", price: 1250.75, total: 1250.75 },
-      { name: "Sonho brilhante", price: 1250.75, total: 1250.75 },
-      { name: "Pina descolada", price: 1250.75, total: 1250.75 },
-      { name: "Cerveja", quantity: 500, price: 12.15, total: 6075 },
-      { name: "Espumante Salton Brut", quantity: 5, price: 40, total: 200 },
-      { name: "Mini beer", quantity: 3, price: 600, total: 1800 },
-      { name: "Bartender", quantity: 5, price: 300, total: 1500 },
-    ],
-    notes: "Pedido para evento corporativo.",
-  },
-  {
-    id: 1006,
-    customerName: "Luciana Mendes",
-    customerEmail: "luciana@example.com",
-    customerPhone: "(11) 97777-8888",
-    date: "2024-05-15T13:30:00",
-    convidados: 80,
-    total: 27327.25,
-    status: "Pendente",
-    deliveryAddress: "Rua Oscar Freire, 987 - São Paulo, SP",
-    items: [
-      { name: "Moscow mule", price: 2000, total: 2000 },
-      { name: "Sex on the beach", price: 2000, total: 2000 },
-      { name: "Mojito", price: 2000, total: 2000 },
-      { name: "Bellini", price: 2000, total: 2000 },
-      { name: "Blood Mary", price: 2000, total: 2000 },
-      { name: "Gin Tônica", price: 2000, total: 2000 },
-      { name: "Caipirinhas", price: 2000, total: 2000 },
-      { name: "Pink Lemonade", price: 1250.75, total: 1250.75 },
-      { name: "Sonho brilhante", price: 1250.75, total: 1250.75 },
-      { name: "Pina descolada", price: 1250.75, total: 1250.75 },
-      { name: "Cerveja", quantity: 500, price: 12.15, total: 6075 },
-      { name: "Espumante Salton Brut", quantity: 5, price: 40, total: 200 },
-      { name: "Mini beer", quantity: 3, price: 600, total: 1800 },
-      { name: "Bartender", quantity: 5, price: 300, total: 1500 },
-    ],
-    notes: "Pedido para evento corporativo.",
-  },
+const STATUS_FILTER = [
+  "Pendente",
+  "Aprovado",
+  "Pagamento",
+  "Concluido",
+  "Reprovado",
 ];
 
 export default function GerenciarPedidos() {
-  const { user, role, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
-  const [orders, setOrders] = useState(SAMPLE_ORDERS);
+
+  // Usar o hook personalizado para dados de pedidos
+  const { 
+    data: allOrders, 
+    loading: loadingOrders, 
+    error, 
+    refreshData, 
+    updateOrderInCache 
+  } = useOrders();
+
+  // Filtrar pedidos para remover "Orcado" (Admin não vê)
+  const orders = allOrders.filter((o) => o.status !== "Orcado");
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [showReviewedOrders, setShowReviewedOrders] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("Todos");
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [orderToReview, setOrderToReview] = useState(null);
-
-  // Modal states
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  // Authentication check
+  /* ───────────────────────────── filtro local ──────────────────────────── */
+  const filteredOrders = orders.filter((o) => {
+    const s = searchTerm.toLowerCase();
+    const matchSearch =
+      o.nomeEvento?.toLowerCase().includes(s) || String(o.id).includes(s);
 
-  // Filter orders based on search term and view type
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.toString().includes(searchTerm);
+    const matchStatus =
+      selectedStatus === "Todos" ||
+      o.status?.toLowerCase() === selectedStatus.toLowerCase();
 
-    const matchesStatus = showReviewedOrders
-      ? order.status === "Revisado"
-      : order.status === "Pendente";
-
-    return matchesSearch && matchesStatus;
+    return matchSearch && matchStatus;
   });
 
-  // Handle view order details
-  const handleViewOrder = (order) => {
-    setSelectedOrder(order);
-    setIsDetailsModalOpen(true);
-  };
+  /* ─────────────────────── atualiza status via API ──────────────────────── */
+  const updateOrderStatusHandler = async (id, newStatus) => {
+    if (isUpdatingStatus) return; // Previne cliques múltiplos
 
-  // Handle mark as reviewed
-  const handleMarkAsReviewed = (order) => {
-    setOrderToReview(order);
-    setIsConfirmModalOpen(true);
-  };
+    setIsUpdatingStatus(true);
+    const toastId = toast.loading(`Alterando status para ${newStatus}...`);
 
-  // Confirm review action
-  const handleConfirmReview = () => {
-    if (orderToReview) {
-      setOrders((prevOrders) =>
-        prevOrders.map((o) =>
-          o.id === orderToReview.id ? { ...o, status: "Revisado" } : o
-        )
-      );
-      toast.success(`Pedido #${orderToReview.id} marcado como revisado!`);
+    try {
+      // Chama a API para atualizar o status
+      await updateOrderStatus(id, newStatus);
+
+      // Atualiza o pedido no cache local
+      updateOrderInCache(id, { status: newStatus });
+
+      toast.update(toastId, {
+        render: `Pedido #${id} alterado para ${newStatus} com sucesso!`,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000
+      });
+
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.update(toastId, {
+        render: `Erro ao alterar status: ${error.message}`,
+        type: "error",
+        isLoading: false,
+        autoClose: 5000
+      });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
+
+  // Show loader during loading
+  if (loadingOrders) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+          <p className="text-white text-xl">Carregando pedidos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !loadingOrders) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={logout} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-red-400 mb-4">Erro ao Carregar</h1>
+            <p className="text-gray-300 mb-6">{error}</p>
+            <button
+              onClick={refreshData}
+              className="bg-amber-700 hover:bg-amber-600 text-white px-6 py-2 rounded-full transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={logout} />
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 lg:ml-12 lg:mr-12">
+        {/* Cabeçalho & filtros */}
+        <div className="flex flex-col items-center lg:flex-row justify-between gap-6 mb-8 lg:ml-12 lg:mr-12">
           <h1 className="text-3xl font-bold text-amber-400 font-serif">
-            Gerenciar Pedidos
+            Gerenciar Pedidos ({filteredOrders.length})
           </h1>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-center w-full lg:w-auto">
-            {/* Toggle buttons */}
-            <div className="flex bg-gray-800 rounded-lg p-1 w-full sm:w-auto">
-              <button
-                onClick={() => setShowReviewedOrders(false)}
-                className={`flex items-center px-4 py-2 rounded-md transition-colors font-sans font-medium ${
-                  !showReviewedOrders
-                    ? "bg-amber-600 text-white"
-                    : "text-gray-300 hover:text-white"
-                }`}
+          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto items-center">
+            {/* dropdown de status melhorado */}
+            <div className="relative w-full sm:w-52">
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full bg-gray-700 text-gray-200 font-sans px-4 py-2 pr-10 rounded-lg border border-none
+                         hover:bg-gray-600 hover:border-gray-500 appearance-none cursor-pointer
+                         transition-all duration-200 ease-in-out
+                         focus:outline-none"
               >
-                <FiList className="mr-2" />
-                Pendentes
-              </button>
-              <button
-                onClick={() => setShowReviewedOrders(true)}
-                className={`flex items-center px-4 py-2 rounded-md transition-colors font-sans font-medium ${
-                  showReviewedOrders
-                    ? "bg-amber-600 text-white"
-                    : "text-gray-300 hover:text-white"
-                }`}
-              >
-                <FiCheckCircle className="mr-2" />
-                Revisados
-              </button>
+                <option value="Todos" className="bg-gray-700 text-gray-200 py-2">
+                  Todos os status
+                </option>
+                {STATUS_FILTER.map((s) => (
+                  <option key={s} value={s} className="bg-gray-700 text-gray-200 py-2">
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <FiChevronDown className="w-4 h-4 text-gray-400" />
+              </div>
             </div>
 
-            {/* Search bar component */}
+            {/* busca */}
             <OrderSearchBar
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
@@ -281,29 +166,23 @@ export default function GerenciarPedidos() {
           </div>
         </div>
 
-        {/* Order table component */}
+        {/* tabela */}
         <OrderTable
           orders={filteredOrders}
-          onViewOrder={handleViewOrder}
-          onMarkAsReviewed={handleMarkAsReviewed}
-          showReviewedOrders={showReviewedOrders}
+          onViewOrder={(o) => {
+            setSelectedOrder(o);
+            setIsDetailsModalOpen(true);
+          }}
+          onUpdateStatus={updateOrderStatusHandler}
+          isUpdatingStatus={isUpdatingStatus}
         />
       </main>
 
-      {/* Modals */}
+      {/* modal */}
       <OrderDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         order={selectedOrder}
-      />
-
-      <ConfirmationModal
-        isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={handleConfirmReview}
-        title="Marcar como Revisado"
-        message={`Tem certeza que deseja marcar o pedido #${orderToReview?.id} como revisado?`}
-        actionText="Marcar como Revisado"
       />
     </div>
   );

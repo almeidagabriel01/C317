@@ -39,24 +39,24 @@ export const formatDateTime = (dateString) => {
  */
 export const formatDateToYYYYMMDD = (dateStr) => {
   if (!dateStr) return '';
-  
+
   // Aceita "dd/mm/yyyy"
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
     const [day, month, year] = dateStr.split('/');
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   }
-  
+
   // Aceita "yyyy-mm-dd" (já está no formato correto)
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     return dateStr;
   }
-  
+
   // Aceita "yyyy/mm/dd"
   if (/^\d{4}\/\d{2}\/\d{2}$/.test(dateStr)) {
     const [year, month, day] = dateStr.split('/');
     return `${year}-${month}-${day}`;
   }
-  
+
   return dateStr;
 };
 
@@ -67,18 +67,18 @@ export const formatDateToYYYYMMDD = (dateStr) => {
  */
 export const formatDateToDDMMYYYY = (dateStr) => {
   if (!dateStr) return '';
-  
+
   // Aceita "yyyy-mm-dd"
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     const [year, month, day] = dateStr.split('-');
     return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
   }
-  
+
   // Se já está em DD/MM/AAAA, retorna como está
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
     return dateStr;
   }
-  
+
   return dateStr;
 };
 
@@ -90,7 +90,7 @@ export const formatDateToDDMMYYYY = (dateStr) => {
 export const formatCurrency = (value) => {
   const numValue = typeof value === 'string' ? parseFloat(value) : value;
   if (typeof numValue !== 'number' || isNaN(numValue)) return 'R$ 0,00';
-  
+
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
@@ -105,12 +105,12 @@ export const formatCurrency = (value) => {
 export const formatPhone = (phone) => {
   if (!phone) return '';
   const digits = phone.replace(/\D/g, '');
-  
+
   if (digits.length === 11) {
-    return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   }
   if (digits.length === 10) {
-    return `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   }
   return phone;
 };
@@ -123,12 +123,12 @@ export const formatPhone = (phone) => {
 export const formatPhoneInput = (value) => {
   // Remove todos os caracteres não numéricos
   let digits = value.replace(/\D/g, '');
-  
+
   // Não permite mais que 11 dígitos (máximo para celular no Brasil)
   if (digits.length > 11) digits = digits.slice(0, 11);
-  
+
   if (digits.length === 0) return '';
-  
+
   // Formata progressivamente conforme digita
   if (digits.length <= 2) {
     // Apenas DDD ou parte dele
@@ -141,7 +141,7 @@ export const formatPhoneInput = (value) => {
     const hasDDI = digits.length > 10;
     const baseIndex = 2; // Posição após o DDD
     const hyphenIndex = hasDDI ? 7 : 6; // Posição do hífen (5 ou 4 dígitos antes)
-    
+
     return `(${digits.substring(0, 2)}) ${digits.substring(baseIndex, hyphenIndex)}-${digits.substring(hyphenIndex)}`;
   }
 };
@@ -162,25 +162,22 @@ export const unformatPhone = (phone) => {
  * @returns {string} Classe CSS para a cor
  */
 export const getStatusColor = (status) => {
-  if (!status) return 'bg-gray-500';
-  
+  if (!status) return "bg-gray-500";
   switch (status.toLowerCase()) {
-    case 'orcado':
-      return 'bg-blue-500';
-    case 'aprovado':
-      return 'bg-green-500';
-    case 'cancelado':
-      return 'bg-red-500';
-    case 'em andamento':
-      return 'bg-yellow-500';
-    case 'finalizado':
-      return 'bg-purple-500';
-    case 'pendente':
-      return 'bg-orange-500';
-    case 'revisado':
-      return 'bg-green-500';
+    case "pendente":
+      return "bg-orange-500";
+    case "aprovado":
+      return "bg-green-500";
+    case "pagamento":
+      return "bg-lime-600";
+    case "concluido":
+      return "bg-purple-500";
+    case "reprovado":
+      return "bg-red-500";
+    case "orcado":
+      return "bg-blue-500";
     default:
-      return 'bg-gray-500';
+      return "bg-gray-500";
   }
 };
 
@@ -191,7 +188,7 @@ export const getStatusColor = (status) => {
  */
 export const getUserStatusColor = (status) => {
   if (!status) return 'bg-gray-900 text-gray-300';
-  
+
   switch (status.toLowerCase()) {
     case 'ativo':
       return 'bg-green-900 text-green-300';

@@ -15,20 +15,14 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
         <table className="min-w-[600px] md:min-w-0 w-full text-sm">
           <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
             <tr>
-              <th className="px-2 md:px-4 py-4 text-center">Nome</th>
-              <th className="px-2 md:px-4 py-4 text-center">Email</th>
-              <th className="px-2 md:px-4 py-4 text-center">Telefone</th>
-              <th className="px-2 md:px-4 py-4 text-center">Função</th>
-              <th className="px-2 md:px-4 py-4 text-center">Status</th>
-              <th className="px-2 md:px-4 py-4 text-center min-w-[120px]">Ações</th>
+              <th className="px-6 py-4 text-center align-middle">Nome</th>
+              <th className="px-6 py-4 text-center align-middle">Email</th>
+              <th className="px-6 py-4 text-center align-middle">Telefone</th>
+              <th className="px-6 py-4 text-center align-middle">Função</th>
+              <th className="px-6 py-4 text-center align-middle">Status</th>
+              <th className="px-6 py-4 text-center align-middle min-w-[120px]">Ações</th>
             </tr>
           </thead>
-        </table>
-      </div>
-
-      {/* Container separado para o body com scroll customizado */}
-      <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
-        <table className="min-w-[600px] md:min-w-0 w-full text-sm">
           <AnimatePresence mode="wait">
             <motion.tbody
               key={users.length}

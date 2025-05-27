@@ -126,6 +126,21 @@ export const fetchUserOrders = async () => {
   }
 };
 
+// Função para atualizar o status de um pedido
+export const updateOrderStatus = async (orderId, status) => {
+  try {
+    const response = await apiClient.put('/pedido/set/status', null, {
+      params: {
+        id: orderId,
+        Status: status
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
 export const fetchUsers = async () => {
   try {
     const response = await apiClient.get('/users/all');
