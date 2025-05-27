@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchItems } from "@/services/api";
+import { fetchItems, calculateOrderPrice } from "@/services/api";
 
 export function groupItemsByCategory(items) {
   const cat = {
@@ -48,6 +48,8 @@ export function useEventCustomizationFlow(STEPS, toast) {
     shots: [], estrutura: [], funcionarios: []
   });
   const [loading, setLoading] = useState(true);
+  const [backendPrice, setBackendPrice] = useState(NaN);
+  const [calculatingPrice, setCalculatingPrice] = useState(false);
 
   useEffect(() => {
     const toSave = {
@@ -77,6 +79,34 @@ export function useEventCustomizationFlow(STEPS, toast) {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  // Função para calcular o preço no backend
+  const calculateBackendPrice = async (itens) => {
+    if (!itens || itens.length === 0) {
+      setBackendPrice(NaN);
+      return NaN;
+    }
+    
+    console.log("Enviando para cálculo de preço:", itens);
+    
+    setCalculatingPrice(true);
+    try {
+      const price = await calculateOrderPrice(itens);
+      console.log("Preço retornado pelo backend:", price);
+      
+      // Verificar se o preço é válido
+      const validPrice = typeof price === 'number' && !isNaN(price) ? price : NaN;
+      setBackendPrice(validPrice);
+      return validPrice;
+    } catch (error) {
+      console.error("Erro ao calcular preço:", error);
+      toast && toast.error("Erro ao calcular preço do pedido");
+      setBackendPrice(NaN);
+      return NaN;
+    } finally {
+      setCalculatingPrice(false);
+    }
+  };
 
   function isFormValid() {
     const { name, date, startTime, guestCount, eventDuration, eventAddress } = formData;
@@ -132,11 +162,45 @@ export function useEventCustomizationFlow(STEPS, toast) {
     animateNext();
   }
 
+  // Função para gerar os itens do pedido
+  const generateOrderItems = () => {
+    const itemsList = [
+      ...selectedDrinks.map((d) => {
+        const f = items.find((i) => i.item.Descricao === d);
+        return f && { ID: f.item.ID, quantidade: 1 };
+      }).filter(Boolean),
+      ...selectedNonAlcoholicDrinks.map((d) => {
+        const f = items.find((i) => i.item.Descricao === d);
+        return f && { ID: f.item.ID, quantidade: 1 };
+      }).filter(Boolean),
+      ...Object.entries(beverageQuantities)
+        .filter(([, q]) => q > 0)
+        .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
+      ...Object.entries(shotQuantities)
+        .filter(([, q]) => q > 0)
+        .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
+      ...Object.entries(staffQuantities)
+        .filter(([, q]) => q > 0)
+        .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
+      ...(selectedStructure ? [{ ID: selectedStructure, quantidade: 1 }] : []),
+    ];
+    
+    console.log("Itens gerados:", itemsList);
+    return itemsList;
+  };
+
   function handleNext() {
     if (!isStepValid(currentStep)) {
       toast && toast.error("Preencha este passo antes de avançar!");
       return;
     }
+    
+    // Se estamos no step 7 (staff) indo para o step 8 (orçamento), calcular preço
+    if (currentStep === 7) {
+      const itens = generateOrderItems();
+      calculateBackendPrice(itens);
+    }
+    
     if (currentStep < STEPS.length) {
       setDirection(1);
       animateStepChange(currentStep, currentStep + 1);
@@ -186,5 +250,6 @@ export function useEventCustomizationFlow(STEPS, toast) {
     selectedStructure, setSelectedStructure,
     staffQuantities, setStaffQty,
     items, categorizedItems, loading, handleEventSelection,
+    backendPrice, calculatingPrice, generateOrderItems,
   };
 }

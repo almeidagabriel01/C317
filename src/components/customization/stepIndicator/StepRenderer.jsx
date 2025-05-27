@@ -25,6 +25,8 @@ export default function StepRenderer({
   items,
   loading,
   getResumo,
+  backendPrice,
+  calculatingPrice,
 }) {
   if (loading && step > 1) {
     return (
@@ -140,6 +142,7 @@ export default function StepRenderer({
           onBack={actions.handleBack}
           key="step8"
           direction={direction}
+          backendPrice={backendPrice}
         />
       );
     default:

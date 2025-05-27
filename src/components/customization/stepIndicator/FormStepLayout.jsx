@@ -14,14 +14,14 @@ export const containerVariants = {
       type: "spring",
       stiffness: 80,
       damping: 18,
-      duration: 0.4 // ajuste aqui!
+      duration: 0.4
     }
   },
   exit: (direction) => ({
     opacity: 0,
     x: direction < 0 ? 100 : -100,
     transition: {
-      duration: 0.4 // agora igual ao enter!
+      duration: 0.4
     }
   }),
 };
@@ -35,6 +35,8 @@ export default function FormStepLayout({
   onBack,
   onNext,
   isValid = true,
+  nextButtonText = "→",
+  isLastStep = false,
 }) {
   return (
     <motion.div
@@ -82,17 +84,32 @@ export default function FormStepLayout({
               >
                 <span className="text-lg">←</span>
               </button>
-              <button
-                type="button"
-                onClick={onNext}
-                disabled={!isValid}
-                className={`rounded-full w-10 h-10 sm:w-12 sm:h-12 font-bold border-2 flex items-center justify-center transition-all duration-200 ${isValid
-                    ? "border-[#E0CEAA] text-[#E0CEAA] hover:bg-[#9D4815] hover:text-white"
-                    : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
-                  }`}
-              >
-                <span className="text-lg">→</span>
-              </button>
+              
+              {isLastStep ? (
+                <button
+                  type="button"
+                  onClick={onNext}
+                  disabled={!isValid}
+                  className={`px-6 py-2 font-bold border-2 rounded-full flex items-center justify-center transition-all duration-200 ${isValid
+                      ? "border-[#E0CEAA] text-[#E0CEAA] hover:bg-[#9D4815] hover:text-white"
+                      : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
+                    }`}
+                >
+                  <span className="text-sm font-semibold">{nextButtonText}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onNext}
+                  disabled={!isValid}
+                  className={`rounded-full w-10 h-10 sm:w-12 sm:h-12 font-bold border-2 flex items-center justify-center transition-all duration-200 ${isValid
+                      ? "border-[#E0CEAA] text-[#E0CEAA] hover:bg-[#9D4815] hover:text-white"
+                      : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
+                    }`}
+                >
+                  <span className="text-lg">{nextButtonText}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

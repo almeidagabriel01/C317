@@ -6,7 +6,6 @@ import ItemTableRow from "./ItemTableRow";
 const ItemTable = ({
   items,
   onEditItem,
-  onDeleteItem,
   onViewItem,
   onToggleStatus,
 }) => {
@@ -17,7 +16,8 @@ const ItemTable = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="overflow-x-auto">
+      {/* Container unificado para header e body */}
+      <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
         <table className="w-full text-sm">
           <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
             <tr>
@@ -41,12 +41,6 @@ const ItemTable = ({
               </th>
             </tr>
           </thead>
-        </table>
-      </div>
-
-      {/* Container separado para o body com scroll customizado */}
-      <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
-        <table className="w-full text-sm">
           <tbody>
             {items.map((item, index) => (
               <ItemTableRow
@@ -54,7 +48,6 @@ const ItemTable = ({
                 item={item}
                 index={index}
                 onEdit={onEditItem}
-                onDelete={onDeleteItem}
                 onView={onViewItem}
                 onToggleStatus={onToggleStatus}
               />

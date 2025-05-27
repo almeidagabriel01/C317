@@ -1,11 +1,9 @@
 "use client";
 
 import {
-  FiPackage,
   FiTag,
   FiActivity,
   FiEdit2,
-  FiTrash2,
   FiEye,
 } from "react-icons/fi";
 import StatusToggle from "../toggle/StatusToggle";
@@ -14,26 +12,45 @@ const ItemTableRow = ({
   item,
   index,
   onEdit,
-  onDelete,
   onView,
   onToggleStatus,
 }) => {
   const getCategoryColor = (category) => {
-    switch (category) {
-      case "Alcoólico":
+    const normalizedCategory = category?.toLowerCase();
+    switch (normalizedCategory) {
+      case "alcoolicos":
         return "bg-red-900 text-red-300";
-      case "Não Alcoólico":
+      case "nao_alcoolicos":
         return "bg-green-900 text-green-300";
-      case "Shots":
+      case "shots":
         return "bg-purple-900 text-purple-300";
-      case "Outras Bebidas":
+      case "outras_bebidas":
         return "bg-blue-900 text-blue-300";
-      case "Estruturas":
+      case "estrutura":
         return "bg-yellow-900 text-yellow-300";
-      case "Funcionário":
+      case "funcionarios":
         return "bg-gray-900 text-gray-300";
       default:
         return "bg-gray-900 text-gray-300";
+    }
+  };
+
+  const formatCategoryName = (category) => {
+    switch (category?.toLowerCase()) {
+      case "alcoolicos":
+        return "Alcoólicos";
+      case "nao_alcoolicos":
+        return "Não Alcoólicos";
+      case "shots":
+        return "Shots";
+      case "outras_bebidas":
+        return "Outras Bebidas";
+      case "estrutura":
+        return "Estruturas";
+      case "funcionarios":
+        return "Funcionários";
+      default:
+        return category || "Não definido";
     }
   };
 
@@ -61,14 +78,14 @@ const ItemTableRow = ({
               item.category
             )}`}
           >
-            {item.category}
+            {formatCategoryName(item.category)}
           </span>
         </div>
       </td>
       <td className="px-6 py-4 text-center">
         <div className="flex items-center justify-center">
           <span className="text-green-400 font-medium">
-            R$ {item.price ? item.price.toFixed(2) : "0,00"}
+            R$ {item.price ? (item.price / 100).toFixed(2).replace('.', ',') : "0,00"}
           </span>
         </div>
       </td>
@@ -101,13 +118,6 @@ const ItemTableRow = ({
             title="Editar item"
           >
             <FiEdit2 size={18} />
-          </button>
-          <button
-            onClick={() => onDelete(item)}
-            className="p-2 text-red-400 hover:text-red-300 hover:bg-gray-700 rounded-full"
-            title="Excluir item"
-          >
-            <FiTrash2 size={18} />
           </button>
           <StatusToggle
             isActive={item.status === "Ativo"}

@@ -5,131 +5,81 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FiPlus } from "react-icons/fi";
-import Navbar from "../../components/navbar/Navbar";
-import CreateItemModal from "../../components/items/modals/CreateItemModal";
-import EditItemModal from "../../components/items/modals/EditItemModal";
-import ViewItemModal from "../../components/items/modals/ViewItemModal";
-import ConfirmationModal from "../../components/items/modals/ConfirmationModal";
-import ItemSearchBar from "../../components/items/list/ItemSearchBar";
-import ItemTable from "../../components/items/list/ItemTable";
-
-// Sample item data
-const SAMPLE_ITEMS = [
-  {
-    id: 1,
-    name: "Cerveja Heineken",
-    description: "Cerveja premium holandesa com sabor único e refrescante",
-    category: "Alcoólico",
-    price: 8.5,
-    status: "Ativo",
-    image:
-      "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&h=400&fit=crop",
-  },
-  {
-    id: 2,
-    name: "Refrigerante Coca-Cola",
-    description: "Refrigerante clássico para refrescar qualquer momento",
-    category: "Não Alcoólico",
-    price: 8.5,
-    status: "Ativo",
-    image:
-      "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=400&h=400&fit=crop",
-  },
-  {
-    id: 3,
-    name: "Tequila Shot",
-    description: "Shot de tequila premium servido com limão e sal",
-    category: "Shots",
-    price: 8.5,
-    status: "Ativo",
-    image:
-      "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=400&fit=crop",
-  },
-  {
-    id: 4,
-    name: "Caipirinha",
-    description: "Drink tradicional brasileiro com cachaça, limão e açúcar",
-    category: "Outras Bebidas",
-    price: 8.5,
-    status: "Ativo",
-    image:
-      "https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=400&fit=crop",
-  },
-  {
-    id: 5,
-    name: "Palco Principal",
-    description: "Estrutura completa para shows e apresentações",
-    category: "Estruturas",
-    price: 8.5,
-    status: "Ativo",
-    image:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop",
-  },
-  {
-    id: 6,
-    name: "Bartender Especialista",
-    description: "Profissional especializado em drinks e coquetéis",
-    category: "Funcionário",
-    price: 8.5,
-    status: "Ativo",
-    image:
-      "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop",
-  },
-  {
-    id: 7,
-    name: "Whisky Johnnie Walker",
-    description: "Whisky escocês premium para ocasiões especiais",
-    category: "Alcoólico",
-    status: "Inativo",
-    price: 8.5,
-    image:
-      "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&h=400&fit=crop",
-  },
-  {
-    id: 8,
-    name: "Água Mineral",
-    description: "Água mineral natural sem gás",
-    category: "Não Alcoólico",
-    price: 8.5,
-    status: "Ativo",
-    image:
-      "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=400&fit=crop",
-  },
-];
+import { fetchItemsForAdmin, createItem, updateItem, toggleItemStatus } from "@/services/api";
+import Navbar from "../navbar/Navbar";
+import CreateItemModal from "./modals/CreateItemModal";
+import EditItemModal from "./modals/EditItemModal";
+import ViewItemModal from "./modals/ViewItemModal";
+import ItemSearchBar from "./list/ItemSearchBar";
+import ItemTable from "./list/ItemTable";
 
 export default function GerenciarItens() {
-  const { user, role, isAuthenticated, logout, loading } = useAuth();
+  const { user, role, isAuthenticated, logout, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [items, setItems] = useState(SAMPLE_ITEMS);
+  const [items, setItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingItem, setEditingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
-  const [deletingItem, setDeletingItem] = useState(null);
+  const [loadingItems, setLoadingItems] = useState(true);
+  const [error, setError] = useState(null);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   // Authentication check
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+    } else if (!authLoading && isAuthenticated && role !== 'Administrador') {
+      router.push('/');
+    }
+  }, [isAuthenticated, authLoading, router, role]);
+
+  // Load items from API
+  useEffect(() => {
+    const loadItems = async () => {
+      if (!authLoading && isAuthenticated && role === 'Administrador') {
+        try {
+          setLoadingItems(true);
+          setError(null);
+          const itemsData = await fetchItemsForAdmin();
+          setItems(itemsData);
+        } catch (err) {
+          console.error('Erro ao carregar itens:', err);
+          setError(err.message);
+          toast.error(`Erro ao carregar itens: ${err.message}`);
+        } finally {
+          setLoadingItems(false);
+        }
+      }
+    };
+
+    loadItems();
+  }, [authLoading, isAuthenticated, role]);
 
   // Filter items based on search term
   const filteredItems = items.filter(
     (item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase())
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Handle create new item
-  const handleCreateItem = (newItemData) => {
-    const newItem = {
-      id: Math.max(...items.map((i) => i.id)) + 1,
-      ...newItemData,
-    };
-    setItems((prevItems) => [...prevItems, newItem]);
-    toast.success("Item criado com sucesso!");
+  const handleCreateItem = async (newItemData) => {
+    try {
+      await createItem(newItemData);
+      toast.success("Item criado com sucesso!");
+      
+      // Recarregar lista de itens
+      const itemsData = await fetchItemsForAdmin();
+      setItems(itemsData);
+    } catch (err) {
+      console.error('Erro ao criar item:', err);
+      toast.error(`Erro ao criar item: ${err.message}`);
+    }
   };
 
   // Handle edit item
@@ -144,43 +94,70 @@ export default function GerenciarItens() {
     setIsViewModalOpen(true);
   };
 
-  // Handle delete item
-  const handleDeleteItem = (item) => {
-    setDeletingItem(item);
-    setIsConfirmModalOpen(true);
-  };
-
   // Handle item status toggle
-  const handleToggleStatus = (itemId, isActive) => {
-    setItems((prevItems) =>
-      prevItems.map((i) =>
-        i.id === itemId ? { ...i, status: isActive ? "Ativo" : "Inativo" } : i
-      )
-    );
-    toast.success(`Status do item alterado com sucesso!`);
-  };
+  const handleToggleStatus = async (itemId) => {
+    try {
+      await toggleItemStatus(itemId);
+      toast.success(`Status do item alterado com sucesso!`);
 
-  // Save item changes
-  const handleSaveItem = (updatedData) => {
-    setItems((prevItems) =>
-      prevItems.map((i) =>
-        i.id === editingItem.id ? { ...i, ...updatedData } : i
-      )
-    );
-    toast.success("Item atualizado com sucesso!");
-  };
-
-  // Confirm delete
-  const handleConfirmDelete = () => {
-    if (deletingItem) {
-      setItems((prevItems) =>
-        prevItems.filter((i) => i.id !== deletingItem.id)
-      );
-      toast.success("Item excluído com sucesso!");
+      // Recarregar lista de itens
+      const itemsData = await fetchItemsForAdmin();
+      setItems(itemsData);
+    } catch (err) {
+      console.error('Erro ao alterar status:', err);
+      toast.error(`Erro ao alterar status: ${err.message}`);
     }
   };
 
-  // Show loader during verification
+  // Save item changes
+  const handleSaveItem = async (updatedData) => {
+    try {
+      await updateItem(editingItem.id, updatedData);
+      toast.success("Item atualizado com sucesso!");
+
+      // Recarregar lista de itens
+      const itemsData = await fetchItemsForAdmin();
+      setItems(itemsData);
+    } catch (err) {
+      console.error('Erro ao atualizar item:', err);
+      toast.error(`Erro ao atualizar item: ${err.message}`);
+    }
+  };
+
+  // Show loader during verification or loading items
+  if (authLoading || !isAuthenticated || loadingItems) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+          <p className="text-white text-xl">
+            {authLoading ? "Verificando autenticação..." : "Carregando itens..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !loadingItems) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={logout} />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-red-400 mb-4">Erro ao Carregar</h1>
+            <p className="text-gray-300 mb-6">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-amber-700 hover:bg-amber-600 text-white px-6 py-2 rounded-full transition-colors"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -189,7 +166,7 @@ export default function GerenciarItens() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
           <h1 className="text-3xl font-bold text-amber-400 font-serif">
-            Gerenciar Itens
+            Gerenciar Itens ({items.length})
           </h1>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
@@ -214,7 +191,6 @@ export default function GerenciarItens() {
         <ItemTable
           items={filteredItems}
           onEditItem={handleEditItem}
-          onDeleteItem={handleDeleteItem}
           onViewItem={handleViewItem}
           onToggleStatus={handleToggleStatus}
         />
@@ -238,15 +214,6 @@ export default function GerenciarItens() {
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         item={viewingItem}
-      />
-
-      <ConfirmationModal
-        isOpen={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        onConfirm={handleConfirmDelete}
-        title="Excluir Item"
-        message={`Tem certeza que deseja excluir o item "${deletingItem?.name}"? Esta ação não pode ser desfeita.`}
-        actionText="Excluir"
       />
     </div>
   );

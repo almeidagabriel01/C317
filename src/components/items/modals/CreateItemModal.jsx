@@ -13,15 +13,16 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
   });
   const [imagePreview, setImagePreview] = useState(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
 
   const categories = [
-    "Alcoólico",
-    "Não Alcoólico",
-    "Shots",
-    "Outras Bebidas",
-    "Estruturas",
-    "Funcionário",
+    { value: "alcoolicos", label: "Alcoólicos" },
+    { value: "nao_alcoolicos", label: "Não Alcoólicos" },
+    { value: "shots", label: "Shots" },
+    { value: "outras_bebidas", label: "Outras Bebidas" },
+    { value: "estrutura", label: "Estruturas" },
+    { value: "funcionarios", label: "Funcionários" },
   ];
 
   const handleChange = (e) => {
@@ -76,15 +77,22 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      ...itemData,
-      price: parseFloat(itemData.price) || 0,
-      status: "Ativo",
-      image: imagePreview, // In a real app, you'd upload the file and get a URL
-    });
-    handleClose();
+    setIsSubmitting(true);
+    
+    try {
+      await onSave({
+        ...itemData,
+        price: parseFloat(itemData.price) || 0,
+        status: "Ativo", // Items são criados como ativos por padrão
+      });
+      handleClose();
+    } catch (error) {
+      console.error('Erro ao criar item:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -97,6 +105,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
     });
     setImagePreview(null);
     setIsDragActive(false);
+    setIsSubmitting(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -143,7 +152,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
         onClick={handleClose}
       >
         <motion.div
-          className="relative bg-[#1C2431] w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
+          className="relative bg-[#1C2431] w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
           variants={contentVariants}
           onClick={(e) => e.stopPropagation()}
         >
@@ -167,7 +176,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                     value={itemData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans disabled:opacity-50"
                   />
                 </div>
 
@@ -185,7 +195,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                     onChange={handleChange}
                     required
                     rows={3}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans resize-none"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans resize-none disabled:opacity-50"
                   />
                 </div>
 
@@ -202,12 +213,13 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                     value={itemData.category}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans disabled:opacity-50"
                   >
                     <option value="">Selecione uma categoria</option>
                     {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                      <option key={category.value} value={category.value}>
+                        {category.label}
                       </option>
                     ))}
                   </select>
@@ -229,7 +241,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                     required
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans disabled:opacity-50"
                     placeholder="0,00"
                   />
                 </div>
@@ -249,7 +262,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                       <button
                         type="button"
                         onClick={removeImage}
-                        className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
+                        disabled={isSubmitting}
+                        className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 disabled:opacity-50"
                       >
                         <FiX size={16} />
                       </button>
@@ -257,14 +271,16 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                   ) : (
                     <div
                       className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                        isDragActive
+                        isSubmitting 
+                          ? "opacity-50 cursor-not-allowed" 
+                          : isDragActive
                           ? "border-amber-500 bg-amber-500 bg-opacity-10"
                           : "border-gray-600 hover:border-gray-500"
                       }`}
                       onDrop={handleDrop}
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => !isSubmitting && fileInputRef.current?.click()}
                     >
                       <FiUpload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                       <p className="text-gray-400 font-sans">
@@ -281,6 +297,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                     type="file"
                     accept="image/*"
                     onChange={handleFileInputChange}
+                    disabled={isSubmitting}
                     className="hidden"
                   />
                 </div>
@@ -290,15 +307,24 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 px-4 py-2 border border-gray-600 rounded-full text-white hover:bg-gray-700 transition-colors font-sans font-medium"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2 border border-gray-600 rounded-full text-white hover:bg-gray-700 transition-colors font-sans font-medium disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-[#9D4815] hover:bg-amber-600 rounded-full text-white transition-colors font-sans font-medium"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2 bg-[#9D4815] hover:bg-amber-600 rounded-full text-white transition-colors font-sans font-medium disabled:opacity-50 flex items-center justify-center"
                 >
-                  Criar Item
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Criando...
+                    </>
+                  ) : (
+                    "Criar Item"
+                  )}
                 </button>
               </div>
             </form>

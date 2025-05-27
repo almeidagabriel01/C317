@@ -33,6 +33,8 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
         onBack={onBack}
         onNext={onNext}
         isValid={typeof isValid === "boolean" ? isValid : true}
+        nextButtonText="RESUMO DO PEDIDO"
+        isLastStep={true}
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-[#E0CEAA] text-lg">Carregando as opções de equipe...</div>
@@ -50,6 +52,8 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
       onBack={onBack}
       onNext={onNext}
       isValid={typeof isValid === "boolean" ? isValid : true}
+      nextButtonText="RESUMO DO PEDIDO"
+      isLastStep={true}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-2 md:px-0 mt-4">
         {items.map((item) => {

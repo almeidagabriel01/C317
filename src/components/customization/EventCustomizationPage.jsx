@@ -95,26 +95,7 @@ export default function EventCustomizationPage() {
       estrutura:
         categorizedItems.estrutura.find((i) => i.item.ID === selectedStructure)?.item.Descricao || "",
       valorTotal: calcularValorTotal(),
-      itens: [
-        ...selectedDrinks.map((d) => {
-          const f = items.find((i) => i.item.Descricao === d);
-          return f && { ID: f.item.ID, quantidade: 1 };
-        }).filter(Boolean),
-        ...selectedNonAlcoholicDrinks.map((d) => {
-          const f = items.find((i) => i.item.Descricao === d);
-          return f && { ID: f.item.ID, quantidade: 1 };
-        }).filter(Boolean),
-        ...Object.entries(beverageQuantities)
-          .filter(([, q]) => q > 0)
-          .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
-        ...Object.entries(shotQuantities)
-          .filter(([, q]) => q > 0)
-          .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
-        ...Object.entries(staffQuantities)
-          .filter(([, q]) => q > 0)
-          .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
-        ...(selectedStructure ? [{ ID: selectedStructure, quantidade: 1 }] : []),
-      ],
+      itens: flow.generateOrderItems(),
     };
   }
 
@@ -141,6 +122,8 @@ export default function EventCustomizationPage() {
             items={flow.items}
             loading={flow.loading}
             getResumo={getResumo}
+            backendPrice={flow.backendPrice}
+            calculatingPrice={flow.calculatingPrice}
           />
         </AnimatePresence>
       </div>
