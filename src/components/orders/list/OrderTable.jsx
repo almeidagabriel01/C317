@@ -18,7 +18,7 @@ const OrderTable = ({
     >
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="text-xs uppercase bg-gray-700 text-gray-300">
+          <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
             <tr>
               <th scope="col" className="px-6 py-4 text-center">
                 Pedido
@@ -40,6 +40,12 @@ const OrderTable = ({
               </th>
             </tr>
           </thead>
+        </table>
+      </div>
+      
+      {/* Container separado para o body com scroll customizado */}
+      <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
+        <table className="w-full text-sm">
           <tbody>
             {orders.map((order, index) => (
               <OrderTableRow

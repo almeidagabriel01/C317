@@ -13,7 +13,7 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
     >
       <div className="overflow-x-auto">
         <table className="min-w-[600px] md:min-w-0 w-full text-sm">
-          <thead className="text-xs uppercase bg-gray-700 text-gray-300">
+          <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
             <tr>
               <th className="px-2 md:px-4 py-4 text-center">Nome</th>
               <th className="px-2 md:px-4 py-4 text-center">Email</th>
@@ -23,6 +23,12 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
               <th className="px-2 md:px-4 py-4 text-center min-w-[120px]">Ações</th>
             </tr>
           </thead>
+        </table>
+      </div>
+
+      {/* Container separado para o body com scroll customizado */}
+      <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
+        <table className="min-w-[600px] md:min-w-0 w-full text-sm">
           <AnimatePresence mode="wait">
             <motion.tbody
               key={users.length}
