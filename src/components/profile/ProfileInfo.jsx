@@ -12,35 +12,12 @@ export default function ProfileInfo({ user, onUpdate }) {
   });
   const [loading, setLoading] = useState(false);
 
-  // Função de formatação de telefone
-  const formatTelefone = (value) => {
-    // Remove tudo que não for dígito
-    let digits = value.replace(/\D/g, '');
-    // Limita a até 11 dígitos (2 do DDD + 9 do número)
-    if (digits.length > 11) digits = digits.slice(0, 11);
-    if (digits.length === 0) return '';
-    if (digits.length <= 2) {
-      // Só DDD parcial
-      return `(${digits}`;
-    }
-    const ddd = digits.slice(0, 2);
-    const resto = digits.slice(2);
-    if (resto.length <= 4) {
-      // (DD) XXXX…
-      return `(${ddd}) ${resto}`;
-    }
-    // Insere hífen antes dos últimos 4 dígitos
-    const parte1 = resto.slice(0, resto.length - 4);
-    const parte2 = resto.slice(-4);
-    return `(${ddd}) ${parte1}-${parte2}`;
-  };
-
   useEffect(() => {
     if (user) {
       setFormData({
         nome: user.nome || '',
         email: user.email || '',
-        celular: user.celular || '',
+        celular: formatPhoneInput(user.celular || ''), // ← Aplica formatação aqui
       });
     }
   }, [user]);
@@ -90,88 +67,90 @@ export default function ProfileInfo({ user, onUpdate }) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-5">
-        <div className="grid gap-5 mb-5 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-amber-300">
-              Nome
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiUser className="text-gray-400" />
+      <div className="p-5 max-h-[60vh] overflow-y-auto custom-scrollbar">
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-5 mb-5 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-amber-300">
+                Nome
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiUser className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="nome"
+                  value={formData.nome}
+                  onChange={handleChange}
+                  className="bg-gray-700 text-white pl-10 pr-4 py-3 border-2 border-gray-600 focus:border-amber-400 rounded-lg block w-full focus:outline-none transition-colors"
+                  placeholder="Seu nome"
+                />
               </div>
-              <input
-                type="text"
-                name="nome"
-                value={formData.nome}
-                onChange={handleChange}
-                className="bg-gray-700 text-white pl-10 pr-4 py-3 border-2 border-gray-600 focus:border-amber-400 rounded-lg block w-full focus:outline-none transition-colors"
-                placeholder="Seu nome"
-              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-amber-300">
+                Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiMail className="text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="bg-gray-700 text-white pl-10 pr-4 py-3 border-2 border-gray-600 focus:border-amber-400 rounded-lg block w-full focus:outline-none transition-colors opacity-50"
+                  placeholder="Seu email"
+                  disabled
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                O email não pode ser alterado.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-amber-300">
+                Celular
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiPhone className="text-gray-400" />
+                </div>
+                <input
+                  type="tel"
+                  name="celular"
+                  value={formData.celular}
+                  onChange={handleChange}
+                  maxLength={15}
+                  className="bg-gray-700 text-white pl-10 pr-4 py-3 border-2 border-gray-600 focus:border-amber-400 rounded-lg block w-full focus:outline-none transition-colors"
+                  placeholder="(DD) XXXXX-XXXX"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-amber-300">
-              Email
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className="text-gray-400" />
-              </div>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="bg-gray-700 text-white pl-10 pr-4 py-3 border-2 border-gray-600 focus:border-amber-400 rounded-lg block w-full focus:outline-none transition-colors opacity-50"
-                placeholder="Seu email"
-                disabled
-              />
-            </div>
-            <p className="text-xs text-gray-400 mt-1">
-              O email não pode ser alterado.
-            </p>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-medium py-2 px-5 rounded-lg flex items-center shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span>Salvando...</span>
+              ) : (
+                <>
+                  <FiSave className="mr-2" />
+                  <span>Salvar Alterações</span>
+                </>
+              )}
+            </button>
           </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-amber-300">
-              Celular
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiPhone className="text-gray-400" />
-              </div>
-              <input
-                type="tel"
-                name="celular"
-                value={formData.celular}
-                onChange={handleChange}
-                maxLength={15}
-                className="bg-gray-700 text-white pl-10 pr-4 py-3 border-2 border-gray-600 focus:border-amber-400 rounded-lg block w-full focus:outline-none transition-colors"
-                placeholder="(DD) XXXXX-XXXX"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-medium py-2 px-5 rounded-lg flex items-center shadow-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span>Salvando...</span>
-            ) : (
-              <>
-                <FiSave className="mr-2" />
-                <span>Salvar Alterações</span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

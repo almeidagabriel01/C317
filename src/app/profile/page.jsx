@@ -40,7 +40,7 @@ export default function Perfil() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={logout} />
-        <main className="bg-gradient-to-b from-gray-900 to-gray-800 flex-1 p-4 overflow-auto">
+        <main className="bg-gradient-to-b from-gray-900 to-gray-800 flex-1 p-4 overflow-auto custom-scrollbar">
           <div className="max-w-4xl mx-auto py-4">
             <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
               <div className="p-6 flex justify-center items-center">
@@ -56,7 +56,7 @@ export default function Perfil() {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={logout} />
-      <main className="bg-gradient-to-b from-gray-900 to-gray-800 flex-1 p-4 overflow-auto">
+      <main className="bg-gradient-to-b from-gray-900 to-gray-800 flex-1 p-4 overflow-auto custom-scrollbar">
         <div className="max-w-4xl mx-auto py-4">
           {/* Botão Voltar */}
           <div className="mb-4">

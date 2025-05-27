@@ -1,17 +1,18 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { FiFileText, FiCalendar, FiDollarSign, FiUsers, FiEye, FiPlus } from 'react-icons/fi';
+import { FiFileText, FiCalendar, FiDollarSign, FiUsers, FiEye, FiPlus, FiSend } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
-import { fetchUserOrders } from '@/services/api';
+import { fetchUserOrders, updateOrderStatus } from '@/services/api';
 import { formatDate, formatCurrency, getStatusColor } from '@/utils/formatUtils';
-import OrderDetailModal from './OrderDetailModal';
+import OrderDetailModal from './OrderModal';
 
 export default function UserOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sendingOrder, setSendingOrder] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -34,6 +35,32 @@ export default function UserOrders() {
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
+  };
+
+  const handleSendOrder = async (orderId) => {
+    setSendingOrder(orderId);
+    
+    try {
+      await updateOrderStatus(orderId, 'Pendente');
+      toast.success('Pedido enviado com sucesso!');
+      
+      // Recarrega os orçamentos para atualizar o status
+      await loadOrders();
+    } catch (error) {
+      console.error('Erro ao enviar pedido:', error);
+      toast.error('Erro ao enviar pedido. Tente novamente.');
+    } finally {
+      setSendingOrder(null);
+    }
+  };
+
+  const handleModalSendOrder = async (orderId) => {
+    await handleSendOrder(orderId);
+    // Atualiza o pedido selecionado no modal
+    const updatedOrder = orders.find(order => order.id === orderId);
+    if (updatedOrder) {
+      setSelectedOrder({ ...updatedOrder, status: 'Pendente' });
+    }
   };
 
   if (loading) {
@@ -68,7 +95,7 @@ export default function UserOrders() {
           </p>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
           {orders.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <FiFileText size={64} className="text-gray-500 mb-4" />
@@ -130,14 +157,30 @@ export default function UserOrders() {
                     Orçamento criado em {formatDate(order.dataCompra)}
                   </div>
 
-                  {/* Botão de ação */}
-                  <button
-                    onClick={() => handleViewDetails(order)}
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <FiEye size={16} />
-                    <span>Ver Detalhes</span>
-                  </button>
+                  {/* Botões de ação */}
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handleViewDetails(order)}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <FiEye size={16} />
+                      <span>Ver Detalhes</span>
+                    </button>
+
+                    {/* Botão Enviar Pedido - só aparece para orçamentos */}
+                    {order.status === 'Orcado' && (
+                      <button
+                        onClick={() => handleSendOrder(order.id)}
+                        disabled={sendingOrder === order.id}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <FiSend size={16} />
+                        <span>
+                          {sendingOrder === order.id ? 'Enviando...' : 'Enviar Pedido'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -166,6 +209,8 @@ export default function UserOrders() {
           setIsModalOpen(false);
           setSelectedOrder(null);
         }}
+        onSendOrder={handleModalSendOrder}
+        isSendingOrder={sendingOrder === selectedOrder?.id}
       />
     </>
   );

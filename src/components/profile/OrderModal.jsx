@@ -1,14 +1,20 @@
 'use client';
 import React from 'react';
-import { FiX, FiCalendar, FiClock, FiUsers, FiDollarSign, FiInfo } from 'react-icons/fi';
+import { FiX, FiCalendar, FiClock, FiUsers, FiDollarSign, FiInfo, FiSend } from 'react-icons/fi';
 import { formatDate, formatCurrency, getStatusColor } from '@/utils/formatUtils';
 
-export default function OrderDetailModal({ order, isOpen, onClose }) {
+export default function OrderDetailModal({ order, isOpen, onClose, onSendOrder, isSendingOrder }) {
   if (!isOpen || !order) return null;
+
+  const handleSendOrder = () => {
+    if (onSendOrder && order.id) {
+      onSendOrder(order.id);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
         {/* Header */}
         <div className="bg-primary p-6 border-b border-gray-700 flex justify-between items-center">
           <div>
@@ -101,7 +107,9 @@ export default function OrderDetailModal({ order, isOpen, onClose }) {
             <h3 className="text-amber-300 font-medium mb-2">Observações</h3>
             <p className="text-gray-300 text-sm">
               {order.status === 'Orcado' 
-                ? 'Seu orçamento foi calculado e está aguardando aprovação. Você receberá uma notificação quando houver atualizações.'
+                ? 'Seu orçamento foi calculado e está aguardando aprovação. Você pode enviá-lo como pedido oficial quando estiver pronto.'
+                : order.status === 'Pendente'
+                ? 'Pedido enviado e aguardando aprovação. Em breve entraremos em contato para confirmar os detalhes.'
                 : order.status === 'Aprovado'
                 ? 'Orçamento aprovado! Em breve entraremos em contato para finalizar os detalhes do evento.'
                 : 'Entre em contato conosco para mais informações sobre este orçamento.'
@@ -111,13 +119,27 @@ export default function OrderDetailModal({ order, isOpen, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-700 px-6 py-4 flex justify-end">
+        <div className="bg-gray-700 px-6 py-4 flex justify-between">
           <button
             onClick={onClose}
-            className="bg-amber-500 hover:bg-amber-600 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors"
+            className="bg-gray-600 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Fechar
           </button>
+
+          {/* Botão Enviar Pedido - só aparece para orçamentos */}
+          {order.status === 'Orcado' && (
+            <button
+              onClick={handleSendOrder}
+              disabled={isSendingOrder}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiSend size={16} />
+              <span>
+                {isSendingOrder ? 'Enviando...' : 'Enviar Pedido'}
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>
