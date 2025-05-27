@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatPhoneInput } from "@/utils/formatUtils";
 
 const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
   const [userData, setUserData] = useState({
@@ -23,35 +24,11 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
     }
   }, [isOpen, user]);
 
-  const formatPhoneNumber = (phone) => {
-    // Remove todos os caracteres não numéricos
-    const numbers = phone.replace(/\D/g, '');
-    
-    // Não permite mais que 11 dígitos (máximo para celular no Brasil: (DD)XXXXX-XXXX)
-    const maxNumbers = numbers.slice(0, 11);
-    
-    // Formata progressivamente conforme digita
-    if (maxNumbers.length <= 2) {
-      // Apenas DDD ou parte dele
-      return maxNumbers.length === 0 ? '' : `(${maxNumbers}`;
-    } else if (maxNumbers.length <= 7) {
-      // DDD + parte do número com espaço após o parêntese
-      return `(${maxNumbers.substring(0, 2)}) ${maxNumbers.substring(2)}`;
-    } else {
-      // Número completo com hífen e espaço após o parêntese
-      const hasDDI = maxNumbers.length > 10;
-      const baseIndex = 2; // Posição após o DDD
-      const hyphenIndex = hasDDI ? 7 : 6; // Posição do hífen (5 ou 4 dígitos antes)
-      
-      return `(${maxNumbers.substring(0, 2)}) ${maxNumbers.substring(baseIndex, hyphenIndex)}-${maxNumbers.substring(hyphenIndex)}`;
-    }
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     if (name === 'phone') {
-      setUserData(prev => ({ ...prev, [name]: formatPhoneNumber(value) }));
+      setUserData(prev => ({ ...prev, [name]: formatPhoneInput(value) }));
     } else {
       setUserData(prev => ({ ...prev, [name]: value }));
     }
@@ -155,6 +132,8 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
                     value={userData.phone}
                     onChange={handleChange}
                     required
+                    maxLength={15}
+                    placeholder="(DD) XXXXX-XXXX"
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans"
                   />
                 </div>
@@ -170,7 +149,7 @@ const EditUserModal = ({ isOpen, onClose, user, onSave }) => {
                     required
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans"
                   >
-                    <option value="cliente">cliente</option>
+                    <option value="Cliente">Cliente</option>
                     <option value="Administrador">Administrador</option>
                   </select>
                 </div>

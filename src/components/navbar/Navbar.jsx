@@ -218,7 +218,7 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
               >
                 <div className="flex flex-col items-end mr-2">
                   <span className="text-sm text-amber-200 font-medium truncate max-w-[100px] sm:max-w-[120px] md:max-w-[150px]">
-                    {user?.userName}
+                    {user?.nome}
                   </span>
                   <span className="text-xs text-amber-100/70">
                     {isOrganizer ? 'Administrador' : 'Minha conta'}

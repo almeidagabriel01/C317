@@ -8,6 +8,7 @@ import { createPedido } from "@/services/api";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { containerVariants } from "@/components/customization/stepIndicator/FormStepLayout";
+import { formatDateToYYYYMMDD } from "@/utils/formatUtils";
 
 export default function OrcamentoStep({ resumo, onBack, direction, backendPrice = null }) {
   const { user } = useAuth();
@@ -16,25 +17,6 @@ export default function OrcamentoStep({ resumo, onBack, direction, backendPrice 
   const [savingBudget, setSavingBudget] = useState(false);
 
   const clienteId = user?.ID;
-
-  function formatDateToYYYYMMDD(dateStr) {
-    if (!dateStr) return "";
-    // Aceita "dd/mm/yyyy"
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-      const [day, month, year] = dateStr.split("/");
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-    }
-    // Aceita "yyyy-mm-dd"
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      return dateStr;
-    }
-    // Aceita "yyyy/mm/dd"
-    if (/^\d{4}\/\d{2}\/\d{2}$/.test(dateStr)) {
-      const [year, month, day] = dateStr.split("/");
-      return `${year}-${month}-${day}`;
-    }
-    return dateStr;
-  }
 
   const createPayload = (status) => {
     return {

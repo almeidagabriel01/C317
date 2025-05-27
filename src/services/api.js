@@ -12,11 +12,10 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("Token adicionado à requisição:", config.url);
     } else {
       console.warn("Token não encontrado para requisição:", config.url);
     }
-    return config;
+  return config;
   },
   (error) => {
     return Promise.reject(error);
@@ -41,7 +40,7 @@ const getErrorMessage = (error) => {
 const normalizeRole = (role) => {
   if (!role) return 'Cliente';
   const lower = role.toLowerCase();
-  if (lower === 'Administrador') return 'Administrador';
+  if (lower === 'administrador') return 'Administrador';
   if (lower === 'cliente') return 'Cliente';
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 };
@@ -86,12 +85,53 @@ export const registerUser = async (userData) => {
   }
 };
 
+// Nova função para buscar dados do usuário logado
+export const fetchCurrentUser = async () => {
+  try {
+    const response = await apiClient.get('/users/get/me');
+    return {
+      id: response.data.ID,
+      nome: response.data.userName,
+      email: response.data.Email,
+      role: normalizeRole(response.data.role),
+      celular: response.data.NumCel,
+      ativo: response.data.Ativo,
+      originalData: response.data,
+    };
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Nova função para buscar pedidos do usuário logado
+export const fetchUserOrders = async () => {
+  try {
+    const response = await apiClient.get('/pedido/all');
+    return response.data.map(pedido => ({
+      id: pedido.ID,
+      nomeEvento: pedido.Nome_Evento,
+      dataEvento: pedido.Data_Evento,
+      dataCompra: pedido.Data_Compra,
+      horarioInicio: pedido.Horario_Inicio,
+      horarioFim: pedido.Horario_Fim,
+      numConvidados: pedido.Num_Convidado,
+      preco: pedido.Preço,
+      status: pedido.Status,
+      ativo: pedido.Ativo,
+      idComprador: pedido.ID_Comprador,
+      originalData: pedido,
+    }));
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
 export const fetchUsers = async () => {
   try {
     const response = await apiClient.get('/users/all');
     return response.data.map(user => ({
       id: user.ID,
-      name: user.userName,
+      name: user.nome || user.userName,
       email: user.Email,
       phone: (() => {
         const d = user.NumCel.replace(/\D/g, '');
@@ -149,7 +189,7 @@ export const fetchItemsForAdmin = async () => {
     const response = await apiClient.get('/item/all');
     return response.data.Itens.map(itemData => ({
       id: itemData.item.ID,
-      name: itemData.item.Descricao, // Backend não tem nome separado, usando descrição
+      name: itemData.item.Nome,
       description: itemData.item.Descricao,
       category: itemData.item.Categoria,
       price: itemData.item.Preco,
@@ -229,23 +269,4 @@ export const createPedido = async (payload) => {
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
-};
-
-/**
- * MOCK: Simula fetchCurrentUser antes de existir no backend.
- * Retorna os dados completos que foram salvos em localStorage no login.
- */
-export const fetchCurrentUser = async () => {
-  return new Promise((resolve, reject) => {
-    try {
-      const stored = localStorage.getItem('userData');
-      if (stored) {
-        resolve(JSON.parse(stored));
-      } else {
-        reject(new Error('Dados de usuário não encontrados (mock).'));
-      }
-    } catch (err) {
-      reject(err);
-    }
-  });
 };

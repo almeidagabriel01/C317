@@ -8,14 +8,6 @@ import StructureSelector from "@/components/customization/formSteps/StructureSel
 import StaffSelector from "@/components/customization/formSteps/StaffSelector";
 import OrcamentoStep from "@/components/customization/formSteps/OrcamentoStep";
 
-// Função utilitária de formatação de data para resumo
-function formatDateToDDMMYYYY(dateStr) {
-  if (!dateStr) return "";
-  const [year, month, day] = dateStr.split("-");
-  if (!year || !month || !day) return dateStr;
-  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
-}
-
 export default function StepRenderer({
   step,
   direction,

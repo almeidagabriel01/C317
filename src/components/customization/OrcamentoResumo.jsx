@@ -1,5 +1,7 @@
 "use client";
 
+import { formatCurrency } from "@/utils/formatUtils";
+
 export default function OrcamentoResumo({ resumo, backendPrice = NaN }) {
   if (!resumo) return null;
 
@@ -55,10 +57,7 @@ export default function OrcamentoResumo({ resumo, backendPrice = NaN }) {
           </span>
         ) : (
           <span className="text-2xl font-bold text-yellow-300">
-            {Number(finalPrice).toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            })}
+            {formatCurrency(finalPrice)}
           </span>
         )}
       </div>

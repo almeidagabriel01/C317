@@ -3,13 +3,9 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
+import { formatCurrency } from "@/utils/formatUtils";
 
 export default function StructureSelector({ items, selectedStructure, setSelectedStructure, onNext, onBack, direction, isValid }) {
-  // Função para formatar o preço em reais
-  const formatPrice = (price) => {
-    return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: {
@@ -118,7 +114,7 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
                     ? "text-[#9D4815]"
                     : "text-[#E0CEAA]/70"
                   }`}>
-                  {formatPrice(item.item.Preco)}
+                  {formatCurrency(item.item.Preco)}
                 </p>
               </div>
             </motion.div>
@@ -137,7 +133,7 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
             <div className="flex justify-between text-lg text-white">
               <span>{items.find(item => item.item.ID === selectedStructure)?.item.Descricao}</span>
               <span className="font-semibold text-[#E0CEAA]">
-                {formatPrice(items.find(item => item.item.ID === selectedStructure)?.item.Preco || 0)}
+                {formatCurrency(items.find(item => item.item.ID === selectedStructure)?.item.Preco || 0)}
               </span>
             </div>
           </motion.div>

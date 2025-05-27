@@ -9,6 +9,7 @@ import {
   FiEye,
   FiCheckCircle,
 } from "react-icons/fi";
+import { formatDate, formatCurrency, getStatusColor } from "@/utils/formatUtils";
 
 const OrderTableRow = ({
   order,
@@ -17,17 +18,6 @@ const OrderTableRow = ({
   onMarkAsReviewed,
   showReviewedOrders = false,
 }) => {
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("pt-BR");
-  };
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
-
   return (
     <tr
       className={`border-b border-gray-700 ${
@@ -63,12 +53,12 @@ const OrderTableRow = ({
         <div className="flex items-center justify-center">
           <FiActivity className="mr-2" />
           <span
-            className={`text-xs font-medium px-2.5 py-0.5 rounded ${
+            className={`text-xs font-medium px-2.5 py-0.5 rounded ${getStatusColor(order.status).replace('bg-', 'bg-').replace('-500', '-900')} ${
               order.status === "Pendente"
-                ? "bg-orange-900 text-orange-300"
+                ? "text-orange-300"
                 : order.status === "Revisado"
-                ? "bg-green-900 text-green-300"
-                : "bg-red-900 text-red-300"
+                ? "text-green-300"
+                : "text-red-300"
             }`}
           >
             {order.status}

@@ -41,7 +41,7 @@ export default function Home() {
             <p>Verificando autenticação...</p>
           ) : isAuthenticated && user ? (
             <p className="text-lg text-green-400">
-              Bem-vindo(a) de volta, {user.userName || user.Email}!
+              Bem-vindo(a) de volta, {user.nome || user.Email}!
             </p>
           ) : !isAuthenticated ? (
             <p className="text-lg text-amber-400">

@@ -17,23 +17,45 @@ export function groupItemsByCategory(items) {
   return cat;
 }
 
+// Função para inicializar o estado do localStorage de forma segura
+const initializeFromStorage = () => {
+  if (typeof window === "undefined") return {};
+
+  try {
+    const saved = localStorage.getItem("C317_eventFlow");
+    return saved ? JSON.parse(saved) : {};
+  } catch (error) {
+    console.warn("Erro ao ler localStorage:", error);
+    return {};
+  }
+};
+
+// Função para salvar no localStorage de forma segura
+const saveToStorage = (data) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem("C317_eventFlow", JSON.stringify(data));
+  } catch (error) {
+    console.warn("Erro ao salvar no localStorage:", error);
+  }
+};
+
 export function useEventCustomizationFlow(STEPS, toast) {
-  const saved = typeof window !== "undefined"
-    ? JSON.parse(localStorage.getItem("C317_eventFlow") || "{}")
-    : {};
+  const saved = initializeFromStorage();
 
   const [currentStep, setCurrentStep] = useState(saved.currentStep ?? 0);
   const [animatedStep, setAnimatedStep] = useState(saved.currentStep ?? 0);
   const [direction, setDirection] = useState(1);
 
   const [selectedEventType, setSelectedEventType] = useState(saved.selectedEventType ?? "");
-  const [formData, setFormData] = useState(saved.formData ?? {
-    name: "",
-    date: "",
-    startTime: "",
-    guestCount: "",
-    eventDuration: "",
-    eventAddress: ""
+  const [formData, setFormData] = useState({
+    name: saved.formData?.name ?? "",
+    date: saved.formData?.date ?? "",
+    startTime: saved.formData?.startTime ?? "",
+    guestCount: saved.formData?.guestCount ?? "",
+    eventDuration: saved.formData?.eventDuration ?? "",
+    eventAddress: saved.formData?.eventAddress ?? ""
   });
   const [selectedDrinks, setSelectedDrinks] = useState(saved.selectedDrinks ?? []);
   const [selectedNonAlcoholicDrinks, setSelectedNonAlcoholicDrinks] = useState(saved.selectedNonAlcoholicDrinks ?? []);
@@ -51,6 +73,7 @@ export function useEventCustomizationFlow(STEPS, toast) {
   const [backendPrice, setBackendPrice] = useState(NaN);
   const [calculatingPrice, setCalculatingPrice] = useState(false);
 
+  // Effect para salvar no localStorage sempre que o estado mudar
   useEffect(() => {
     const toSave = {
       currentStep,
@@ -63,22 +86,28 @@ export function useEventCustomizationFlow(STEPS, toast) {
       selectedStructure,
       staffQuantities
     };
-    localStorage.setItem("C317_eventFlow", JSON.stringify(toSave));
+    saveToStorage(toSave);
   }, [
     currentStep, selectedEventType, formData, selectedDrinks,
     selectedNonAlcoholicDrinks, beverageQuantities, shotQuantities,
     selectedStructure, staffQuantities
   ]);
 
+  // Effect para carregar itens da API
   useEffect(() => {
     fetchItems()
       .then((data) => {
         setItems(data);
         setCategorizedItems(groupItemsByCategory(data));
       })
-      .catch(console.error)
+      .catch((error) => {
+        console.error("Erro ao carregar itens:", error);
+        if (toast) {
+          toast.error("Erro ao carregar itens do catálogo");
+        }
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [toast]);
 
   // Função para calcular o preço no backend
   const calculateBackendPrice = async (itens) => {
@@ -86,21 +115,23 @@ export function useEventCustomizationFlow(STEPS, toast) {
       setBackendPrice(NaN);
       return NaN;
     }
-    
+
     console.log("Enviando para cálculo de preço:", itens);
-    
+
     setCalculatingPrice(true);
     try {
       const price = await calculateOrderPrice(itens);
       console.log("Preço retornado pelo backend:", price);
-      
+
       // Verificar se o preço é válido
       const validPrice = typeof price === 'number' && !isNaN(price) ? price : NaN;
       setBackendPrice(validPrice);
       return validPrice;
     } catch (error) {
       console.error("Erro ao calcular preço:", error);
-      toast && toast.error("Erro ao calcular preço do pedido");
+      if (toast) {
+        toast.error("Erro ao calcular preço do pedido");
+      }
       setBackendPrice(NaN);
       return NaN;
     } finally {
@@ -108,6 +139,7 @@ export function useEventCustomizationFlow(STEPS, toast) {
     }
   };
 
+  // Função de validação do formulário
   function isFormValid() {
     const { name, date, startTime, guestCount, eventDuration, eventAddress } = formData;
     const dateOk = date && /^\d{4}-\d{2}-\d{2}$/.test(date);
@@ -122,6 +154,8 @@ export function useEventCustomizationFlow(STEPS, toast) {
       eventAddress.trim() !== ""
     );
   }
+
+  // Função para validar cada step
   function isStepValid(step) {
     switch (step) {
       case 0: return !!selectedEventType;
@@ -135,7 +169,8 @@ export function useEventCustomizationFlow(STEPS, toast) {
       default: return true;
     }
   }
-  // Novo: retorna true se todos steps ANTES do "to" estão preenchidos (mas não o próprio "to")
+
+  // Função para verificar se todos os steps anteriores são válidos
   function areAllPreviousStepsValid(to) {
     for (let i = 0; i < to; i++) {
       if (!isStepValid(i)) return false;
@@ -143,6 +178,7 @@ export function useEventCustomizationFlow(STEPS, toast) {
     return true;
   }
 
+  // Função para animar mudança de step
   function animateStepChange(from, to, onDone) {
     if (from === to) return;
     let step = from;
@@ -184,28 +220,33 @@ export function useEventCustomizationFlow(STEPS, toast) {
         .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
       ...(selectedStructure ? [{ ID: selectedStructure, quantidade: 1 }] : []),
     ];
-    
+
     console.log("Itens gerados:", itemsList);
     return itemsList;
   };
 
+  // Função para avançar para o próximo step
   function handleNext() {
     if (!isStepValid(currentStep)) {
-      toast && toast.error("Preencha este passo antes de avançar!");
+      if (toast) {
+        toast.error("Preencha este passo antes de avançar!");
+      }
       return;
     }
-    
+
     // Se estamos no step 7 (staff) indo para o step 8 (orçamento), calcular preço
     if (currentStep === 7) {
       const itens = generateOrderItems();
       calculateBackendPrice(itens);
     }
-    
+
     if (currentStep < STEPS.length) {
       setDirection(1);
       animateStepChange(currentStep, currentStep + 1);
     }
   }
+
+  // Função para voltar ao step anterior
   function handleBack() {
     if (currentStep > 0) {
       setDirection(-1);
@@ -213,24 +254,36 @@ export function useEventCustomizationFlow(STEPS, toast) {
     }
   }
 
+  // Função para lidar com seleção de evento
   const handleEventSelection = (type) => {
     setSelectedEventType(type);
-    handleNext();
+
+    setDirection(1);
+    animateStepChange(currentStep, currentStep + 1);
   };
+
+  // Função para lidar com mudança de input
   const handleInputChange = (e) =>
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  // Funções para toggle de drinks
   const toggleDrink = (d) =>
     setSelectedDrinks((prev) =>
       prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
     );
+
   const toggleNonAlcoholicDrink = (d) =>
     setSelectedNonAlcoholicDrinks((prev) =>
       prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
     );
+
+  // Funções para definir quantidades
   const setBeverageQty = (id, q) =>
     setBeverageQuantities((prev) => ({ ...prev, [id]: q }));
+
   const setShotQty = (id, q) =>
     setShotQuantities((prev) => ({ ...prev, [id]: q }));
+
   const setStaffQty = (id, q) =>
     setStaffQuantities((prev) => ({ ...prev, [id]: q }));
 

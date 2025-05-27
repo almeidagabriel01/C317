@@ -11,6 +11,7 @@ import {
   FiDollarSign,
   FiUsers,
 } from "react-icons/fi";
+import { formatDateTime, formatCurrency, getStatusColor } from "@/utils/formatUtils";
 
 const OrderDetailsModal = ({ isOpen, onClose, order }) => {
   if (!isOpen || !order) return null;
@@ -40,23 +41,6 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
       scale: 0.95,
       transition: { duration: 0.15 },
     },
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
   };
 
   return (
@@ -131,7 +115,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-purple-400" />
                   <span className="text-gray-300 font-sans">
-                    {formatDate(order.date)}
+                    {formatDateTime(order.date)}
                   </span>
                 </div>
                 <div className="flex items-center">
@@ -149,13 +133,12 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                 <div className="flex items-center">
                   <FiShoppingCart className="mr-2 text-amber-400" />
                   <span
-                    className={`text-xs font-medium px-2.5 py-0.5 rounded ${
-                      order.status === "Pendente"
+                    className={`text-xs font-medium px-2.5 py-0.5 rounded ${order.status === "Pendente"
                         ? "bg-orange-900 text-orange-300"
                         : order.status === "Revisado"
-                        ? "bg-green-900 text-green-300"
-                        : "bg-red-900 text-red-300"
-                    }`}
+                          ? "bg-green-900 text-green-300"
+                          : "bg-red-900 text-red-300"
+                      }`}
                   >
                     {order.status}
                   </span>

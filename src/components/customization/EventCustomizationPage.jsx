@@ -6,6 +6,7 @@ import CustomStepper from "@/components/customization/stepIndicator/CustomSteppe
 import StepRenderer from "./stepIndicator/StepRenderer";
 import { useEventCustomizationFlow } from "./useEventCustomizationFlow";
 import { toast } from "react-toastify";
+import { formatDateToDDMMYYYY } from "@/utils/formatUtils";
 
 const STEPS = [
   { label: "Informações" },
@@ -17,13 +18,6 @@ const STEPS = [
   { label: "Bartender" },
   { label: "Orçamento" },
 ];
-
-function formatDateToDDMMYYYY(dateStr) {
-  if (!dateStr) return "";
-  const [year, month, day] = dateStr.split("-");
-  if (!year || !month || !day) return dateStr;
-  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
-}
 
 export default function EventCustomizationPage() {
   const { user, isAuthenticated, logout } = useAuth();
