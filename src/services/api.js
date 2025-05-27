@@ -199,7 +199,26 @@ export const fetchItems = async () => {
   }
 };
 
-export const fetchItemsForAdmin = async () => {
+// Função auxiliar para adicionar cache buster apenas quando necessário
+const addCacheBusterToImage = (imageUrl, forceRefresh = false) => {
+  if (!imageUrl) return null;
+  
+  // Se forceRefresh for true, sempre adiciona novo timestamp
+  if (forceRefresh) {
+    const baseUrl = imageUrl.split('?')[0]; // Remove parâmetros existentes
+    return `${baseUrl}?t=${Date.now()}`;
+  }
+  
+  // Se já tem cache buster, mantém
+  if (imageUrl.includes('?t=')) {
+    return imageUrl;
+  }
+  
+  // Adiciona cache buster inicial
+  return `${imageUrl}?t=${Date.now()}`;
+};
+
+export const fetchItemsForAdmin = async (forceImageRefresh = false) => {
   try {
     const response = await apiClient.get('/item/all');
     return response.data.Itens.map(itemData => ({
@@ -207,14 +226,19 @@ export const fetchItemsForAdmin = async () => {
       name: itemData.item.Nome,
       description: itemData.item.Descricao,
       category: itemData.item.Categoria,
-      price: itemData.item.Preco,
+      price: itemData.item.Preco, // Mantém em centavos
       status: itemData.item.Ativo ? 'Ativo' : 'Inativo',
-      image: itemData.imageURL,
+      image: addCacheBusterToImage(itemData.imageURL, forceImageRefresh),
       originalData: itemData.item,
     }));
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
+};
+
+// Função específica para refresh após update de item
+export const refreshItemsAfterUpdate = async () => {
+  return fetchItemsForAdmin(true); // Force refresh das imagens
 };
 
 export const createItem = async (itemData) => {
@@ -241,15 +265,17 @@ export const createItem = async (itemData) => {
 export const updateItem = async (itemId, itemData) => {
   try {
     const formData = new FormData();
+    formData.append('id', itemId);
     formData.append('Nome', itemData.name);
     formData.append('Descricao', itemData.description);
     formData.append('Categoria', itemData.category);
     formData.append('Preco', Math.round(itemData.price * 100)); // Converter para centavos
+    formData.append('Ativo', true); // Mantém ativo ao editar
     if (itemData.image && typeof itemData.image !== 'string') {
       formData.append('image', itemData.image);
     }
 
-    const response = await apiClient.put(`/item/update/${itemId}`, formData, {
+    const response = await apiClient.put('/item/update/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
@@ -260,7 +286,9 @@ export const updateItem = async (itemId, itemData) => {
 
 export const toggleItemStatus = async (itemId) => {
   try {
-    const response = await apiClient.put(`/item/toggle/status/${itemId}`);
+    const response = await apiClient.put('/item/toogle/Status', null, {
+      params: { item_id: itemId }
+    });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));

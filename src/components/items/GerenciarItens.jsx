@@ -24,6 +24,7 @@ export default function GerenciarItens() {
     loading: loadingItems,
     error,
     refreshData,
+    refreshDataWithCacheBusting, // Nova função para refresh com cache busting
     updateItemInCache,
     addItemToCache
   } = useItems();
@@ -62,6 +63,7 @@ export default function GerenciarItens() {
 
       // Refresh data to get the complete item data with ID
       await refreshData();
+      setIsCreateModalOpen(false);
     } catch (err) {
       console.error('Erro ao criar item:', err);
       toast.error(`Erro ao criar item: ${err.message}`);
@@ -83,14 +85,21 @@ export default function GerenciarItens() {
   // Handle item status toggle
   const handleToggleStatus = async (itemId) => {
     try {
-      await toggleItemStatus(itemId);
-      toast.success(`Status do item alterado com sucesso!`);
-
-      // Refresh data to get updated status
-      await refreshData();
+      const response = await toggleItemStatus(itemId);
+      
+      // Extrai o novo status da resposta
+      const newStatus = response.includes("True") ? "Ativo" : "Inativo";
+      
+      // Atualiza no cache local
+      updateItemInCache(itemId, { status: newStatus });
+      
+      toast.success(`Status do item alterado para ${newStatus}!`);
     } catch (err) {
       console.error('Erro ao alterar status:', err);
       toast.error(`Erro ao alterar status: ${err.message}`);
+      
+      // Em caso de erro, refresh para garantir consistência
+      await refreshData();
     }
   };
 
@@ -100,22 +109,30 @@ export default function GerenciarItens() {
       await updateItem(editingItem.id, updatedData);
       toast.success("Item atualizado com sucesso!");
 
-      // Atualiza o item no cache local (apenas se não há nova imagem)
-      if (!updatedData.image || typeof updatedData.image === 'string') {
-        updateItemInCache(editingItem.id, {
-          name: updatedData.name,
-          description: updatedData.description,
-          category: updatedData.category,
-          price: updatedData.price
-        });
-      } else {
-        // Se há nova imagem, refresh completo para obter nova URL
-        await refreshData();
-      }
+      // Usa refresh com cache busting para forçar reload das imagens
+      await refreshDataWithCacheBusting();
+      
+      setIsEditModalOpen(false);
+      setEditingItem(null);
     } catch (err) {
       console.error('Erro ao atualizar item:', err);
       toast.error(`Erro ao atualizar item: ${err.message}`);
     }
+  };
+
+  // Close modals
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewingItem(null);
   };
 
   // Show loader during verification or loading items
@@ -160,7 +177,7 @@ export default function GerenciarItens() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
           <h1 className="text-3xl font-bold text-amber-400 font-serif">
-            Gerenciar Itens ({items.length})
+            Gerenciar Itens ({filteredItems.length})
           </h1>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
@@ -181,7 +198,7 @@ export default function GerenciarItens() {
           </div>
         </div>
 
-        {/* Item table component */}
+        {/* Item table component - agora com ordenação */}
         <ItemTable
           items={filteredItems}
           onEditItem={handleEditItem}
@@ -193,20 +210,20 @@ export default function GerenciarItens() {
       {/* Modals */}
       <CreateItemModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={handleCloseCreateModal}
         onSave={handleCreateItem}
       />
 
       <EditItemModal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={handleCloseEditModal}
         item={editingItem}
         onSave={handleSaveItem}
       />
 
       <ViewItemModal
         isOpen={isViewModalOpen}
-        onClose={() => setIsViewModalOpen(false)}
+        onClose={handleCloseViewModal}
         item={viewingItem}
       />
     </div>

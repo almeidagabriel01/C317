@@ -87,6 +87,50 @@ export const useAdminData = (dataType) => {
     }
   }, [isAuthenticated, role, authLoading, dataType, isCacheValid, fetchFunctions]);
 
+  // Função para refresh forçado com cache busting (específica para imagens)
+  const refreshDataWithCacheBusting = useCallback(async () => {
+    if (!isAuthenticated || role !== 'Administrador' || authLoading) {
+      return;
+    }
+
+    const cacheEntry = dataCache[dataType];
+
+    try {
+      cacheEntry.loading = true;
+      setLoading(true);
+      setError(null);
+
+      let result;
+      if (dataType === 'items') {
+        // Para itens, usa fetchItemsForAdmin com forceImageRefresh = true
+        result = await fetchItemsForAdmin(true);
+      } else {
+        const fetchFunction = fetchFunctions[dataType];
+        result = await fetchFunction();
+      }
+
+      if (mountedRef.current) {
+        // Atualiza cache global
+        cacheEntry.data = result;
+        cacheEntry.timestamp = Date.now();
+        cacheEntry.loading = false;
+
+        // Atualiza estado local
+        setData(result);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error(`Erro ao carregar ${dataType}:`, err);
+
+      if (mountedRef.current) {
+        cacheEntry.loading = false;
+        setError(err.message);
+        setLoading(false);
+        toast.error(`Erro ao carregar ${dataType}: ${err.message}`);
+      }
+    }
+  }, [isAuthenticated, role, authLoading, dataType, fetchFunctions]);
+
   // Função para invalidar cache específico
   const invalidateCache = useCallback(() => {
     dataCache[dataType] = { data: null, timestamp: null, loading: false };
@@ -119,6 +163,7 @@ export const useAdminData = (dataType) => {
     loading,
     error,
     refreshData,
+    refreshDataWithCacheBusting, // Nova função para refresh com cache busting
     invalidateCache
   };
 };

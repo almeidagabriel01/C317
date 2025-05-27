@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSorting } from "@/utils/sortUtils";
+import SortableTableHeader from "@/components/common/SortableTableHeader";
 import ItemTableRow from "./ItemTableRow";
 
 const ItemTable = ({
@@ -9,6 +11,25 @@ const ItemTable = ({
   onViewItem,
   onToggleStatus,
 }) => {
+  const {
+    handleSort,
+    getSortedData,
+    getSortIcon,
+    sortField,
+    sortDirection
+  } = useSorting(items);
+
+  const sortedItems = getSortedData();
+
+  const columns = [
+    { field: 'name', label: 'Item' },
+    { field: 'description', label: 'Descrição' },
+    { field: 'category', label: 'Categoria' },
+    { field: 'price', label: 'Preço' },
+    { field: 'status', label: 'Status' },
+    { field: 'actions', label: 'Ações', sortable: false }
+  ];
+
   return (
     <motion.div
       className="bg-gray-800 rounded-xl overflow-hidden shadow-lg"
@@ -21,28 +42,21 @@ const ItemTable = ({
         <table className="w-full text-sm">
           <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
             <tr>
-              <th scope="col" className="px-6 py-4 text-center">
-                Item
-              </th>
-              <th scope="col" className="px-6 py-4 text-center">
-                Descrição
-              </th>
-              <th scope="col" className="px-6 py-4 text-center">
-                Categoria
-              </th>
-              <th scope="col" className="px-6 py-4 text-center">
-                Preço
-              </th>
-              <th scope="col" className="px-6 py-4 text-center">
-                Status
-              </th>
-              <th scope="col" className="px-6 py-4 text-center">
-                Ações
-              </th>
+              {columns.map((column) => (
+                <SortableTableHeader
+                  key={column.field}
+                  field={column.field}
+                  label={column.label}
+                  onSort={handleSort}
+                  sortDirection={sortDirection}
+                  activeSortField={sortField}
+                  sortable={column.sortable !== false}
+                />
+              ))}
             </tr>
           </thead>
           <tbody>
-            {items.map((item, index) => (
+            {sortedItems.map((item, index) => (
               <ItemTableRow
                 key={item.id}
                 item={item}
@@ -56,7 +70,7 @@ const ItemTable = ({
         </table>
       </div>
 
-      {items.length === 0 && (
+      {sortedItems.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-400 font-sans">Nenhum item encontrado.</p>
         </div>

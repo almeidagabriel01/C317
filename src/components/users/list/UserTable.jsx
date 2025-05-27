@@ -1,9 +1,30 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { useSorting } from "@/utils/sortUtils";
+import SortableTableHeader from "@/components/common/SortableTableHeader";
 import UserTableRow from "./UserTableRow";
 
 const UserTable = ({ users, onEditUser, onToggleStatus }) => {
+  const {
+    handleSort,
+    getSortedData,
+    getSortIcon,
+    sortField,
+    sortDirection
+  } = useSorting(users);
+
+  const sortedUsers = getSortedData();
+
+  const columns = [
+    { field: 'name', label: 'Nome' },
+    { field: 'email', label: 'Email' },
+    { field: 'phone', label: 'Telefone' },
+    { field: 'role', label: 'Função' },
+    { field: 'status', label: 'Status' },
+    { field: 'actions', label: 'Ações', sortable: false }
+  ];
+
   return (
     <motion.div
       className="bg-gray-800 rounded-xl overflow-hidden shadow-lg"
@@ -15,23 +36,28 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
         <table className="min-w-[600px] md:min-w-0 w-full text-sm">
           <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
             <tr>
-              <th className="px-6 py-4 text-center align-middle">Nome</th>
-              <th className="px-6 py-4 text-center align-middle">Email</th>
-              <th className="px-6 py-4 text-center align-middle">Telefone</th>
-              <th className="px-6 py-4 text-center align-middle">Função</th>
-              <th className="px-6 py-4 text-center align-middle">Status</th>
-              <th className="px-6 py-4 text-center align-middle min-w-[120px]">Ações</th>
+              {columns.map((column) => (
+                <SortableTableHeader
+                  key={column.field}
+                  field={column.field}
+                  label={column.label}
+                  onSort={handleSort}
+                  sortDirection={sortDirection}
+                  activeSortField={sortField}
+                  sortable={column.sortable !== false}
+                />
+              ))}
             </tr>
           </thead>
           <AnimatePresence mode="wait">
             <motion.tbody
-              key={users.length}
+              key={sortedUsers.length}
               initial={{ opacity: 0.8, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0.8, scale: 0.98 }}
               transition={{ duration: 0.2 }}
             >
-              {users.map((user, index) => (
+              {sortedUsers.map((user, index) => (
                 <UserTableRow
                   key={user.id}
                   user={user}
@@ -45,7 +71,7 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
         </table>
       </div>
 
-      {users.length === 0 && (
+      {sortedUsers.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-400 font-sans">Nenhum usuário encontrado.</p>
         </div>

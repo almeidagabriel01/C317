@@ -31,16 +31,58 @@ const EditItemModal = ({ isOpen, onClose, item, onSave }) => {
         name: item.name || "",
         description: item.description || "",
         category: item.category || "",
-        price: item.price ? (item.price / 100) : "", // Converter de centavos para reais
+        price: formatPriceDisplay(item.price), // Formatar preço para exibição
         image: item.image,
       });
       setImagePreview(item.image);
     }
   }, [isOpen, item]);
 
+  // Função para formatar preço para exibição (centavos -> R$ formatado)
+  const formatPriceDisplay = (priceInCents) => {
+    if (!priceInCents) return '';
+    const priceInReais = priceInCents / 100;
+    return priceInReais.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setItemData((prev) => ({ ...prev, [name]: value }));
+    
+    if (name === 'price') {
+      // Formatação em tempo real do preço
+      const formattedPrice = formatPriceInput(value);
+      setItemData((prev) => ({ ...prev, [name]: formattedPrice }));
+    } else {
+      setItemData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  // Função para formatar o preço enquanto digita
+  const formatPriceInput = (value) => {
+    // Remove tudo que não é dígito
+    let numbers = value.replace(/\D/g, '');
+    
+    // Se vazio, retorna vazio
+    if (numbers === '') return '';
+    
+    // Converte para número e divide por 100 para ter centavos
+    let amount = parseInt(numbers) / 100;
+    
+    // Formata com vírgula decimal brasileira
+    return amount.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  // Função para converter o valor formatado de volta para número
+  const parsePriceValue = (formattedValue) => {
+    if (!formattedValue) return 0;
+    // Remove pontos de milhares e converte vírgula para ponto
+    return parseFloat(formattedValue.replace(/\./g, '').replace(',', '.')) || 0;
   };
 
   const handleFileSelect = (file) => {
@@ -97,7 +139,7 @@ const EditItemModal = ({ isOpen, onClose, item, onSave }) => {
     try {
       await onSave({
         ...itemData,
-        price: parseFloat(itemData.price) || 0,
+        price: parsePriceValue(itemData.price), // Converte preço formatado para número
       });
       onClose();
     } catch (error) {
@@ -160,10 +202,23 @@ const EditItemModal = ({ isOpen, onClose, item, onSave }) => {
           variants={contentVariants}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-[#E0CEAA] mb-6 font-serif">
+          {/* Header com X */}
+          <div className="sticky top-0 z-10 bg-[#1C2431] px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-[#E0CEAA] font-serif">
               Editar Item
             </h2>
+            <button
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-400 hover:text-white disabled:opacity-50"
+              title="Fechar modal"
+            >
+              <FiX size={20} />
+            </button>
+          </div>
+
+          {/* Conteúdo com scroll customizado */}
+          <div className="p-6 custom-scrollbar">
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
@@ -237,14 +292,12 @@ const EditItemModal = ({ isOpen, onClose, item, onSave }) => {
                     Preço (R$)
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     id="price"
                     name="price"
                     value={itemData.price}
                     onChange={handleChange}
                     required
-                    min="0"
-                    step="0.01"
                     disabled={isSubmitting}
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-amber-500 focus:border-amber-500 font-sans disabled:opacity-50"
                     placeholder="0,00"

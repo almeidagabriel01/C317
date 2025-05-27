@@ -6,6 +6,7 @@ import {
   FiActivity,
   FiFileText,
   FiDollarSign,
+  FiX,
 } from "react-icons/fi";
 
 const ViewItemModal = ({ isOpen, onClose, item }) => {
@@ -69,11 +70,11 @@ const ViewItemModal = ({ isOpen, onClose, item }) => {
       >
         <motion.div
           className="relative bg-[#1C2431] w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl 
-                     max-h-[95vh] overflow-y-auto rounded-xl shadow-2xl"
+                     max-h-[95vh] overflow-y-auto custom-scrollbar rounded-xl shadow-2xl"
           variants={contentVariants}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-3 sm:p-4 md:p-6">
+          <div className="p-3 sm:p-4 md:p-6 custom-scrollbar">
             {/* Header com botão de fechar no mobile */}
             <div className="flex justify-between items-center mb-4 md:mb-6">
               <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#E0CEAA] font-serif">
@@ -81,22 +82,10 @@ const ViewItemModal = ({ isOpen, onClose, item }) => {
               </h2>
               <button
                 onClick={onClose}
-                className="md:hidden p-2 rounded-full hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
-                aria-label="Fechar modal"
+                className="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-400 hover:text-white disabled:opacity-50"
+                title="Fechar modal"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <FiX size={20} />
               </button>
             </div>
 
@@ -151,7 +140,7 @@ const ViewItemModal = ({ isOpen, onClose, item }) => {
                 <p className="text-green-400 font-medium text-base sm:text-lg md:text-xl font-sans">
                   R${" "}
                   {item.price
-                    ? item.price.toFixed(2).replace(".", ",")
+                    ? (item.price / 100).toFixed(2).replace(".", ",")
                     : "0,00"}
                 </p>
               </div>
@@ -183,38 +172,15 @@ const ViewItemModal = ({ isOpen, onClose, item }) => {
                     </span>
                   </div>
                   <span
-                    className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${
-                      item.status === "Ativo"
+                    className={`text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full ${item.status === "Ativo"
                         ? "bg-green-900 text-green-300"
                         : "bg-red-900 text-red-300"
-                    } inline-block`}
+                      } inline-block`}
                   >
                     {item.status}
                   </span>
                 </div>
               </div>
-            </div>
-
-            {/* Botão de fechar - Desktop */}
-            <div className="mt-6 md:mt-8 flex justify-end">
-              <button
-                onClick={onClose}
-                className="hidden md:inline-flex px-4 sm:px-6 py-2 bg-[#9D4815] hover:bg-amber-600 
-                          rounded-full text-white transition-colors font-sans font-medium text-sm sm:text-base"
-              >
-                Fechar
-              </button>
-            </div>
-
-            {/* Botão de fechar - Mobile (full width) */}
-            <div className="mt-6 md:hidden">
-              <button
-                onClick={onClose}
-                className="w-full px-4 py-3 bg-[#9D4815] hover:bg-amber-600 
-                          rounded-lg text-white transition-colors font-sans font-medium"
-              >
-                Fechar
-              </button>
             </div>
           </div>
         </motion.div>

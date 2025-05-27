@@ -54,6 +54,11 @@ const ItemTableRow = ({
     }
   };
 
+  // Handler para o toggle que só passa o ID do item
+  const handleToggleStatus = () => {
+    onToggleStatus(item.id);
+  };
+
   return (
     <tr
       className={`border-b border-gray-700 ${
@@ -121,7 +126,7 @@ const ItemTableRow = ({
           </button>
           <StatusToggle
             isActive={item.status === "Ativo"}
-            onChange={(isActive) => onToggleStatus(item.id, isActive)}
+            onChange={handleToggleStatus}
           />
         </div>
       </td>

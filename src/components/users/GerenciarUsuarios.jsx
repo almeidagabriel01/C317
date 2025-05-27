@@ -146,7 +146,7 @@ export default function GerenciarUsuarios() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <h1 className="text-3xl font-bold text-amber-400 mb-4 md:mb-0 font-serif">
-            Gerenciar Usuários ({users.length})
+            Gerenciar Usuários ({filteredUsers.length})
           </h1>
 
           {/* Search bar component */}
@@ -156,7 +156,7 @@ export default function GerenciarUsuarios() {
           />
         </div>
 
-        {/* User table component */}
+        {/* User table component - agora com ordenação */}
         <UserTable
           users={filteredUsers}
           onEditUser={handleEditUser}

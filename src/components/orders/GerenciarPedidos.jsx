@@ -166,7 +166,7 @@ export default function GerenciarPedidos() {
           </div>
         </div>
 
-        {/* tabela */}
+        {/* tabela com ordenação */}
         <OrderTable
           orders={filteredOrders}
           onViewOrder={(o) => {
