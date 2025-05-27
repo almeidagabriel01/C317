@@ -14,7 +14,7 @@ import { toast } from 'react-toastify';
 const AuthContext = createContext(null);
 
 const BUYER_ROUTES = ['/profile','/pagamento','/personalizar','/pacotes'];
-const ORGANIZER_ROUTES = ['/dashboard','/users'];
+const ORGANIZER_ROUTES = ['/dashboard','/users','/pedidos','/gerenciar-itens'];
 const ORGANIZER_RESTRICTED = [...BUYER_ROUTES,'/'];
 const BUYER_RESTRICTED = ORGANIZER_ROUTES;
 
