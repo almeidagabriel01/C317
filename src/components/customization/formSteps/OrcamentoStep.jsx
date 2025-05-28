@@ -72,7 +72,7 @@ export default function OrcamentoStep({ resumo, onBack, direction, backendPrice 
       await createPedido(payload);
       toast.success("Pedido enviado com sucesso!");
       localStorage.removeItem("C317_eventFlow");
-      router.push("/");
+      router.push("/profile");
     } catch (e) {
       toast.error(e.message || "Erro ao enviar pedido");
     } finally {

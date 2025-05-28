@@ -335,7 +335,7 @@ export const fetchPackageItems = async (packageId) => {
 // Função para criar pedido a partir de pacote pronto
 export const createPackageOrder = async (payload) => {
   try {
-    const response = await apiClient.post('/pedido/update/packages/', payload);
+    const response = await apiClient.post('/pedido/create/packages/', payload);
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));

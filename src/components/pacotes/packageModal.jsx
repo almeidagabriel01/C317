@@ -106,21 +106,74 @@ export default function PackageModal({ isOpen, onClose, packageInfo }) {
   // Função para calcular horário de fim
   const calcularHorarioFim = () => packageHook.calcularHorarioFim();
 
-  // Função para criar o payload
-  const createPayload = () => {
+  // Função para criar o payload base
+  const createBasePayload = () => {
     return {
       id_pacote: packageInfo.id,
       Nome_Evento: packageHook.formData.name,
       Horario_Inicio: packageHook.formData.startTime,
       Horario_Fim: calcularHorarioFim(),
       Data_Evento: formatDateToYYYYMMDD(packageHook.formData.date),
-      // Status: status,
     };
   };
 
-  // Handlers para salvar e enviar
-  const handleSalvarOrcamento = async () => { /* ... (Mantido como original) ... */ };
-  const handleEnviarPedido = async () => { /* ... (Mantido como original) ... */ };
+  // Handler para salvar orçamento (Status: "Orcado")
+  const handleSalvarOrcamento = async () => {
+    if (!isFormValid() || showDateError || showTimeError) {
+      toast.error("Por favor, corrija os erros no formulário antes de salvar.");
+      return;
+    }
+
+    setSavingBudget(true);
+    const payload = {
+      ...createBasePayload(),
+      Status: "Orcado",
+    };
+
+    console.log("Payload para salvar orçamento:", payload);
+
+    try {
+      await createPackageOrder(payload);
+      toast.success("Orçamento salvo com sucesso!");
+      packageHook.clearData();
+      handleClose();
+      router.push("/profile");
+    } catch (error) {
+      console.error("Erro ao salvar orçamento:", error);
+      toast.error(error.message || "Erro ao salvar orçamento");
+    } finally {
+      setSavingBudget(false);
+    }
+  };
+
+  // Handler para enviar pedido (Status: "Pendente")
+  const handleEnviarPedido = async () => {
+    if (!isFormValid() || showDateError || showTimeError) {
+      toast.error("Por favor, corrija os erros no formulário antes de enviar.");
+      return;
+    }
+
+    setLoading(true);
+    const payload = {
+      ...createBasePayload(),
+      Status: "Pendente",
+    };
+
+    console.log("Payload para enviar pedido:", payload);
+
+    try {
+      await createPackageOrder(payload);
+      toast.success("Pedido enviado com sucesso!");
+      packageHook.clearData();
+      handleClose();
+      router.push("/profile");
+    } catch (error) {
+      console.error("Erro ao enviar pedido:", error);
+      toast.error(error.message || "Erro ao enviar pedido");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handler para avançar para o formulário
   const handleAdvance = () => {

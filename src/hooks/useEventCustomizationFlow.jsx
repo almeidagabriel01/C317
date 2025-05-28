@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchItems, calculateOrderPrice } from "@/services/api";
 
 export function groupItemsByCategory(items) {
@@ -41,8 +41,20 @@ const saveToStorage = (data) => {
   }
 };
 
+// Cache global simples para evitar chamadas duplicadas
+let itemsCache = {
+  data: null,
+  loading: false,
+  error: null,
+  timestamp: null
+};
+
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
 export function useEventCustomizationFlow(STEPS, toast) {
   const saved = initializeFromStorage();
+  const mountedRef = useRef(true);
+  const fetchedRef = useRef(false); // Ref para controlar se já fez fetch
 
   const [currentStep, setCurrentStep] = useState(saved.currentStep ?? 0);
   const [animatedStep, setAnimatedStep] = useState(saved.currentStep ?? 0);
@@ -92,21 +104,70 @@ export function useEventCustomizationFlow(STEPS, toast) {
     selectedStructure, staffQuantities
   ]);
 
-  // Effect para carregar itens da API
+  // Effect para carregar itens da API (com cache e controle de duplicação)
   useEffect(() => {
+    // Se já fez fetch ou está carregando, não faz novamente
+    if (fetchedRef.current || itemsCache.loading) {
+      if (itemsCache.data) {
+        setItems(itemsCache.data);
+        setCategorizedItems(groupItemsByCategory(itemsCache.data));
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Se tem cache válido, usa ele
+    if (itemsCache.data && itemsCache.timestamp && 
+        (Date.now() - itemsCache.timestamp) < CACHE_DURATION) {
+      setItems(itemsCache.data);
+      setCategorizedItems(groupItemsByCategory(itemsCache.data));
+      setLoading(false);
+      fetchedRef.current = true;
+      return;
+    }
+
+    // Marca como já tentou fazer fetch
+    fetchedRef.current = true;
+    itemsCache.loading = true;
+
     fetchItems()
       .then((data) => {
-        setItems(data);
-        setCategorizedItems(groupItemsByCategory(data));
+        if (mountedRef.current) {
+          // Atualiza cache
+          itemsCache.data = data;
+          itemsCache.timestamp = Date.now();
+          itemsCache.loading = false;
+          itemsCache.error = null;
+
+          // Atualiza estado
+          setItems(data);
+          setCategorizedItems(groupItemsByCategory(data));
+        }
       })
       .catch((error) => {
         console.error("Erro ao carregar itens:", error);
-        if (toast) {
-          toast.error("Erro ao carregar itens do catálogo");
+        if (mountedRef.current) {
+          itemsCache.loading = false;
+          itemsCache.error = error.message;
+          if (toast) {
+            toast.error("Erro ao carregar itens do catálogo");
+          }
         }
       })
-      .finally(() => setLoading(false));
-  }, [toast]);
+      .finally(() => {
+        if (mountedRef.current) {
+          setLoading(false);
+        }
+      });
+  }, []); // Dependências vazias para rodar apenas uma vez
+
+  // Cleanup
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Função para calcular o preço no backend
   const calculateBackendPrice = async (itens) => {

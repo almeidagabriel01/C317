@@ -118,7 +118,7 @@ export default function UserOrders() {
                   className="bg-gray-700 rounded-lg p-6 border border-gray-600 hover:border-amber-400 transition-colors"
                 >
                   {/* Header do Card */}
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-4 gap-3">
                     <div>
                       <h3 className="text-lg font-semibold text-white truncate">
                         {order.nomeEvento}

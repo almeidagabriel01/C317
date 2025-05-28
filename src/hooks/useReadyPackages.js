@@ -33,7 +33,6 @@ const clearStorage = (packageId) => {
   }
 };
 
-
 // Função para validar data no formato yyyy-mm-dd
 const isValidDate = (input) => {
   if (!input) return false;
@@ -58,68 +57,61 @@ const isValidTime = (input) => {
   );
 };
 
+// Mapeamento das categorias para nomes amigáveis
 const categoryMap = {
-  alcoolicos: "Drinks Inclusos",
+  alcoolicos: "Bebidas Alcoólicas",
   nao_alcoolicos: "Bebidas Não Alcoólicas",
   outras_bebidas: "Outras Bebidas",
   shots: "Shots",
   estrutura: "Estrutura",
-  funcionarios: "Equipe",
-  outros: "Outros Itens"
+  funcionarios: "Equipe"
 };
 
+// Ordem das categorias para exibição
 const categoryOrder = [
-  "alcoolicos", "nao_alcoolicos", "outras_bebidas",
-  "shots", "estrutura", "funcionarios", "outros"
+  "alcoolicos", 
+  "nao_alcoolicos", 
+  "outras_bebidas",
+  "shots", 
+  "estrutura", 
+  "funcionarios"
 ];
 
-const groupPackageItems = (packageItems, allItems) => {
+// Função para agrupar itens do pacote por categoria (usando categoria da API)
+const groupPackageItems = (packageItems) => {
   const grouped = {};
-  const allItemsMap = new Map(allItems.map(i => [i.item.ID, i.item]));
 
   packageItems.forEach(pkgItem => {
-    const itemID = pkgItem.id_item || pkgItem.ID;
-    const itemDetails = itemID ? allItemsMap.get(itemID) : null;
-
-    let category = 'outros';
-    let itemName = pkgItem.nome || `Item ID ${itemID || 'Desconhecido'}`;
-
-    if (itemDetails) {
-      category = itemDetails.Categoria || 'outros';
-      itemName = itemDetails.Nome;
-    } else if (pkgItem.nome) {
-        const foundByName = allItems.find(i => i.item.Nome === pkgItem.nome);
-        if (foundByName) {
-            category = foundByName.item.Categoria || 'outros';
-            itemName = foundByName.item.Nome;
-        } else {
-            console.warn(`Item '${itemName}' from package not found in all items list.`);
-        }
-    } else {
-        console.warn(`Item ID ${itemID} from package not found and has no name.`);
-    }
+    // A categoria agora vem da API
+    const category = pkgItem.categoria || 'outros';
 
     if (!grouped[category]) {
       grouped[category] = [];
     }
+
     grouped[category].push({
-      id_item: itemID,
-      nome: itemName,
+      id_item: pkgItem.id_item,
+      nome: pkgItem.nome,
       quantidade: pkgItem.quantidade,
       categoria: category,
     });
   });
 
+  // Organizar as categorias na ordem definida
   const sortedGrouped = {};
+  
+  // Primeiro, adiciona as categorias na ordem definida
   categoryOrder.forEach(catKey => {
-    if (grouped[catKey]) {
+    if (grouped[catKey] && grouped[catKey].length > 0) {
       sortedGrouped[catKey] = grouped[catKey];
     }
   });
+  
+  // Depois, adiciona qualquer categoria adicional que não esteja na ordem predefinida
   Object.keys(grouped).forEach(catKey => {
-      if (!sortedGrouped[catKey]) {
-          sortedGrouped[catKey] = grouped[catKey];
-      }
+    if (!sortedGrouped[catKey] && grouped[catKey].length > 0) {
+      sortedGrouped[catKey] = grouped[catKey];
+    }
   });
 
   return sortedGrouped;
@@ -132,70 +124,61 @@ export const useReadyPackages = (packageInfo) => {
   const [formData, setFormData] = useState({
     name: saved.formData?.name ?? "",
     date: saved.formData?.date ?? "",
-    startTime: saved.formData?.startTime ?? "", // <-- MODIFICADO AQUI
+    startTime: saved.formData?.startTime ?? "",
   });
 
   const [packageItems, setPackageItems] = useState([]);
-  const [allItems, setAllItems] = useState([]);
   const [categorizedItems, setCategorizedItems] = useState({});
   const [loadingItems, setLoadingItems] = useState(false);
   const [itemsError, setItemsError] = useState(null);
 
+  // Salva no localStorage quando o formData muda
   useEffect(() => {
     if (!packageId) return;
     const toSave = { formData };
     saveToStorage(packageId, toSave);
   }, [formData, packageId]);
 
-  useEffect(() => {
-    fetchItems()
-      .then(setAllItems)
-      .catch(err => {
-        console.error("Erro ao carregar todos os itens:", err);
-        setItemsError("Não foi possível carregar detalhes dos itens.");
-      });
-  }, []);
-
+  // Função para carregar itens do pacote
   const loadPackageItems = useCallback(async (id) => {
     setLoadingItems(true);
     setItemsError(null);
     setPackageItems([]);
     setCategorizedItems({});
+    
     try {
       const items = await fetchPackageItems(id);
+      
       if (Array.isArray(items)) {
-          setPackageItems(items);
+        console.log("Itens do pacote recebidos:", items);
+        setPackageItems(items);
+        
+        // Agrupa os itens por categoria usando a categoria que vem da API
+        const grouped = groupPackageItems(items);
+        console.log("Itens categorizados:", grouped);
+        setCategorizedItems(grouped);
       } else {
-          console.error("fetchPackageItems não retornou um array:", items);
-          setItemsError("Formato de dados inesperado.");
-          setPackageItems([]);
+        console.error("fetchPackageItems não retornou um array:", items);
+        setItemsError("Formato de dados inesperado.");
+        setPackageItems([]);
+        setCategorizedItems({});
       }
     } catch (error) {
       console.error('Erro ao carregar itens do pacote:', error);
       setItemsError(error.message);
       setPackageItems([]);
+      setCategorizedItems({});
     } finally {
       setLoadingItems(false);
     }
   }, []);
 
+  // Carrega os itens quando o packageInfo muda
   useEffect(() => {
     if (packageInfo?.id) {
       loadPackageItems(packageInfo.id);
     }
   }, [packageInfo?.id, loadPackageItems]);
-
-  useEffect(() => {
-    if (packageItems.length > 0) {
-      if (allItems.length > 0) {
-        setCategorizedItems(groupPackageItems(packageItems, allItems));
-      } else {
-        setCategorizedItems({ outros: packageItems.map(item => ({ ...item, categoria: 'outros' })) });
-      }
-    } else {
-      setCategorizedItems({});
-    }
-  }, [packageItems, allItems]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -221,7 +204,7 @@ export const useReadyPackages = (packageInfo) => {
   };
 
   const resetForm = () => {
-    setFormData({ name: "", date: "", startTime: "" }); // <-- MODIFICADO AQUI
+    setFormData({ name: "", date: "", startTime: "" });
     setItemsError(null);
     if (packageId) clearStorage(packageId);
   };
