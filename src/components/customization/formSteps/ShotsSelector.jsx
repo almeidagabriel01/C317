@@ -3,17 +3,13 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
+import { formatCurrency } from "@/utils/formatUtils";
 
 export default function ShotsSelector({ items, shotQuantities, setShotQuantity, onNext, onBack, direction, isValid }) {
   // Função para atualizar a quantidade de um shot
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 0) return;
     setShotQuantity(id, newQuantity);
-  };
-
-  // Função para formatar o preço em reais
-  const formatPrice = (price) => {
-    return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
   const itemVariants = {
@@ -93,7 +89,7 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
 
               <div className="flex-1">
                 <div className="font-bold text-[#E0CEAA] text-sm md:text-base">{item.item.Descricao}</div>
-                <div className="text-sm text-[#9D4815] font-semibold mt-1">{formatPrice(item.item.Preco)} / unidade</div>
+                <div className="text-sm text-[#9D4815] font-semibold mt-1">{formatCurrency(item.item.Preco)} / unidade</div>
               </div>
 
               <div className="flex items-center bg-[#1A222F] rounded-full border border-[#E0CEAA]/30 overflow-hidden">
@@ -150,14 +146,14 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
               .map(item => (
                 <div key={item.item.ID} className="flex justify-between text-white">
                   <span>{item.item.Descricao} <span className="text-gray-400">x {shotQuantities[item.item.ID]}</span></span>
-                  <span>{formatPrice(item.item.Preco * shotQuantities[item.item.ID])}</span>
+                  <span>{formatCurrency(item.item.Preco * shotQuantities[item.item.ID])}</span>
                 </div>
               ))}
           </div>
           <div className="flex justify-between text-lg font-bold text-[#E0CEAA] pt-3 border-t border-gray-700/40">
             <span>Total</span>
             <span>
-              {formatPrice(
+              {formatCurrency(
                 items.reduce((sum, item) => {
                   return sum + (item.item.Preco * (shotQuantities[item.item.ID] || 0));
                 }, 0)

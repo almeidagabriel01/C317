@@ -6,7 +6,11 @@ import StatusToggle from "../toggle/StatusToggle";
 const UserTableRow = ({ user, index, onEdit, onToggleStatus }) => {
   return (
     <tr
-      className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-700 bg-opacity-20' : 'bg-gray-700 bg-opacity-10'}`}
+      className={`border-b border-gray-700 ${
+        index % 2 === 0
+          ? "bg-gray-700 bg-opacity-20 hover:bg-gray-800 hover:bg-opacity-30"
+          : "bg-gray-700 bg-opacity-10 hover:bg-gray-800 hover:bg-opacity-30"
+      }`}
     >
       <td className="px-6 py-4 font-medium text-white text-center">
         <div className="flex items-center justify-center">
@@ -29,7 +33,7 @@ const UserTableRow = ({ user, index, onEdit, onToggleStatus }) => {
       <td className="px-6 py-4 text-center">
         <div className="flex items-center justify-center">
           <FiTag className="mr-2" />
-          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${user.role === 'Organizador'
+          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${user.role === 'Administrador'
             ? 'bg-purple-900 text-purple-300'
             : 'bg-blue-900 text-blue-300'
             }`}>

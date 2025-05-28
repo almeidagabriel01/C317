@@ -4,8 +4,9 @@ import { AnimatePresence } from "framer-motion";
 import Navbar from "@/components/navbar/Navbar";
 import CustomStepper from "@/components/customization/stepIndicator/CustomStepper";
 import StepRenderer from "./stepIndicator/StepRenderer";
-import { useEventCustomizationFlow } from "./useEventCustomizationFlow";
+import { useEventCustomizationFlow } from "../../hooks/useEventCustomizationFlow";
 import { toast } from "react-toastify";
+import { formatDateToDDMMYYYY } from "@/utils/formatUtils";
 
 const STEPS = [
   { label: "Informações" },
@@ -17,13 +18,6 @@ const STEPS = [
   { label: "Bartender" },
   { label: "Orçamento" },
 ];
-
-function formatDateToDDMMYYYY(dateStr) {
-  if (!dateStr) return "";
-  const [year, month, day] = dateStr.split("-");
-  if (!year || !month || !day) return dateStr;
-  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
-}
 
 export default function EventCustomizationPage() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -44,8 +38,8 @@ export default function EventCustomizationPage() {
 
   function getResumo() {
     const { selectedEventType, formData, selectedDrinks, selectedNonAlcoholicDrinks, beverageQuantities, shotQuantities, selectedStructure, staffQuantities, categorizedItems, items } = flow;
+
     const calcularHorarioFim = () => {
-      const start = "18:00";
       const [h, m] = formData.eventDuration.split(":").map(Number);
       let total = Number(h) * 60 + Number(m);
       let nh = 18 + Math.floor(total / 60);
@@ -53,6 +47,7 @@ export default function EventCustomizationPage() {
       nh = nh >= 24 ? nh - 24 : nh;
       return `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`;
     };
+
     const calcularValorTotal = () => {
       let total = 0;
       total += categorizedItems.alcoolicos
@@ -73,11 +68,12 @@ export default function EventCustomizationPage() {
       }
       return total;
     };
+
     return {
       tipoEvento: selectedEventType,
       nome: formData.name,
       data: formatDateToDDMMYYYY(formData.date),
-      eventAddress: formData.eventAddress,
+      // Removido eventAddress
       numConvidados: formData.guestCount,
       horarioInicio: formData.startTime,
       horarioFim: calcularHorarioFim(),
@@ -95,26 +91,7 @@ export default function EventCustomizationPage() {
       estrutura:
         categorizedItems.estrutura.find((i) => i.item.ID === selectedStructure)?.item.Descricao || "",
       valorTotal: calcularValorTotal(),
-      itens: [
-        ...selectedDrinks.map((d) => {
-          const f = items.find((i) => i.item.Descricao === d);
-          return f && { ID: f.item.ID, quantidade: 1 };
-        }).filter(Boolean),
-        ...selectedNonAlcoholicDrinks.map((d) => {
-          const f = items.find((i) => i.item.Descricao === d);
-          return f && { ID: f.item.ID, quantidade: 1 };
-        }).filter(Boolean),
-        ...Object.entries(beverageQuantities)
-          .filter(([, q]) => q > 0)
-          .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
-        ...Object.entries(shotQuantities)
-          .filter(([, q]) => q > 0)
-          .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
-        ...Object.entries(staffQuantities)
-          .filter(([, q]) => q > 0)
-          .map(([id, q]) => ({ ID: Number(id), quantidade: q })),
-        ...(selectedStructure ? [{ ID: selectedStructure, quantidade: 1 }] : []),
-      ],
+      itens: flow.generateOrderItems(),
     };
   }
 
@@ -141,6 +118,8 @@ export default function EventCustomizationPage() {
             items={flow.items}
             loading={flow.loading}
             getResumo={getResumo}
+            backendPrice={flow.backendPrice}
+            calculatingPrice={flow.calculatingPrice}
           />
         </AnimatePresence>
       </div>

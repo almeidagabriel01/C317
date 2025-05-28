@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
+import { formatCurrency } from "@/utils/formatUtils";
 
 export default function NonAlcoholicDrinkSelector({ items = [], selectedDrinks, toggleDrink, onNext, onBack, direction, isValid }) {
   const itemVariants = {
@@ -104,7 +105,7 @@ export default function NonAlcoholicDrinkSelector({ items = [], selectedDrinks, 
             <div className="flex flex-col flex-1">
               <div className="font-bold text-[#E0CEAA] text-xs md:text-sm lg:text-base">{item.item.Descricao}</div>
               <div className="text-xs text-gray-300/80 md:leading-snug">
-                {item.item.Preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {formatCurrency(item.item.Preco)}
               </div>
             </div>
           </div>
@@ -127,7 +128,7 @@ export default function NonAlcoholicDrinkSelector({ items = [], selectedDrinks, 
                 <div key={item.item.ID} className="flex justify-between text-white">
                   <span>{item.item.Descricao}</span>
                   <span>
-                    {item.item.Preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    {formatCurrency(item.item.Preco)}
                   </span>
                 </div>
               ))}
@@ -135,12 +136,11 @@ export default function NonAlcoholicDrinkSelector({ items = [], selectedDrinks, 
           <div className="flex justify-between text-lg font-bold text-[#E0CEAA] pt-3 border-t border-gray-700/40">
             <span>Total</span>
             <span>
-              {
+              {formatCurrency(
                 items
                   .filter(item => selectedDrinks.includes(item.item.Descricao))
                   .reduce((sum, item) => sum + item.item.Preco, 0)
-                  .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-              }
+              )}
             </span>
           </div>
         </motion.div>

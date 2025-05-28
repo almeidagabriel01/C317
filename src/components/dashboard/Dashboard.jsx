@@ -14,7 +14,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/login');
-    } else if (!loading && isAuthenticated && role !== 'Organizador') {
+    } else if (!loading && isAuthenticated && role !== 'Administrador') {
       router.push('/');
     }
   }, [isAuthenticated, loading, router, role]);

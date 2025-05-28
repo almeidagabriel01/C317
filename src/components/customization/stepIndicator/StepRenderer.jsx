@@ -8,14 +8,6 @@ import StructureSelector from "@/components/customization/formSteps/StructureSel
 import StaffSelector from "@/components/customization/formSteps/StaffSelector";
 import OrcamentoStep from "@/components/customization/formSteps/OrcamentoStep";
 
-// Função utilitária de formatação de data para resumo
-function formatDateToDDMMYYYY(dateStr) {
-  if (!dateStr) return "";
-  const [year, month, day] = dateStr.split("-");
-  if (!year || !month || !day) return dateStr;
-  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
-}
-
 export default function StepRenderer({
   step,
   direction,
@@ -25,6 +17,8 @@ export default function StepRenderer({
   items,
   loading,
   getResumo,
+  backendPrice,
+  calculatingPrice,
 }) {
   if (loading && step > 1) {
     return (
@@ -140,6 +134,7 @@ export default function StepRenderer({
           onBack={actions.handleBack}
           key="step8"
           direction={direction}
+          backendPrice={backendPrice}
         />
       );
     default:

@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { FiUser, FiLogOut, FiChevronDown, FiLogIn, FiHome, FiUsers, FiMenu, FiX } from "react-icons/fi";
+import { FiUser, FiLogOut, FiChevronDown, FiLogIn, FiHome, FiUsers, FiMenu, FiX, FiPackage, FiTag } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar({ isAuthenticated, user, onLogout }) {
@@ -15,7 +15,7 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
   const pathname = usePathname();
   
   // Determine user role for conditional rendering
-  const isOrganizer = user?.role === 'Organizador';
+  const isOrganizer = user?.role === 'Administrador';
 
   // Animation variants for mobile menu
   const mobileMenuVariants = {
@@ -156,7 +156,7 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
         {/* Desktop Navigation links - center */}
         {isAuthenticated && isOrganizer && (
           <div className="hidden lg:flex items-center justify-center flex-grow mx-4">
-            <div className="flex space-x-8">
+            <div className="flex space-x-6">
               <Link
                 href="/dashboard"
                 className={`flex items-center transition-colors font-medium px-3 py-2 rounded-lg ${
@@ -179,6 +179,28 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
                 <FiUsers className="mr-2" />
                 Gerenciar Usuários
               </Link>
+              <Link
+                href="/pedidos"
+                className={`flex items-center transition-colors font-medium px-3 py-2 rounded-lg ${
+                  isLinkActive('/pedidos')
+                    ? 'bg-amber-700 text-white'
+                    : 'text-amber-100 hover:bg-amber-800/30 hover:text-amber-300'
+                }`}
+              >
+                <FiPackage className="mr-2" />
+                Pedidos
+              </Link>
+              <Link
+                href="/gerenciar-itens"
+                className={`flex items-center transition-colors font-medium px-3 py-2 rounded-lg ${
+                  isLinkActive('/gerenciar-itens')
+                    ? 'bg-amber-700 text-white'
+                    : 'text-amber-100 hover:bg-amber-800/30 hover:text-amber-300'
+                }`}
+              >
+                <FiTag className="mr-2" />
+                Gerenciar Itens
+              </Link>
             </div>
           </div>
         )}
@@ -196,10 +218,10 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
               >
                 <div className="flex flex-col items-end mr-2">
                   <span className="text-sm text-amber-200 font-medium truncate max-w-[100px] sm:max-w-[120px] md:max-w-[150px]">
-                    {user?.userName}
+                    {user?.nome}
                   </span>
                   <span className="text-xs text-amber-100/70">
-                    {isOrganizer ? 'Organizador' : 'Minha conta'}
+                    {isOrganizer ? 'Administrador' : 'Minha conta'}
                   </span>
                 </div>
 
@@ -334,6 +356,36 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
                 >
                   <FiUsers className="mr-3 h-5 w-5" />
                   <span className="font-medium">Gerenciar Usuários</span>
+                </Link>
+              </motion.div>
+
+              <motion.div variants={menuItemVariants}>
+                <Link
+                  href="/pedidos"
+                  className={`flex items-center w-full p-3 rounded-lg transition-colors ${
+                    isLinkActive('/pedidos')
+                      ? 'bg-amber-700 text-white'
+                      : 'text-gray-200 hover:bg-gray-700 hover:text-amber-300'
+                  }`}
+                  onClick={closeMobileMenu}
+                >
+                  <FiPackage className="mr-3 h-5 w-5" />
+                  <span className="font-medium">Pedidos</span>
+                </Link>
+              </motion.div>
+
+              <motion.div variants={menuItemVariants}>
+                <Link
+                  href="/gerenciar-itens"
+                  className={`flex items-center w-full p-3 rounded-lg transition-colors ${
+                    isLinkActive('/gerenciar-itens')
+                      ? 'bg-amber-700 text-white'
+                      : 'text-gray-200 hover:bg-gray-700 hover:text-amber-300'
+                  }`}
+                  onClick={closeMobileMenu}
+                >
+                  <FiTag className="mr-3 h-5 w-5" />
+                  <span className="font-medium">Gerenciar Itens</span>
                 </Link>
               </motion.div>
             </div>

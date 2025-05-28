@@ -1,7 +1,13 @@
 "use client";
 
-export default function OrcamentoResumo({ resumo }) {
+import { formatCurrency } from "@/utils/formatUtils";
+
+export default function OrcamentoResumo({ resumo, backendPrice = NaN }) {
   if (!resumo) return null;
+
+  // Usar o preço do backend se disponível e válido, senão usar o calculado localmente
+  const finalPrice = !isNaN(backendPrice) ? backendPrice : resumo.valorTotal;
+  const isBackendPrice = !isNaN(backendPrice);
 
   return (
     <div className="space-y-6">
@@ -10,7 +16,6 @@ export default function OrcamentoResumo({ resumo }) {
         <Info label="Evento" value={resumo.tipoEvento} />
         <Info label="Nome" value={resumo.nome} />
         <Info label="Data" value={resumo.data} />
-        <Info label="Endereço" value={resumo.eventAddress} />
         <Info label="Convidados" value={resumo.numConvidados} />
         <Info label="Horário" value={`${resumo.horarioInicio} – ${resumo.horarioFim}`} />
       </div>
@@ -40,12 +45,20 @@ export default function OrcamentoResumo({ resumo }) {
       {/* Total */}
       <div className="text-right">
         <span className="text-xl font-semibold text-[#E0CEAA]">Total: </span>
-        <span className="text-2xl font-bold text-yellow-300">
-          {Number(resumo.valorTotal).toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })}
-        </span>
+        {resumo.calculatingPrice ? (
+          <div className="inline-flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-300"></div>
+            <span className="text-lg text-yellow-300">Calculando...</span>
+          </div>
+        ) : isNaN(finalPrice) ? (
+          <span className="text-2xl font-bold text-red-400">
+            Erro no cálculo
+          </span>
+        ) : (
+          <span className="text-2xl font-bold text-yellow-300">
+            {formatCurrency(finalPrice)}
+          </span>
+        )}
       </div>
     </div>
   );

@@ -14,7 +14,7 @@ import { toast } from 'react-toastify';
 const AuthContext = createContext(null);
 
 const BUYER_ROUTES = ['/profile','/pagamento','/personalizar','/pacotes'];
-const ORGANIZER_ROUTES = ['/dashboard','/users'];
+const ORGANIZER_ROUTES = ['/dashboard','/users','/pedidos','/gerenciar-itens'];
 const ORGANIZER_RESTRICTED = [...BUYER_ROUTES,'/'];
 const BUYER_RESTRICTED = ORGANIZER_ROUTES;
 
@@ -32,16 +32,29 @@ export const AuthProvider = ({ children }) => {
   [],);
 
   const isRestrictedRoute = useCallback(path => {
-    if (role === 'Comprador') {
+    if (role === 'Cliente') {
       return BUYER_RESTRICTED.some(r => path === r || path.startsWith(`${r}/`));
     }
-    if (role === 'Organizador') {
+    if (role === 'Administrador') {
       return ORGANIZER_RESTRICTED.some(r => path === r || path.startsWith(`${r}/`));
     }
     return false;
   }, [role]);
 
-  // Ao iniciar, lê token e faz mock fetch do usuário
+  // Função para normalizar dados do usuário
+  const normalizeUser = useCallback((userData) => {
+    return {
+      ID: userData.ID || userData.id,
+      nome: userData.nome || userData.userName || userData.name,
+      email: userData.email || userData.Email,
+      role: userData.role,
+      celular: userData.celular || userData.NumCel,
+      ativo: userData.ativo !== undefined ? userData.ativo : userData.Ativo,
+      originalData: userData.originalData || userData,
+    };
+  }, []);
+
+  // Ao iniciar, lê token e busca dados do usuário via API
   useEffect(() => {
     const init = async () => {
       const t = localStorage.getItem('authToken');
@@ -52,17 +65,20 @@ export const AuthProvider = ({ children }) => {
       setToken(t);
       try {
         const me = await fetchCurrentUser();
-        setUser(me);
-        setRole(me.role);
+        const normalizedUser = normalizeUser(me);
+        setUser(normalizedUser);
+        setRole(normalizedUser.role);
       } catch {
         localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
+        setToken(null);
+        setUser(null);
+        setRole(null);
       } finally {
         setLoading(false);
       }
     };
     init();
-  }, []);
+  }, [normalizeUser]);
 
   // Proteção de rotas
   useEffect(() => {
@@ -70,7 +86,7 @@ export const AuthProvider = ({ children }) => {
     const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
 
     if (isRestrictedRoute(pathname) && token) {
-      router.push(role === 'Organizador' ? '/dashboard' : '/');
+      router.push(role === 'Administrador' ? '/dashboard' : '/');
       return;
     }
     if (isPrivateRoute(pathname) && !token) {
@@ -90,13 +106,15 @@ export const AuthProvider = ({ children }) => {
       const t = data.access_token;
       const me = data.user;
 
-      setToken(t);
-      setUser(me);
-      setRole(me.role);
+      // Normalizar dados do usuário
+      const normalizedUser = normalizeUser(me);
 
-      // salva token e dados completos para mock
+      setToken(t);
+      setUser(normalizedUser);
+      setRole(normalizedUser.role);
+
+      // Salva apenas o token, dados serão buscados via API
       localStorage.setItem('authToken', t);
-      localStorage.setItem('userData', JSON.stringify(me));
 
       toast.update(idToast, {
         render: "Login realizado!",
@@ -105,7 +123,7 @@ export const AuthProvider = ({ children }) => {
         autoClose: 2000
       });
 
-      router.push(me.role === 'Organizador' ? '/dashboard' : '/');
+      router.push(normalizedUser.role === 'Administrador' ? '/dashboard' : '/');
     } catch (err) {
       toast.update(idToast, {
         render: `Erro: ${err.message}`,
@@ -122,17 +140,32 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setRole(null);
     localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
     toast.info('Logout realizado.');
     router.push('/login');
   }, [router]);
+
+  // Função para recarregar dados do usuário
+  const refreshUser = useCallback(async () => {
+    if (!token) return null;
+    try {
+      const me = await fetchCurrentUser();
+      const normalizedUser = normalizeUser(me);
+      setUser(normalizedUser);
+      setRole(normalizedUser.role);
+      return normalizedUser;
+    } catch (error) {
+      console.error('Erro ao recarregar dados do usuário:', error);
+      return null;
+    }
+  }, [token, normalizeUser]);
 
   return (
     <AuthContext.Provider value={{
       user, token, role,
       isAuthenticated: !!token,
       loading, login, logout,
-      isPrivateRoute, isRestrictedRoute
+      isPrivateRoute, isRestrictedRoute,
+      refreshUser
     }}>
       {children}
     </AuthContext.Provider>

@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
-import { fetchUsers, updateUser, updateUserStatus } from "@/services/api";
+import { updateUser, updateUserStatus } from "@/services/api";
+import { useUsers } from "@/hooks/useAdminData";
 import Navbar from "../navbar/Navbar";
 import EditUserModal from "./modals/EditUserModal";
 import ConfirmationModal from "./modals/ConfirmationModal";
@@ -14,12 +15,19 @@ import UserTable from "./list/UserTable";
 export default function GerenciarUsuarios() {
   const { user, role, isAuthenticated, logout, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [users, setUsers] = useState([]);
+  
+  // Usar o hook personalizado para dados de usuários
+  const { 
+    data: users, 
+    loading: loadingUsers, 
+    error, 
+    refreshData, 
+    updateUserInCache 
+  } = useUsers();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [toggleUser, setToggleUser] = useState(null);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [error, setError] = useState(null);
 
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -29,32 +37,10 @@ export default function GerenciarUsuarios() {
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
-    } else if (!authLoading && isAuthenticated && role !== 'Organizador') {
+    } else if (!authLoading && isAuthenticated && role !== 'Administrador') {
       router.push('/');
     }
   }, [isAuthenticated, authLoading, router, role]);
-
-  // Load users from API
-  useEffect(() => {
-    const loadUsers = async () => {
-      if (!authLoading && isAuthenticated && role === 'Organizador') {
-        try {
-          setLoadingUsers(true);
-          setError(null);
-          const usersData = await fetchUsers();
-          setUsers(usersData);
-        } catch (err) {
-          console.error('Erro ao carregar usuários:', err);
-          setError(err.message);
-          toast.error(`Erro ao carregar usuários: ${err.message}`);
-        } finally {
-          setLoadingUsers(false);
-        }
-      }
-    };
-
-    loadUsers();
-  }, [authLoading, isAuthenticated, role]);
 
   // Filter users based on search term
   const filteredUsers = users.filter(user => {
@@ -78,8 +64,8 @@ export default function GerenciarUsuarios() {
       const response = await updateUserStatus(userId);
       toast.success(response.message || `Status do usuário alterado com sucesso!`);
 
-      const usersData = await fetchUsers();
-      setUsers(usersData);
+      // Refresh data to get updated status
+      await refreshData();
     } catch (err) {
       console.error('Erro ao alterar status:', err);
       toast.error(`Erro ao alterar status: ${err.message}`);
@@ -89,17 +75,15 @@ export default function GerenciarUsuarios() {
   // Save user changes
   const handleSaveUser = async (updatedData) => {
     try {
-      // Passa o ID do usuário e os dados atualizados
       await updateUser(editingUser.id, updatedData);
 
-      // Atualiza a lista local de usuários
-      setUsers(prevUsers =>
-        prevUsers.map(u =>
-          u.id === editingUser.id
-            ? { ...u, name: updatedData.name, phone: updatedData.phone, role: updatedData.role }
-            : u
-        )
-      );
+      // Atualiza o usuário no cache local
+      updateUserInCache(editingUser.id, {
+        name: updatedData.name,
+        phone: updatedData.phone,
+        role: updatedData.role
+      });
+
       toast.success('Usuário atualizado com sucesso!');
     } catch (err) {
       console.error('Erro ao atualizar usuário:', err);
@@ -144,7 +128,7 @@ export default function GerenciarUsuarios() {
             <h1 className="text-3xl font-bold text-red-400 mb-4">Erro ao Carregar</h1>
             <p className="text-gray-300 mb-6">{error}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={refreshData}
               className="bg-amber-700 hover:bg-amber-600 text-white px-6 py-2 rounded-full transition-colors"
             >
               Tentar Novamente
@@ -162,7 +146,7 @@ export default function GerenciarUsuarios() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <h1 className="text-3xl font-bold text-amber-400 mb-4 md:mb-0 font-serif">
-            Gerenciar Usuários ({users.length})
+            Gerenciar Usuários ({filteredUsers.length})
           </h1>
 
           {/* Search bar component */}
@@ -172,7 +156,7 @@ export default function GerenciarUsuarios() {
           />
         </div>
 
-        {/* User table component */}
+        {/* User table component - agora com ordenação */}
         <UserTable
           users={filteredUsers}
           onEditUser={handleEditUser}

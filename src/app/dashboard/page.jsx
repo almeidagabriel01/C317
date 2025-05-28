@@ -14,14 +14,14 @@ export default function DashboardPage() {
     if (!loading) {
       if (!isAuthenticated) {
         router.push('/login');
-      } else if (role !== 'Organizador') {
+      } else if (role !== 'Administrador') {
         router.push('/');
       }
     }
   }, [isAuthenticated, role, loading, router]);
 
   // Mostrar loader enquanto verifica autenticação
-  if (loading || !isAuthenticated || role !== 'Organizador') {
+  if (loading || !isAuthenticated || role !== 'Administrador') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <p className="text-white text-xl">Carregando...</p>
@@ -29,6 +29,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Renderizar o componente Dashboard se o usuário for autenticado e for um Organizador
+  // Renderizar o componente Dashboard se o usuário for autenticado e for um Administrador
   return <Dashboard />;
 }

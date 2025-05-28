@@ -3,15 +3,13 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import FormStepLayout from "../stepIndicator/FormStepLayout";
+import { formatCurrency } from "@/utils/formatUtils";
 
 export default function StaffSelector({ items, staffQuantities, setStaffQuantity, onNext, onBack, direction, isValid }) {
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 0) return;
     setStaffQuantity(id, newQuantity);
   };
-
-  const formatPrice = (price) =>
-    price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -33,6 +31,8 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
         onBack={onBack}
         onNext={onNext}
         isValid={typeof isValid === "boolean" ? isValid : true}
+        nextButtonText="RESUMO DO PEDIDO"
+        isLastStep={true}
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-[#E0CEAA] text-lg">Carregando as opções de equipe...</div>
@@ -50,6 +50,8 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
       onBack={onBack}
       onNext={onNext}
       isValid={typeof isValid === "boolean" ? isValid : true}
+      nextButtonText="RESUMO DO PEDIDO"
+      isLastStep={true}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-2 md:px-0 mt-4">
         {items.map((item) => {
@@ -89,7 +91,7 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
 
               <div className="p-4">
                 <h3 className="font-bold text-[#E0CEAA] text-lg">{item.item.Descricao}</h3>
-                <p className="text-[#9D4815] font-semibold mt-1">{formatPrice(item.item.Preco)} / profissional</p>
+                <p className="text-[#9D4815] font-semibold mt-1">{formatCurrency(item.item.Preco)} / profissional</p>
 
                 <div className="flex items-center justify-between mt-4">
                   <span className="text-white text-sm">Quantidade:</span>
@@ -123,7 +125,7 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
 
                 {quantity > 0 && (
                   <div className="mt-2 text-right text-white">
-                    Total: <span className="font-semibold text-[#E0CEAA]">{formatPrice(item.item.Preco * quantity)}</span>
+                    Total: <span className="font-semibold text-[#E0CEAA]">{formatCurrency(item.item.Preco * quantity)}</span>
                   </div>
                 )}
               </div>
@@ -149,14 +151,14 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
                   <span>
                     {item.item.Descricao} <span className="text-gray-400">x {staffQuantities[item.item.ID]}</span>
                   </span>
-                  <span>{formatPrice(item.item.Preco * staffQuantities[item.item.ID])}</span>
+                  <span>{formatCurrency(item.item.Preco * staffQuantities[item.item.ID])}</span>
                 </div>
               ))}
           </div>
           <div className="flex justify-between text-lg font-bold text-[#E0CEAA] pt-3 border-t border-gray-700/40">
             <span>Total</span>
             <span>
-              {formatPrice(
+              {formatCurrency(
                 items.reduce((sum, item) => {
                   return sum + (item.item.Preco * (staffQuantities[item.item.ID] || 0));
                 }, 0)

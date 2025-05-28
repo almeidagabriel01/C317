@@ -6,6 +6,22 @@ const apiClient = axios.create({
   baseURL: BASE_URL,
 });
 
+// Interceptor para adicionar Bearer token em todas as requisições
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn("Token não encontrado para requisição:", config.url);
+    }
+  return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 const getErrorMessage = (error) => {
   if (error.response && error.response.data) {
     return (
@@ -22,10 +38,10 @@ const getErrorMessage = (error) => {
 };
 
 const normalizeRole = (role) => {
-  if (!role) return 'Comprador';
+  if (!role) return 'Cliente';
   const lower = role.toLowerCase();
-  if (lower === 'organizador') return 'Organizador';
-  if (lower === 'comprador') return 'Comprador';
+  if (lower === 'administrador') return 'Administrador';
+  if (lower === 'cliente') return 'Cliente';
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 };
 
@@ -62,10 +78,64 @@ export const loginUser = async (email, password) => {
 
 export const registerUser = async (userData) => {
   try {
-    const response = await apiClient.post('/users/create/', userData, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = await apiClient.post('/users/create/', userData);
     return response.status;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Nova função para buscar dados do usuário logado
+export const fetchCurrentUser = async () => {
+  try {
+    const response = await apiClient.get('/users/get/me');
+    return {
+      id: response.data.ID,
+      nome: response.data.userName,
+      email: response.data.Email,
+      role: normalizeRole(response.data.role),
+      celular: response.data.NumCel,
+      ativo: response.data.Ativo,
+      originalData: response.data,
+    };
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Nova função para buscar pedidos do usuário logado
+export const fetchUserOrders = async () => {
+  try {
+    const response = await apiClient.get('/pedido/all');
+    return response.data.map(pedido => ({
+      id: pedido.ID,
+      nomeEvento: pedido.Nome_Evento,
+      dataEvento: pedido.Data_Evento,
+      dataCompra: pedido.Data_Compra,
+      horarioInicio: pedido.Horario_Inicio,
+      horarioFim: pedido.Horario_Fim,
+      numConvidados: pedido.Num_Convidado,
+      preco: pedido.Preço,
+      status: pedido.Status,
+      ativo: pedido.Ativo,
+      idComprador: pedido.ID_Comprador,
+      originalData: pedido,
+    }));
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Função para atualizar o status de um pedido
+export const updateOrderStatus = async (orderId, status) => {
+  try {
+    const response = await apiClient.put('/pedido/set/status', null, {
+      params: {
+        id: orderId,
+        Status: status
+      }
+    });
+    return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -76,7 +146,7 @@ export const fetchUsers = async () => {
     const response = await apiClient.get('/users/all');
     return response.data.map(user => ({
       id: user.ID,
-      name: user.userName,
+      name: user.nome || user.userName,
       email: user.Email,
       phone: (() => {
         const d = user.NumCel.replace(/\D/g, '');
@@ -101,9 +171,7 @@ export const updateUser = async (userId, userData) => {
       role: userData.role.toLowerCase(),
       NumCel: userData.phone.replace(/\D/g, ''),
     };
-    const response = await apiClient.put('/users/update/Adm/Role', apiData, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = await apiClient.put('/users/update/Adm/Role', apiData);
     if (response.status === 202) {
       return { success: true };
     }
@@ -131,34 +199,145 @@ export const fetchItems = async () => {
   }
 };
 
-export const createPedido = async (payload) => {
+// Função auxiliar para adicionar cache buster apenas quando necessário
+const addCacheBusterToImage = (imageUrl, forceRefresh = false) => {
+  if (!imageUrl) return null;
+  
+  // Se forceRefresh for true, sempre adiciona novo timestamp
+  if (forceRefresh) {
+    const baseUrl = imageUrl.split('?')[0]; // Remove parâmetros existentes
+    return `${baseUrl}?t=${Date.now()}`;
+  }
+  
+  // Se já tem cache buster, mantém
+  if (imageUrl.includes('?t=')) {
+    return imageUrl;
+  }
+  
+  // Adiciona cache buster inicial
+  return `${imageUrl}?t=${Date.now()}`;
+};
+
+export const fetchItemsForAdmin = async (forceImageRefresh = false) => {
   try {
-    const response = await apiClient.post(
-      '/pedido/create/',
-      payload,
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    const response = await apiClient.get('/item/all');
+    return response.data.Itens.map(itemData => ({
+      id: itemData.item.ID,
+      name: itemData.item.Nome,
+      description: itemData.item.Descricao,
+      category: itemData.item.Categoria,
+      price: itemData.item.Preco, // Mantém em centavos
+      status: itemData.item.Ativo ? 'Ativo' : 'Inativo',
+      image: addCacheBusterToImage(itemData.imageURL, forceImageRefresh),
+      originalData: itemData.item,
+    }));
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Função específica para refresh após update de item
+export const refreshItemsAfterUpdate = async () => {
+  return fetchItemsForAdmin(true); // Force refresh das imagens
+};
+
+export const createItem = async (itemData) => {
+  try {
+    const formData = new FormData();
+    formData.append('Nome', itemData.name);
+    formData.append('Descricao', itemData.description);
+    formData.append('Categoria', itemData.category);
+    formData.append('Preco', Math.round(itemData.price * 100)); // Converter para centavos
+    formData.append('Ativo', itemData.status === 'Ativo');
+    if (itemData.image) {
+      formData.append('image', itemData.image);
+    }
+
+    const response = await apiClient.post('/item/create/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 };
 
-/**
- * MOCK: Simula fetchCurrentUser antes de existir no backend.
- * Retorna os dados completos que foram salvos em localStorage no login.
- */
-export const fetchCurrentUser = async () => {
-  return new Promise((resolve, reject) => {
-    try {
-      const stored = localStorage.getItem('userData');
-      if (stored) {
-        resolve(JSON.parse(stored));
-      } else {
-        reject(new Error('Dados de usuário não encontrados (mock).'));
-      }
-    } catch (err) {
-      reject(err);
+export const updateItem = async (itemId, itemData) => {
+  try {
+    const formData = new FormData();
+    formData.append('id', itemId);
+    formData.append('Nome', itemData.name);
+    formData.append('Descricao', itemData.description);
+    formData.append('Categoria', itemData.category);
+    formData.append('Preco', Math.round(itemData.price * 100)); // Converter para centavos
+    formData.append('Ativo', true); // Mantém ativo ao editar
+    if (itemData.image && typeof itemData.image !== 'string') {
+      formData.append('image', itemData.image);
     }
-  });
+
+    const response = await apiClient.put('/item/update/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+export const toggleItemStatus = async (itemId) => {
+  try {
+    const response = await apiClient.put('/item/toogle/Status', null, {
+      params: { item_id: itemId }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Nova função para calcular preço dos itens selecionados
+export const calculateOrderPrice = async (itens) => {
+  try {
+    const response = await apiClient.post('/pedido/get/price', itens);
+    return response.data.Preço || response.data["Preço"] || response.data.total_price || response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Função para criar pedido customizado (sem campo de endereço)
+export const createPedido = async (payload) => {
+  try {
+    // Remove o campo eventAddress se existir no payload
+    if (payload.pedido && payload.pedido.eventAddress) {
+      delete payload.pedido.eventAddress;
+    }
+    
+    const response = await apiClient.post('/pedido/create/', payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Função para buscar itens de um pacote pronto
+export const fetchPackageItems = async (packageId) => {
+  try {
+    const response = await apiClient.get('/pedido/packages/all', {
+      params: { id: packageId }
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
+// Função para criar pedido a partir de pacote pronto
+export const createPackageOrder = async (payload) => {
+  try {
+    const response = await apiClient.post('/pedido/create/packages/', payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
 };

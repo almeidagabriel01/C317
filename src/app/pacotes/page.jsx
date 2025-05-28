@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import Navbar from "@/components/navbar/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import HeaderSection from "@/components/pacotes/HeaderSection";
-import PackagesCarousel from "@/components/pacotes/PackagesCarousel";
+import PackagesGrid from "@/components/pacotes/PackagesGrid";
 import CustomizeSection from "@/components/pacotes/CustomizeSection";
 
 const fadeVariants = {
@@ -19,42 +19,32 @@ const fadeVariants = {
   },
 };
 
+// Definindo os 3 pacotes fixos com itens detalhados
 const packages = [
   {
+    id: 1,
+    title: "Aniversário",
+    guests: 80,
+    hours: 5,
+    price: "R$ 7.500,00",
+    image: "aniversario.jpg",
+  },
+  {
+    id: 2,
     title: "Casamento",
-    guests: 100,
+    guests: 120,
     hours: 6,
-    price: "R$ 9.000,00",
+    price: "R$ 12.000,00",
     image: "casamento.jpg",
   },
   {
-    title: "Festa Debutante",
-    guests: 150,
-    hours: 6,
-    price: "R$ 14.000,00",
-    image: "debutante1.jpg",
-  },
-  {
-    title: "Festa Debutante 2",
-    guests: 200,
-    hours: 8,
-    price: "R$ 20.000,00",
-    image: "debutante2.jpeg",
-  },
-  {
+    id: 3,
     title: "Festa Corporativa",
     guests: 100,
-    hours: 5,
-    price: "R$ 8.000,00",
-    image: "corporativa.jpg",
-  },
-  {
-    title: "Festa Corporativa 2",
-    guests: 120,
-    hours: 7,
-    price: "R$ 9.000,00",
-    image: "corporativa.jpg",
-  },
+    hours: 4,
+    price: "R$ 8.500,00",
+    image: "coorporativo.jpg",
+  }
 ];
 
 export default function PackagesPage() {
@@ -89,7 +79,7 @@ export default function PackagesPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#101820] text-white">
       <Navbar isAuthenticated={isAuthenticated} user={user} onLogout={logout} />
-      
+
       <main className="flex-grow flex flex-col">
         <motion.div
           initial="hidden"
@@ -99,11 +89,11 @@ export default function PackagesPage() {
           className="flex-grow flex flex-col"
         >
           <HeaderSection />
-          
+
           <div className="flex-grow flex items-center justify-center my-4">
-            <PackagesCarousel packages={packages} />
+            <PackagesGrid packages={packages} />
           </div>
-          
+
           <CustomizeSection />
         </motion.div>
       </main>
