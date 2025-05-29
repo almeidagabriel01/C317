@@ -22,7 +22,10 @@ export default function Dashboard() {
   if (loading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <p className="text-white text-xl">Carregando...</p>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 border-3 border-amber-300 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white text-xl font-sans">Carregando...</p>
+        </div>
       </div>
     );
   }

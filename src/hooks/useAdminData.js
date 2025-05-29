@@ -5,8 +5,14 @@ import { useAuth } from '@/context/AuthContext';
 import { fetchUsers, fetchUserOrders, fetchItemsForAdmin } from '@/services/api';
 import { toast } from 'react-toastify';
 
-// Mapa de requisições em andamento para evitar chamadas duplicadas na mesma sessão
-const pendingRequests = new Map();
+// Cache global para cada tipo de dados
+const globalCache = {
+  users: { data: null, timestamp: null, loading: false, promise: null },
+  orders: { data: null, timestamp: null, loading: false, promise: null },
+  items: { data: null, timestamp: null, loading: false, promise: null }
+};
+
+const CACHE_DURATION = 3 * 60 * 1000; // 3 minutos
 
 export const useAdminData = (dataType) => {
   const { isAuthenticated, role, loading: authLoading } = useAuth();
@@ -14,20 +20,35 @@ export const useAdminData = (dataType) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const mountedRef = useRef(true);
-  const [refreshKey, setRefreshKey] = useState(0); // Para forçar re-fetch
+  const hasInitialized = useRef(false);
 
-  // Função para buscar dados
+  // Função para buscar dados com cache global
   const fetchData = useCallback(async (forceRefresh = false) => {
     if (!isAuthenticated || role !== 'Administrador' || authLoading) {
+      setLoading(false);
       return;
     }
 
-    const requestKey = `${dataType}-${refreshKey}`;
-    
-    // Se já há uma requisição em andamento para este tipo de dados, aguarda
-    if (!forceRefresh && pendingRequests.has(requestKey)) {
+    const cache = globalCache[dataType];
+    if (!cache) {
+      throw new Error(`Tipo de dados desconhecido: ${dataType}`);
+    }
+
+    // Verifica cache se não for refresh forçado
+    if (!forceRefresh && cache.data && cache.timestamp && 
+        (Date.now() - cache.timestamp) < CACHE_DURATION) {
+      if (mountedRef.current) {
+        setData(cache.data);
+        setLoading(false);
+        setError(null);
+      }
+      return cache.data;
+    }
+
+    // Se já está carregando, aguarda a promise existente
+    if (cache.loading && cache.promise && !forceRefresh) {
       try {
-        const result = await pendingRequests.get(requestKey);
+        const result = await cache.promise;
         if (mountedRef.current) {
           setData(result);
           setLoading(false);
@@ -35,15 +56,15 @@ export const useAdminData = (dataType) => {
         }
         return result;
       } catch (err) {
-        // Se a requisição pendente falhou, remove da cache e tenta novamente
-        pendingRequests.delete(requestKey);
+        // Se a promise pendente falhou, continua com nova requisição
       }
     }
 
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
+    cache.loading = true;
 
+    try {
       // Seleciona a função de fetch baseada no tipo
       let fetchFunction;
       switch (dataType) {
@@ -54,63 +75,22 @@ export const useAdminData = (dataType) => {
           fetchFunction = fetchUserOrders;
           break;
         case 'items':
-          fetchFunction = fetchItemsForAdmin;
+          fetchFunction = () => fetchItemsForAdmin(forceRefresh);
           break;
         default:
           throw new Error(`Tipo de dados desconhecido: ${dataType}`);
       }
       
-      // Cria uma promise e armazena no mapa para evitar chamadas duplicadas
+      // Cria promise única para evitar chamadas duplicadas
       const promise = fetchFunction();
-      if (!forceRefresh) {
-        pendingRequests.set(requestKey, promise);
-      }
+      cache.promise = promise;
       
       const result = await promise;
 
-      if (mountedRef.current) {
-        setData(result);
-        setLoading(false);
-      }
-      
-      return result;
-    } catch (err) {
-      console.error(`Erro ao carregar ${dataType}:`, err);
-      
-      if (mountedRef.current) {
-        setError(err.message);
-        setLoading(false);
-        toast.error(`Erro ao carregar ${dataType}: ${err.message}`);
-      }
-      
-      throw err;
-    } finally {
-      // Remove a requisição do mapa após completar
-      pendingRequests.delete(requestKey);
-    }
-  }, [isAuthenticated, role, authLoading, dataType, refreshKey]);
-
-  // Função para refresh forçado com cache busting (específica para imagens)
-  const refreshDataWithCacheBusting = useCallback(async () => {
-    if (!isAuthenticated || role !== 'Administrador' || authLoading) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      let result;
-      if (dataType === 'items') {
-        // Para itens, usa fetchItemsForAdmin com forceImageRefresh = true
-        result = await fetchItemsForAdmin(true);
-      } else if (dataType === 'users') {
-        result = await fetchUsers();
-      } else if (dataType === 'orders') {
-        result = await fetchUserOrders();
-      } else {
-        throw new Error(`Tipo de dados desconhecido: ${dataType}`);
-      }
+      // Atualiza cache
+      cache.data = result;
+      cache.timestamp = Date.now();
+      cache.loading = false;
 
       if (mountedRef.current) {
         setData(result);
@@ -120,7 +100,9 @@ export const useAdminData = (dataType) => {
       return result;
     } catch (err) {
       console.error(`Erro ao carregar ${dataType}:`, err);
-
+      cache.loading = false;
+      cache.promise = null;
+      
       if (mountedRef.current) {
         setError(err.message);
         setLoading(false);
@@ -131,38 +113,44 @@ export const useAdminData = (dataType) => {
     }
   }, [isAuthenticated, role, authLoading, dataType]);
 
+  // Função para refresh forçado com cache busting (específica para imagens)
+  const refreshDataWithCacheBusting = useCallback(async () => {
+    // Invalida cache
+    globalCache[dataType].timestamp = null;
+    return fetchData(true);
+  }, [fetchData, dataType]);
+
   // Função para refresh dos dados (força novo fetch)
   const refreshData = useCallback(() => {
-    setRefreshKey(prev => prev + 1);
+    globalCache[dataType].timestamp = null; // Invalida cache
     return fetchData(true);
-  }, [fetchData]);
+  }, [fetchData, dataType]);
 
   // Função para limpar dados
   const clearData = useCallback(() => {
     setData([]);
     setError(null);
-    // Limpa requisições pendentes deste tipo
-    const keysToDelete = [];
-    for (const key of pendingRequests.keys()) {
-      if (key.startsWith(dataType)) {
-        keysToDelete.push(key);
-      }
+    // Limpa cache
+    const cache = globalCache[dataType];
+    if (cache) {
+      cache.data = null;
+      cache.timestamp = null;
+      cache.loading = false;
+      cache.promise = null;
     }
-    keysToDelete.forEach(key => pendingRequests.delete(key));
   }, [dataType]);
 
-  // Carrega dados iniciais
+  // Effect principal - executa apenas uma vez quando as condições são atendidas
   useEffect(() => {
-    mountedRef.current = true;
-    fetchData();
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [fetchData]);
+    if (!hasInitialized.current && !authLoading && isAuthenticated && role === 'Administrador') {
+      hasInitialized.current = true;
+      fetchData();
+    }
+  }, [isAuthenticated, role, authLoading, fetchData]);
 
   // Cleanup ao desmontar
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
@@ -183,10 +171,12 @@ export const useUsers = () => {
   const result = useAdminData('users');
   const [localData, setLocalData] = useState([]);
 
-  // Sincroniza com os dados do hook principal
+  // Sincroniza com os dados do hook principal apenas quando necessário
   useEffect(() => {
-    setLocalData(result.data);
-  }, [result.data]);
+    if (JSON.stringify(localData) !== JSON.stringify(result.data)) {
+      setLocalData(result.data);
+    }
+  }, [result.data, localData]);
 
   const updateUserInCache = useCallback((userId, updatedData) => {
     setLocalData(prev => prev.map(user =>
@@ -194,6 +184,16 @@ export const useUsers = () => {
         ? { ...user, ...updatedData }
         : user
     ));
+    
+    // Atualiza também o cache global
+    const cache = globalCache.users;
+    if (cache.data) {
+      cache.data = cache.data.map(user =>
+        user.id === userId
+          ? { ...user, ...updatedData }
+          : user
+      );
+    }
   }, []);
 
   return {
@@ -208,10 +208,12 @@ export const useOrders = () => {
   const result = useAdminData('orders');
   const [localData, setLocalData] = useState([]);
 
-  // Sincroniza com os dados do hook principal
+  // Sincroniza com os dados do hook principal apenas quando necessário
   useEffect(() => {
-    setLocalData(result.data);
-  }, [result.data]);
+    if (JSON.stringify(localData) !== JSON.stringify(result.data)) {
+      setLocalData(result.data);
+    }
+  }, [result.data, localData]);
 
   const updateOrderInCache = useCallback((orderId, updatedData) => {
     setLocalData(prev => prev.map(order =>
@@ -219,6 +221,16 @@ export const useOrders = () => {
         ? { ...order, ...updatedData }
         : order
     ));
+    
+    // Atualiza também o cache global
+    const cache = globalCache.orders;
+    if (cache.data) {
+      cache.data = cache.data.map(order =>
+        order.id === orderId
+          ? { ...order, ...updatedData }
+          : order
+      );
+    }
   }, []);
 
   return {
@@ -233,10 +245,12 @@ export const useItems = () => {
   const result = useAdminData('items');
   const [localData, setLocalData] = useState([]);
 
-  // Sincroniza com os dados do hook principal
+  // Sincroniza com os dados do hook principal apenas quando necessário
   useEffect(() => {
-    setLocalData(result.data);
-  }, [result.data]);
+    if (JSON.stringify(localData) !== JSON.stringify(result.data)) {
+      setLocalData(result.data);
+    }
+  }, [result.data, localData]);
 
   const updateItemInCache = useCallback((itemId, updatedData) => {
     setLocalData(prev => prev.map(item =>
@@ -244,10 +258,26 @@ export const useItems = () => {
         ? { ...item, ...updatedData }
         : item
     ));
+    
+    // Atualiza também o cache global
+    const cache = globalCache.items;
+    if (cache.data) {
+      cache.data = cache.data.map(item =>
+        item.id === itemId
+          ? { ...item, ...updatedData }
+          : item
+      );
+    }
   }, []);
 
   const addItemToCache = useCallback((newItem) => {
     setLocalData(prev => [...prev, newItem]);
+    
+    // Atualiza também o cache global
+    const cache = globalCache.items;
+    if (cache.data) {
+      cache.data = [...cache.data, newItem];
+    }
   }, []);
 
   return {

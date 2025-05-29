@@ -22,6 +22,8 @@ apiClient.interceptors.request.use(
   }
 );
 
+export { apiClient };
+
 const getErrorMessage = (error) => {
   if (error.response && error.response.data) {
     return (

@@ -5,7 +5,8 @@ import React, {
   useState,
   useContext,
   useEffect,
-  useCallback
+  useCallback,
+  useRef
 } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { loginUser, fetchCurrentUser } from '@/services/api';
@@ -19,17 +20,19 @@ const ORGANIZER_RESTRICTED = [...BUYER_ROUTES,'/'];
 const BUYER_RESTRICTED = ORGANIZER_ROUTES;
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]   = useState(null);
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [role, setRole]   = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
+  const hasInitialized = useRef(false);
+  const mountedRef = useRef(true);
 
   const isPrivateRoute = useCallback(path =>
     [...BUYER_ROUTES, ...ORGANIZER_ROUTES]
       .some(r => path === r || path.startsWith(`${r}/`)),
-  [],);
+  []);
 
   const isRestrictedRoute = useCallback(path => {
     if (role === 'Cliente') {
@@ -54,49 +57,70 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Ao iniciar, lê token e busca dados do usuário via API
+  // Inicialização - executa apenas uma vez
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     const init = async () => {
       const t = localStorage.getItem('authToken');
       if (!t) {
         setLoading(false);
         return;
       }
+      
       setToken(t);
       try {
         const me = await fetchCurrentUser();
-        const normalizedUser = normalizeUser(me);
-        setUser(normalizedUser);
-        setRole(normalizedUser.role);
-      } catch {
-        localStorage.removeItem('authToken');
-        setToken(null);
-        setUser(null);
-        setRole(null);
+        if (mountedRef.current) {
+          const normalizedUser = normalizeUser(me);
+          setUser(normalizedUser);
+          setRole(normalizedUser.role);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar usuário atual:', error);
+        if (mountedRef.current) {
+          localStorage.removeItem('authToken');
+          setToken(null);
+          setUser(null);
+          setRole(null);
+        }
       } finally {
-        setLoading(false);
+        if (mountedRef.current) {
+          setLoading(false);
+        }
       }
     };
+    
     init();
   }, [normalizeUser]);
 
-  // Proteção de rotas
+  // Proteção de rotas - com debounce para evitar múltiplas execuções
   useEffect(() => {
-    if (loading) return;
+    if (loading || !hasInitialized.current) return;
+    
     const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
 
-    if (isRestrictedRoute(pathname) && token) {
-      router.push(role === 'Administrador' ? '/dashboard' : '/');
-      return;
-    }
-    if (isPrivateRoute(pathname) && !token) {
-      if (!isVoluntaryLogout) {
-        toast.warning('Você precisa estar logado para acessar esta página.');
-      } else {
-        sessionStorage.removeItem('voluntaryLogout');
+    // Timeout para evitar múltiplas execuções rápidas
+    const timeout = setTimeout(() => {
+      if (isRestrictedRoute(pathname) && token) {
+        router.push(role === 'Administrador' ? '/dashboard' : '/');
+        return;
       }
-      if (pathname !== '/login') router.push('/login');
-    }
+      
+      if (isPrivateRoute(pathname) && !token) {
+        if (!isVoluntaryLogout) {
+          toast.warning('Você precisa estar logado para acessar esta página.');
+        } else {
+          sessionStorage.removeItem('voluntaryLogout');
+        }
+        if (pathname !== '/login') {
+          router.push('/login');
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timeout);
   }, [pathname, token, role, loading, router, isPrivateRoute, isRestrictedRoute]);
 
   const login = async (email, password) => {
@@ -109,12 +133,14 @@ export const AuthProvider = ({ children }) => {
       // Normalizar dados do usuário
       const normalizedUser = normalizeUser(me);
 
-      setToken(t);
-      setUser(normalizedUser);
-      setRole(normalizedUser.role);
+      if (mountedRef.current) {
+        setToken(t);
+        setUser(normalizedUser);
+        setRole(normalizedUser.role);
 
-      // Salva apenas o token, dados serão buscados via API
-      localStorage.setItem('authToken', t);
+        // Salva apenas o token, dados serão buscados via API
+        localStorage.setItem('authToken', t);
+      }
 
       toast.update(idToast, {
         render: "Login realizado!",
@@ -136,9 +162,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(() => {
     sessionStorage.setItem('voluntaryLogout','true');
-    setUser(null);
-    setToken(null);
-    setRole(null);
+    if (mountedRef.current) {
+      setUser(null);
+      setToken(null);
+      setRole(null);
+    }
     localStorage.removeItem('authToken');
     toast.info('Logout realizado.');
     router.push('/login');
@@ -149,15 +177,26 @@ export const AuthProvider = ({ children }) => {
     if (!token) return null;
     try {
       const me = await fetchCurrentUser();
-      const normalizedUser = normalizeUser(me);
-      setUser(normalizedUser);
-      setRole(normalizedUser.role);
-      return normalizedUser;
+      if (mountedRef.current) {
+        const normalizedUser = normalizeUser(me);
+        setUser(normalizedUser);
+        setRole(normalizedUser.role);
+        return normalizedUser;
+      }
+      return null;
     } catch (error) {
       console.error('Erro ao recarregar dados do usuário:', error);
       return null;
     }
   }, [token, normalizeUser]);
+
+  // Cleanup
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{
