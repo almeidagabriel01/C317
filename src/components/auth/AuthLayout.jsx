@@ -32,6 +32,7 @@ const AuthLayout = ({ children, type }) => {
               src={bgImage}
               alt={`${title} background`}
               fill
+              priority
               sizes="(max-width: 767px) 100vw"
               className="object-cover filter brightness-70"
             />
@@ -47,6 +48,7 @@ const AuthLayout = ({ children, type }) => {
                 src={logoImg}
                 alt="Elo Drinks Logo"
                 fill
+                priority
                 className="object-contain"
                 sizes="80px"
               />
@@ -130,6 +132,7 @@ const AuthLayout = ({ children, type }) => {
               src={bgImage}
               alt={`${title} background`}
               fill
+              priority
               sizes="(min-width: 768px) 50vw, 100vw"
               className="object-cover filter brightness-70"
             />
@@ -140,6 +143,7 @@ const AuthLayout = ({ children, type }) => {
                   src={logoImg}
                   alt="Elo Drinks Logo"
                   fill
+                  priority
                   className="object-contain"
                   sizes="460px"
                 />
