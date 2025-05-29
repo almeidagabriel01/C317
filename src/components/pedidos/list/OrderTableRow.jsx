@@ -21,12 +21,11 @@ import {
 } from "@/utils/formatUtils";
 import React, { useState } from "react";
 
-/* Novo fluxo principal */
-const FLOW = ["Pendente", "Pagamento", "Aprovado", "Concluido"];
+/* Fluxo principal para ADMIN */
+const ADMIN_FLOW = ["Pendente", "Pagamento", "Aprovado", "Concluido"];
 
 /* ícone representativo de cada status */
 const STATUS_ICON = {
-  Orcado: FiClock,
   Pendente: FiSend,
   Pagamento: FiCreditCard,
   Aprovado: FiCheckCircle,
@@ -41,36 +40,29 @@ const OrderTableRow = ({ order, index, onView, onUpdateStatus }) => {
 
   const isReprovado = currentStatus === "Reprovado";
   const isConcluido = currentStatus === "Concluido";
-  const isOrcado = currentStatus === "Orcado";
 
-  /* posição no fluxo principal */
-  const flowPos = FLOW.indexOf(currentStatus);
+  /* posição no fluxo principal ADMIN */
+  const flowPos = ADMIN_FLOW.indexOf(currentStatus);
   
-  // Para orçamentos, o próximo status é "Pendente"
-  // Para outros status, segue o fluxo normal
   let prevStatus = null;
   let nextStatus = null;
 
-  if (isOrcado) {
-    // Orçamento não pode voltar, mas pode ir para Pendente
-    nextStatus = "Pendente";
-  } else if (isReprovado) {
-    // Reprovado pode voltar para Pendente
+  if (isReprovado) {
+    // Reprovado pode voltar apenas para Pendente (primeiro status do fluxo admin)
     prevStatus = "Pendente";
   } else if (flowPos > -1) {
     // Está no fluxo principal
     if (flowPos > 0) {
-      prevStatus = FLOW[flowPos - 1];
+      prevStatus = ADMIN_FLOW[flowPos - 1];
     }
-    if (flowPos < FLOW.length - 1) {
-      nextStatus = FLOW[flowPos + 1];
+    if (flowPos < ADMIN_FLOW.length - 1) {
+      nextStatus = ADMIN_FLOW[flowPos + 1];
     }
   }
 
-  // Casos especiais:
-  // - De "Pendente" pode voltar para "Orcado" (caso admin queira reverter)
+  // Pendente é o primeiro status no fluxo do admin
   if (currentStatus === "Pendente") {
-    prevStatus = "Orcado";
+    prevStatus = null;
   }
 
   // Handler para atualizar status com estado local
@@ -144,7 +136,7 @@ const OrderTableRow = ({ order, index, onView, onUpdateStatus }) => {
           <span
             className={`text-xs font-medium px-2.5 py-0.5 rounded flex items-center gap-1 ${getStatusColor(
               currentStatus
-            ).replace("-500", "-900")} text-white ${
+            )} text-white ${
               currentStatus === "Pagamento" ? "animate-pulse" : ""
             } ${isUpdating ? "opacity-75" : ""}`}
           >
@@ -199,7 +191,7 @@ const OrderTableRow = ({ order, index, onView, onUpdateStatus }) => {
             </button>
           )}
 
-          {/* reprovar (permitido se não concluido nem reprovado) */}
+          {/* reprovar */}
           {!isConcluido && !isReprovado && (
             <button
               onClick={() => handleStatusUpdate("Reprovado")}
@@ -211,15 +203,15 @@ const OrderTableRow = ({ order, index, onView, onUpdateStatus }) => {
             </button>
           )}
 
-          {/* Botão especial para reativar orçamentos reprovados */}
+          {/* Botão para reativar pedidos reprovados - volta para Pendente */}
           {isReprovado && (
             <button
-              onClick={() => handleStatusUpdate("Orcado")}
+              onClick={() => handleStatusUpdate("Pendente")}
               disabled={isUpdating}
               className="p-2 text-orange-400 hover:text-orange-300 hover:bg-gray-700 rounded-full transition-colors disabled:opacity-50"
-              title="Reativar como orçamento"
+              title="Reativar pedido"
             >
-              <FiClock size={18} />
+              <FiSend size={18} />
             </button>
           )}
         </div>

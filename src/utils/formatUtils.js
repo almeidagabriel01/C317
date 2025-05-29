@@ -159,19 +159,20 @@ export const unformatPhone = (phone) => {
 
 /**
  * Retorna a cor do status baseado no valor (para pedidos/orçamentos)
- * NOVO FLUXO: Orçamento → Pendente → Pagamento → Aprovado → Concluído
+ * FLUXO ADMIN: Pendente → Pagamento → Aprovado → Concluído
  * @param {string} status - Status do pedido
  * @returns {string} Classe CSS para a cor
  */
 export const getStatusColor = (status) => {
   if (!status) return "bg-gray-500";
+  
   switch (status.toLowerCase()) {
     case "orcado":
       return "bg-blue-500";
     case "pendente":
       return "bg-orange-500";
     case "pagamento":
-      return "bg-lime-600";
+      return "bg-yellow-500";
     case "aprovado":
       return "bg-green-500";
     case "concluido":
