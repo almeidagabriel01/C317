@@ -11,21 +11,27 @@ export default function Login() {
   const [senha, setSenha] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, isAuthenticated, loading: authLoading } = useAuth();
+  const { login, isAuthenticated, role, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  // 1) Assim que detectar que já está logado, redireciona
+  // Redireciona imediatamente se já estiver autenticado
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      router.push("/");
+    if (!authLoading && isAuthenticated && role) {
+      const targetRoute = role === 'Administrador' ? '/dashboard' : '/';
+      router.replace(targetRoute);
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, role, authLoading, router]);
 
-  // 2) Enquanto carrega ou já autenticado, mostra loader
+  // Mostra loading enquanto verifica autenticação ou se já está autenticado
   if (authLoading || isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <p className="text-white text-xl">Carregando…</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mx-auto mb-2"></div>
+          <p className="text-white text-xl">
+            {authLoading ? "Verificando autenticação..." : "Redirecionando..."}
+          </p>
+        </div>
       </div>
     );
   }

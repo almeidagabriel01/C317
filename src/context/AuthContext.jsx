@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
   const pathname = usePathname();
   const hasInitialized = useRef(false);
   const mountedRef = useRef(true);
+  const routeProtectionTimeoutRef = useRef(null);
 
   const isPrivateRoute = useCallback(path =>
     [...BUYER_ROUTES, ...ORGANIZER_ROUTES]
@@ -95,19 +96,32 @@ export const AuthProvider = ({ children }) => {
     init();
   }, [normalizeUser]);
 
-  // Proteção de rotas - com debounce para evitar múltiplas execuções
+  // Proteção de rotas - usando useEffect para evitar setState durante render
   useEffect(() => {
+    // Limpa timeout anterior se existir
+    if (routeProtectionTimeoutRef.current) {
+      clearTimeout(routeProtectionTimeoutRef.current);
+    }
+
+    // Só executa proteção se não estiver carregando e tiver inicializado
     if (loading || !hasInitialized.current) return;
     
     const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
 
-    // Timeout para evitar múltiplas execuções rápidas
-    const timeout = setTimeout(() => {
-      if (isRestrictedRoute(pathname) && token) {
-        router.push(role === 'Administrador' ? '/dashboard' : '/');
+    // Usa timeout para evitar múltiplas execuções e problemas de setState durante render
+    routeProtectionTimeoutRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
+
+      // Rota restrita para o role atual - SOMENTE se não estivermos já na rota correta
+      if (isRestrictedRoute(pathname) && token && role) {
+        const targetRoute = role === 'Administrador' ? '/dashboard' : '/';
+        if (pathname !== targetRoute) {
+          router.replace(targetRoute); // Usa replace em vez de push
+        }
         return;
       }
       
+      // Rota privada sem autenticação
       if (isPrivateRoute(pathname) && !token) {
         if (!isVoluntaryLogout) {
           toast.warning('Você precisa estar logado para acessar esta página.');
@@ -115,12 +129,17 @@ export const AuthProvider = ({ children }) => {
           sessionStorage.removeItem('voluntaryLogout');
         }
         if (pathname !== '/login') {
-          router.push('/login');
+          router.replace('/login'); // Usa replace em vez de push
         }
       }
-    }, 100);
+    }, 50); // Reduzido para 50ms para ser mais responsivo
 
-    return () => clearTimeout(timeout);
+    // Cleanup do timeout
+    return () => {
+      if (routeProtectionTimeoutRef.current) {
+        clearTimeout(routeProtectionTimeoutRef.current);
+      }
+    };
   }, [pathname, token, role, loading, router, isPrivateRoute, isRestrictedRoute]);
 
   const login = async (email, password) => {
@@ -132,6 +151,9 @@ export const AuthProvider = ({ children }) => {
 
       // Normalizar dados do usuário
       const normalizedUser = normalizeUser(me);
+
+      // Determina a rota de destino ANTES de atualizar o estado
+      const targetRoute = normalizedUser.role === 'Administrador' ? '/dashboard' : '/';
 
       if (mountedRef.current) {
         setToken(t);
@@ -149,7 +171,10 @@ export const AuthProvider = ({ children }) => {
         autoClose: 2000
       });
 
-      router.push(normalizedUser.role === 'Administrador' ? '/dashboard' : '/');
+      // Navega IMEDIATAMENTE para a rota correta, sem timeout
+      if (mountedRef.current) {
+        router.replace(targetRoute); // Usa replace em vez de push para evitar histórico
+      }
     } catch (err) {
       toast.update(idToast, {
         render: `Erro: ${err.message}`,
@@ -161,15 +186,26 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = useCallback(() => {
+    // Limpa qualquer timeout pendente
+    if (routeProtectionTimeoutRef.current) {
+      clearTimeout(routeProtectionTimeoutRef.current);
+    }
+
     sessionStorage.setItem('voluntaryLogout','true');
+    
     if (mountedRef.current) {
       setUser(null);
       setToken(null);
       setRole(null);
     }
+    
     localStorage.removeItem('authToken');
     toast.info('Logout realizado.');
-    router.push('/login');
+    
+    // Navega imediatamente para login
+    if (mountedRef.current) {
+      router.replace('/login'); // Usa replace em vez de push
+    }
   }, [router]);
 
   // Função para recarregar dados do usuário
@@ -195,6 +231,10 @@ export const AuthProvider = ({ children }) => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      // Limpa timeout ao desmontar
+      if (routeProtectionTimeoutRef.current) {
+        clearTimeout(routeProtectionTimeoutRef.current);
+      }
     };
   }, []);
 

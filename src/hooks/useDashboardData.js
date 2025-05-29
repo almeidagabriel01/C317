@@ -190,7 +190,6 @@ export const useDashboardData = () => {
         setLoading(false);
       }
 
-      console.log('Dashboard data fetched successfully');
     } catch (err) {
       console.error('Erro ao carregar dados do dashboard:', err);
       dashboardCache.loading = false;
