@@ -10,12 +10,13 @@ import React, {
 } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { loginUser, fetchCurrentUser } from '@/services/api';
+import { useClearAllCache } from '@/hooks/useDataManager'; // Importa a função de limpar cache
 import { toast } from 'react-toastify';
 
 const AuthContext = createContext(null);
 
 const BUYER_ROUTES = ['/profile','/pagamento','/personalizar','/pacotes'];
-const ORGANIZER_ROUTES = ['/dashboard','/users','/pedidos','/gerenciar-itens'];
+const ORGANIZER_ROUTES = ['/dashboard','/users','/pedidos','/itens'];
 const ORGANIZER_RESTRICTED = [...BUYER_ROUTES,'/'];
 const BUYER_RESTRICTED = ORGANIZER_ROUTES;
 
@@ -29,6 +30,7 @@ export const AuthProvider = ({ children }) => {
   const hasInitialized = useRef(false);
   const mountedRef = useRef(true);
   const routeProtectionTimeoutRef = useRef(null);
+  const clearAllCache = useClearAllCache();
 
   const isPrivateRoute = useCallback(path =>
     [...BUYER_ROUTES, ...ORGANIZER_ROUTES]
@@ -85,6 +87,8 @@ export const AuthProvider = ({ children }) => {
           setToken(null);
           setUser(null);
           setRole(null);
+          // Limpa cache se houve erro de autenticação
+          clearAllCache();
         }
       } finally {
         if (mountedRef.current) {
@@ -94,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     };
     
     init();
-  }, [normalizeUser]);
+  }, [normalizeUser, clearAllCache]);
 
   // Proteção de rotas - usando useEffect para evitar setState durante render
   useEffect(() => {
@@ -152,6 +156,9 @@ export const AuthProvider = ({ children }) => {
       // Normalizar dados do usuário
       const normalizedUser = normalizeUser(me);
 
+      // Limpa todo o cache antes de fazer login com novo usuário
+      clearAllCache();
+
       // Determina a rota de destino ANTES de atualizar o estado
       const targetRoute = normalizedUser.role === 'Administrador' ? '/dashboard' : '/';
 
@@ -191,7 +198,11 @@ export const AuthProvider = ({ children }) => {
       clearTimeout(routeProtectionTimeoutRef.current);
     }
 
+    console.log('🚪 Fazendo logout e limpando caches');
     sessionStorage.setItem('voluntaryLogout','true');
+    
+    // Limpa todo o cache no logout
+    clearAllCache();
     
     if (mountedRef.current) {
       setUser(null);
@@ -206,7 +217,7 @@ export const AuthProvider = ({ children }) => {
     if (mountedRef.current) {
       router.replace('/login'); // Usa replace em vez de push
     }
-  }, [router]);
+  }, [router, clearAllCache]);
 
   // Função para recarregar dados do usuário
   const refreshUser = useCallback(async () => {

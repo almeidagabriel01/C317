@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FiChevronDown } from "react-icons/fi";
 import { updateOrderStatus } from "@/services/api";
-import { useOrders } from "@/hooks/useAdminData";
+import { useOrders } from "@/hooks/useDataManager";
 import Navbar from "@/components/navbar/Navbar";
-import OrderSearchBar from "@/components/orders/list/OrderSearchBar";
-import OrderTable from "@/components/orders/list/OrderTable";
-import OrderDetailsModal from "@/components/orders/modals/OrderDetailsModal";
+import OrderSearchBar from "@/components/pedidos/list/OrderSearchBar";
+import OrderTable from "@/components/pedidos/list/OrderTable";
+import OrderDetailsModal from "@/components/pedidos/modals/OrderDetailsModal";
 
 const STATUS_FILTER = [
   "Orcado",
@@ -25,7 +25,7 @@ export default function GerenciarPedidos() {
   const { user, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
-  // Usar o hook personalizado para dados de pedidos
+  // Usar o hook unificado para dados de pedidos
   const { 
     data: allOrders, 
     loading: loadingOrders, 

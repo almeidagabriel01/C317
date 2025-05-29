@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://127.0.0.1:8002';
+const BASE_URL = 'http://127.0.0.1:8000';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -23,13 +23,6 @@ apiClient.interceptors.request.use(
 );
 
 export { apiClient };
-
-// Cache para evitar múltiplas chamadas simultâneas
-let userOrdersCache = {
-  promise: null,
-  data: null,
-  timestamp: null
-};
 
 const getErrorMessage = (error) => {
   if (error.response && error.response.data) {
@@ -112,60 +105,31 @@ export const fetchCurrentUser = async () => {
   }
 };
 
-// Nova função para buscar pedidos do usuário logado
+// Função para buscar pedidos do usuário logado - REMOVIDO CACHE ESPECÍFICO
 export const fetchUserOrders = async () => {
-  // Se já tem dados recentes (menos de 30 segundos), retorna do cache
-  if (userOrdersCache.data && userOrdersCache.timestamp &&
-    (Date.now() - userOrdersCache.timestamp) < 30000) {
-    return userOrdersCache.data;
+  try {
+    const response = await apiClient.get('/pedido/all');
+
+    const data = response.data.map(pedido => ({
+      id: pedido.ID,
+      nomeEvento: pedido.Nome_Evento,
+      dataEvento: pedido.Data_Evento,
+      dataCompra: pedido.Data_Compra,
+      horarioInicio: pedido.Horario_Inicio,
+      horarioFim: pedido.Horario_Fim,
+      numConvidados: pedido.Num_Convidado,
+      preco: pedido.Preço,
+      status: pedido.Status,
+      ativo: pedido.Ativo,
+      idComprador: pedido.ID_Comprador,
+      originalData: pedido,
+    }));
+
+    return data;
+
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
-
-  // Se já tem uma requisição em andamento, aguarda ela
-  if (userOrdersCache.promise) {
-    try {
-      return await userOrdersCache.promise;
-    } catch (error) {
-      // Se deu erro, limpa o cache e tenta novamente
-      userOrdersCache.promise = null;
-    }
-  }
-
-  // Cria função para processar os dados
-  const processData = async () => {
-    try {
-      const response = await apiClient.get('/pedido/all');
-
-      const data = response.data.map(pedido => ({
-        id: pedido.ID,
-        nomeEvento: pedido.Nome_Evento,
-        dataEvento: pedido.Data_Evento,
-        dataCompra: pedido.Data_Compra,
-        horarioInicio: pedido.Horario_Inicio,
-        horarioFim: pedido.Horario_Fim,
-        numConvidados: pedido.Num_Convidado,
-        preco: pedido.Preço,
-        status: pedido.Status,
-        ativo: pedido.Ativo,
-        idComprador: pedido.ID_Comprador,
-        originalData: pedido,
-      }));
-
-      // Armazena no cache
-      userOrdersCache.data = data;
-      userOrdersCache.timestamp = Date.now();
-      userOrdersCache.promise = null;
-
-      return data;
-
-    } catch (error) {
-      userOrdersCache.promise = null;
-      throw new Error(getErrorMessage(error));
-    }
-  };
-
-  // Armazena a promise no cache e retorna
-  userOrdersCache.promise = processData();
-  return userOrdersCache.promise;
 };
 
 // Função para atualizar o status de um pedido

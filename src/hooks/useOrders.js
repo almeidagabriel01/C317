@@ -1,43 +1,22 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { FiFileText, FiCalendar, FiDollarSign, FiUsers, FiEye, FiPlus, FiSend, FiCreditCard } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
-import { fetchUserOrders, updateOrderStatus } from '@/services/api';
+import { useOrders } from './useDataManager'; // Usando o hook unificado
+import { updateOrderStatus } from '@/services/api';
 import { initiateMercadoPagoPayment } from '@/services/mercadopago';
 import { formatDate, formatCurrency, getStatusColor } from '@/utils/formatUtils';
-import OrderDetailModal from '@/components/orders/modals/OrderDetailsModal';
+import OrderDetailModal from '@/components/pedidos/modals/OrderDetailsModal';
 
 export default function UserOrders() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Usando o hook unificado que SEMPRE faz nova requisição
+  const { data: orders, loading, updateOrderInCache } = useOrders();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sendingOrder, setSendingOrder] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(null);
   const router = useRouter();
-
-  useEffect(() => {
-    loadOrders();
-  }, []);
-
-  const loadOrders = async () => {
-    try {
-      const ordersData = await fetchUserOrders();
-
-      if (Array.isArray(ordersData)) {
-        setOrders(ordersData);
-      } else {
-        setOrders([]);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar pedidos:', error);
-      toast.error('Erro ao carregar pedidos. Tente novamente.');
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSendOrder = async (orderId) => {
     setSendingOrder(orderId);
@@ -46,12 +25,10 @@ export default function UserOrders() {
       await updateOrderStatus(orderId, 'Pendente');
       toast.success('Pedido enviado com sucesso!');
 
-      const updatedOrders = orders.map(order =>
-        order.id === orderId ? { ...order, status: 'Pendente' } : order
-      );
+      // Atualiza o cache local
+      updateOrderInCache(orderId, { status: 'Pendente' });
 
-      setOrders(updatedOrders);
-
+      // Atualiza o selectedOrder se for o mesmo
       if (selectedOrder?.id === orderId) {
         setSelectedOrder(prev => ({ ...prev, status: 'Pendente' }));
       }
@@ -122,33 +99,40 @@ export default function UserOrders() {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {orders.map(order => (
-                <div key={order.id} className="bg-gray-700 rounded-lg p-6 border border-gray-600 hover:border-amber-400 transition-colors">
-                  <div className="flex justify-between items-start mb-4 gap-3">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white truncate">{order.nomeEvento}</h3>
+                <div key={order.id} className="bg-gray-700 rounded-lg p-6 border border-gray-600 hover:border-amber-400 transition-colors flex flex-col min-h-[280px]">
+                  {/* Header do card - altura fixa para evitar desalinhamento */}
+                  <div className="flex justify-between items-start mb-4 gap-3 min-h-[60px]">
+                    <div className="flex-1 min-w-0"> {/* min-w-0 permite que o texto seja truncado */}
+                      <h3 className="text-lg font-semibold text-white truncate pr-2" title={order.nomeEvento}>
+                        {order.nomeEvento}
+                      </h3>
                       <p className="text-sm text-gray-400">#{order.id}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
+                    <div className="flex-shrink-0"> {/* Impede que a tag seja comprimida */}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium text-white whitespace-nowrap ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="space-y-3 mb-4">
+                  {/* Informações do pedido - área flexível */}
+                  <div className="space-y-3 mb-4 flex-1">
                     <div className="flex items-center gap-2 text-gray-300">
-                      <FiCalendar size={16} className="text-amber-400" />
+                      <FiCalendar size={16} className="text-amber-400 flex-shrink-0" />
                       <span className="text-sm">{formatDate(order.dataEvento)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-300">
-                      <FiUsers size={16} className="text-amber-400" />
+                      <FiUsers size={16} className="text-amber-400 flex-shrink-0" />
                       <span className="text-sm">{order.numConvidados} convidados</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-300">
-                      <FiDollarSign size={16} className="text-amber-400" />
+                      <FiDollarSign size={16} className="text-amber-400 flex-shrink-0" />
                       <span className="text-sm font-semibold text-green-400">{formatCurrency(order.preco)}</span>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  {/* Botões de ação - sempre no final */}
+                  <div className="space-y-2 mt-auto">
                     <button
                       onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}
                       className="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"

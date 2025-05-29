@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FiPlus } from "react-icons/fi";
 import { createItem, updateItem, toggleItemStatus } from "@/services/api";
-import { useItems } from "@/hooks/useAdminData";
+import { useItems } from "@/hooks/useDataManager";
 import Navbar from "../navbar/Navbar";
 import CreateItemModal from "./modals/CreateItemModal";
 import EditItemModal from "./modals/EditItemModal";
 import ViewItemModal from "./modals/ViewItemModal";
+import ConfirmationModal from "./modals/ConfirmationModal";
 import ItemSearchBar from "./list/ItemSearchBar";
 import ItemTable from "./list/ItemTable";
 
@@ -18,13 +19,12 @@ export default function GerenciarItens() {
   const { user, role, isAuthenticated, logout, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  // Usar o hook personalizado para dados de itens
+  // Usar o hook unificado para dados de itens
   const {
     data: items,
     loading: loadingItems,
     error,
     refreshData,
-    refreshDataWithCacheBusting, // Nova função para refresh com cache busting
     updateItemInCache,
     addItemToCache
   } = useItems();
@@ -32,11 +32,13 @@ export default function GerenciarItens() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingItem, setEditingItem] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
+  const [toggleItem, setToggleItem] = useState(null); // Adicionado estado para item de toggle
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false); // Adicionado modal de confirmação
 
   // Authentication check
   useEffect(() => {
@@ -82,7 +84,13 @@ export default function GerenciarItens() {
     setIsViewModalOpen(true);
   };
 
-  // Handle item status toggle
+  // Handle toggle confirmation - NOVO
+  const handleToggleConfirmation = (item) => {
+    setToggleItem(item);
+    setIsConfirmModalOpen(true);
+  };
+
+  // Handle item status toggle - MODIFICADO para usar confirmação
   const handleToggleStatus = async (itemId) => {
     try {
       const response = await toggleItemStatus(itemId);
@@ -103,14 +111,21 @@ export default function GerenciarItens() {
     }
   };
 
+  // Confirm toggle - NOVO
+  const handleConfirmToggle = async () => {
+    if (toggleItem) {
+      await handleToggleStatus(toggleItem.id);
+    }
+  };
+
   // Save item changes
   const handleSaveItem = async (updatedData) => {
     try {
       await updateItem(editingItem.id, updatedData);
       toast.success("Item atualizado com sucesso!");
 
-      // Usa refresh com cache busting para forçar reload das imagens
-      await refreshDataWithCacheBusting();
+      // Força refresh para buscar dados atualizados
+      await refreshData();
       
       setIsEditModalOpen(false);
       setEditingItem(null);
@@ -198,12 +213,12 @@ export default function GerenciarItens() {
           </div>
         </div>
 
-        {/* Item table component - agora com ordenação */}
+        {/* Item table component - MODIFICADO para usar confirmação */}
         <ItemTable
           items={filteredItems}
           onEditItem={handleEditItem}
           onViewItem={handleViewItem}
-          onToggleStatus={handleToggleStatus}
+          onToggleStatus={handleToggleConfirmation} // Agora chama a confirmação
         />
       </main>
 
@@ -225,6 +240,20 @@ export default function GerenciarItens() {
         isOpen={isViewModalOpen}
         onClose={handleCloseViewModal}
         item={viewingItem}
+      />
+
+      {/* Modal de Confirmação - NOVO */}
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleConfirmToggle}
+        title={toggleItem?.status === 'Ativo' ? 'Desativar Item' : 'Ativar Item'}
+        message={
+          toggleItem?.status === 'Ativo'
+            ? `Tem certeza que deseja desativar o item "${toggleItem?.name}"?`
+            : `Tem certeza que deseja ativar o item "${toggleItem?.name}"?`
+        }
+        actionText={toggleItem?.status === 'Ativo' ? 'Desativar' : 'Ativar'}
       />
     </div>
   );

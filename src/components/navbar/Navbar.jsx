@@ -191,9 +191,9 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
                 Pedidos
               </Link>
               <Link
-                href="/gerenciar-itens"
+                href="/itens"
                 className={`flex items-center transition-colors font-medium px-3 py-2 rounded-lg ${
-                  isLinkActive('/gerenciar-itens')
+                  isLinkActive('/itens')
                     ? 'bg-amber-700 text-white'
                     : 'text-amber-100 hover:bg-amber-800/30 hover:text-amber-300'
                 }`}
@@ -376,9 +376,9 @@ export default function Navbar({ isAuthenticated, user, onLogout }) {
 
               <motion.div variants={menuItemVariants}>
                 <Link
-                  href="/gerenciar-itens"
+                  href="/itens"
                   className={`flex items-center w-full p-3 rounded-lg transition-colors ${
-                    isLinkActive('/gerenciar-itens')
+                    isLinkActive('/itens')
                       ? 'bg-amber-700 text-white'
                       : 'text-gray-200 hover:bg-gray-700 hover:text-amber-300'
                   }`}

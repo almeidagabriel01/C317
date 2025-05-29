@@ -55,7 +55,7 @@ const ItemTableRow = ({
   };
 
   const handleToggleStatus = () => {
-    onToggleStatus(item.id);
+    onToggleStatus(item);
   };
 
   return (

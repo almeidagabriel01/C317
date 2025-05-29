@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useDashboardData } from "@/hooks/useDashboardData";
+import { useDashboardData } from "@/hooks/useDataManager"; // USANDO SISTEMA UNIFICADO
 
 const DashboardCharts = () => {
   const { chartData, loading } = useDashboardData();
