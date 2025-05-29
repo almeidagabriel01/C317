@@ -5,12 +5,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import GerenciarUsuarios from '@/components/users/GerenciarUsuarios';
 
-export default function GerenciarUsuariosPage() {
+export default function UsersPage() {
   const { isAuthenticated, role, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // Verificação de autenticação e papel na camada de rota
     if (!loading) {
       if (!isAuthenticated) {
         router.push('/login');
@@ -24,7 +23,12 @@ export default function GerenciarUsuariosPage() {
   if (loading || !isAuthenticated || role !== 'Administrador') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <p className="text-white text-xl">Carregando...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+          <p className="text-white text-xl">
+            {loading ? "Verificando autenticação..." : "Carregando..."}
+          </p>
+        </div>
       </div>
     );
   }

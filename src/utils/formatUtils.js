@@ -14,18 +14,19 @@ export const formatDate = (dateString) => {
 
 /**
  * Formata uma data com horário completo
- * @param {string} dateString - Data em formato ISO
- * @returns {string} Data formatada com horário (DD de mês de AAAA às HH:MM)
+ * @param {string} dateString - Data em formato ISO ou qualquer formato válido
+ * @returns {string} Data e hora formatadas (DD/MM/AAAA HH:MM)
  */
 export const formatDateTime = (dateString) => {
   if (!dateString) return '';
   try {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+    return new Date(dateString).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false
     });
   } catch {
     return dateString;
@@ -83,18 +84,18 @@ export const formatDateToDDMMYYYY = (dateStr) => {
 };
 
 /**
- * Formata um valor monetário para o padrão brasileiro
- * @param {number|string} value - Valor numérico
- * @returns {string} Valor formatado em BRL
+ * Formata um valor numérico em moeda BRL com 2 casas decimais
+ * @param {number|string} value - Valor em reais ou centavos
+ * @returns {string} Valor formatado em R$ X.XXX,XX
  */
 export const formatCurrency = (value) => {
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  if (typeof numValue !== 'number' || isNaN(numValue)) return 'R$ 0,00';
-
+  const num = typeof value === 'number'
+    ? value
+    : parseFloat(String(value).replace(',', '.')) || 0;
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(numValue);
+  }).format(num);
 };
 
 /**
@@ -158,24 +159,26 @@ export const unformatPhone = (phone) => {
 
 /**
  * Retorna a cor do status baseado no valor (para pedidos/orçamentos)
+ * FLUXO ADMIN: Pendente → Pagamento → Aprovado → Concluído
  * @param {string} status - Status do pedido
  * @returns {string} Classe CSS para a cor
  */
 export const getStatusColor = (status) => {
   if (!status) return "bg-gray-500";
+  
   switch (status.toLowerCase()) {
+    case "orcado":
+      return "bg-blue-500";
     case "pendente":
       return "bg-orange-500";
+    case "pagamento":
+      return "bg-yellow-500";
     case "aprovado":
       return "bg-green-500";
-    case "pagamento":
-      return "bg-lime-600";
     case "concluido":
       return "bg-purple-500";
     case "reprovado":
       return "bg-red-500";
-    case "orcado":
-      return "bg-blue-500";
     default:
       return "bg-gray-500";
   }
@@ -291,13 +294,10 @@ export const reaisToCentavos = (reais) => {
  * @param {number|string} num - Número a ser formatado
  * @returns {string} Número formatado
  */
-
 export const formatNumber = (num) => {
   const numericValue = typeof num === 'number' ? num : parseInt(num) || 0;
-
   if (numericValue >= 1000) {
     return new Intl.NumberFormat('pt-BR').format(numericValue);
   }
-
   return numericValue.toString();
 };

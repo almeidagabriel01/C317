@@ -15,7 +15,7 @@ apiClient.interceptors.request.use(
     } else {
       console.warn("Token não encontrado para requisição:", config.url);
     }
-  return config;
+    return config;
   },
   (error) => {
     return Promise.reject(error);
@@ -105,11 +105,12 @@ export const fetchCurrentUser = async () => {
   }
 };
 
-// Nova função para buscar pedidos do usuário logado
+// Função para buscar pedidos do usuário logado - REMOVIDO CACHE ESPECÍFICO
 export const fetchUserOrders = async () => {
   try {
     const response = await apiClient.get('/pedido/all');
-    return response.data.map(pedido => ({
+
+    const data = response.data.map(pedido => ({
       id: pedido.ID,
       nomeEvento: pedido.Nome_Evento,
       dataEvento: pedido.Data_Evento,
@@ -123,6 +124,9 @@ export const fetchUserOrders = async () => {
       idComprador: pedido.ID_Comprador,
       originalData: pedido,
     }));
+
+    return data;
+
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -152,8 +156,8 @@ export const fetchUsers = async () => {
       email: user.Email,
       phone: (() => {
         const d = user.NumCel.replace(/\D/g, '');
-        if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-        if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+        if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+        if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
         return user.NumCel;
       })(),
       role: normalizeRole(user.role),
@@ -183,6 +187,19 @@ export const updateUser = async (userId, userData) => {
   }
 };
 
+/**
+ * Atualiza perfil de Cliente
+ * @param {{ ID: number, userName: string, NumCel: string }} payload
+ */
+export const updateUserProfile = async (payload) => {
+  try {
+    const response = await apiClient.put('/users/update/', payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
 export const updateUserStatus = async (userId) => {
   try {
     const response = await apiClient.put(`/users/toogle/Status?user_id=${userId}`);
@@ -204,18 +221,18 @@ export const fetchItems = async () => {
 // Função auxiliar para adicionar cache buster apenas quando necessário
 const addCacheBusterToImage = (imageUrl, forceRefresh = false) => {
   if (!imageUrl) return null;
-  
+
   // Se forceRefresh for true, sempre adiciona novo timestamp
   if (forceRefresh) {
     const baseUrl = imageUrl.split('?')[0]; // Remove parâmetros existentes
     return `${baseUrl}?t=${Date.now()}`;
   }
-  
+
   // Se já tem cache buster, mantém
   if (imageUrl.includes('?t=')) {
     return imageUrl;
   }
-  
+
   // Adiciona cache buster inicial
   return `${imageUrl}?t=${Date.now()}`;
 };
@@ -228,7 +245,7 @@ export const fetchItemsForAdmin = async (forceImageRefresh = false) => {
       name: itemData.item.Nome,
       description: itemData.item.Descricao,
       category: itemData.item.Categoria,
-      price: itemData.item.Preco, // Mantém em centavos
+      price: itemData.item.Preco,
       status: itemData.item.Ativo ? 'Ativo' : 'Inativo',
       image: addCacheBusterToImage(itemData.imageURL, forceImageRefresh),
       originalData: itemData.item,
@@ -249,7 +266,7 @@ export const createItem = async (itemData) => {
     formData.append('Nome', itemData.name);
     formData.append('Descricao', itemData.description);
     formData.append('Categoria', itemData.category);
-    formData.append('Preco', Math.round(itemData.price * 100)); // Converter para centavos
+    formData.append('Preco', itemData.price);
     formData.append('Ativo', itemData.status === 'Ativo');
     if (itemData.image) {
       formData.append('image', itemData.image);
@@ -271,8 +288,8 @@ export const updateItem = async (itemId, itemData) => {
     formData.append('Nome', itemData.name);
     formData.append('Descricao', itemData.description);
     formData.append('Categoria', itemData.category);
-    formData.append('Preco', Math.round(itemData.price * 100)); // Converter para centavos
-    formData.append('Ativo', true); // Mantém ativo ao editar
+    formData.append('Preco', itemData.price);
+    formData.append('Ativo', true);
     if (itemData.image && typeof itemData.image !== 'string') {
       formData.append('image', itemData.image);
     }
@@ -314,7 +331,7 @@ export const createPedido = async (payload) => {
     if (payload.pedido && payload.pedido.eventAddress) {
       delete payload.pedido.eventAddress;
     }
-    
+
     const response = await apiClient.post('/pedido/create/', payload);
     return response.data;
   } catch (error) {

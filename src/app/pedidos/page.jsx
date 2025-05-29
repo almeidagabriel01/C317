@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import GerenciarPedidos from '@/components/orders/GerenciarPedidos';
+import GerenciarPedidos from '@/components/pedidos/GerenciarPedidos';
 
 export default function PedidosPage() {
   const { isAuthenticated, role, loading } = useAuth();

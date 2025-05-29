@@ -9,7 +9,6 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
   const {
     handleSort,
     getSortedData,
-    getSortIcon,
     sortField,
     sortDirection
   } = useSorting(users);
@@ -17,12 +16,12 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
   const sortedUsers = getSortedData();
 
   const columns = [
-    { field: 'name', label: 'Nome' },
-    { field: 'email', label: 'Email' },
-    { field: 'phone', label: 'Telefone' },
-    { field: 'role', label: 'Função' },
-    { field: 'status', label: 'Status' },
-    { field: 'actions', label: 'Ações', sortable: false }
+    { field: 'name',    label: 'Nome',     width: 'w-1/6' },
+    { field: 'email',   label: 'Email',    width: 'w-1/6' },
+    { field: 'phone',   label: 'Telefone', width: 'w-1/6' },
+    { field: 'role',    label: 'Função',   width: 'w-1/6' },
+    { field: 'status',  label: 'Status',   width: 'w-1/6' },
+    { field: 'actions', label: 'Ações',    width: 'w-1/6', sortable: false }
   ];
 
   return (
@@ -33,42 +32,50 @@ const UserTable = ({ users, onEditUser, onToggleStatus }) => {
       transition={{ duration: 0.5 }}
     >
       <div className="overflow-x-auto">
-        <table className="min-w-[600px] md:min-w-0 w-full text-sm">
-          <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
+        {/* Cabeçalho fixo */}
+        <table className="table-fixed w-full text-sm">
+          <thead className="text-xs uppercase bg-gray-700 text-gray-300">
             <tr>
-              {columns.map((column) => (
+              {columns.map((col) => (
                 <SortableTableHeader
-                  key={column.field}
-                  field={column.field}
-                  label={column.label}
+                  key={col.field}
+                  field={col.field}
+                  label={col.label}
                   onSort={handleSort}
                   sortDirection={sortDirection}
                   activeSortField={sortField}
-                  sortable={column.sortable !== false}
+                  sortable={col.sortable !== false}
+                  className={col.width}
                 />
               ))}
             </tr>
           </thead>
+        </table>
+
+        {/* Corpo rolável */}
+        <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
           <AnimatePresence mode="wait">
-            <motion.tbody
-              key={sortedUsers.length}
+            <motion.table
+              className="table-fixed w-full text-sm"
               initial={{ opacity: 0.8, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0.8, scale: 0.98 }}
               transition={{ duration: 0.2 }}
             >
-              {sortedUsers.map((user, index) => (
-                <UserTableRow
-                  key={user.id}
-                  user={user}
-                  index={index}
-                  onEdit={onEditUser}
-                  onToggleStatus={onToggleStatus}
-                />
-              ))}
-            </motion.tbody>
+              <tbody>
+                {sortedUsers.map((user, idx) => (
+                  <UserTableRow
+                    key={user.id}
+                    user={user}
+                    index={idx}
+                    onEdit={onEditUser}
+                    onToggleStatus={onToggleStatus}
+                  />
+                ))}
+              </tbody>
+            </motion.table>
           </AnimatePresence>
-        </table>
+        </div>
       </div>
 
       {sortedUsers.length === 0 && (

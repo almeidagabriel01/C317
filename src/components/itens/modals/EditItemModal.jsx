@@ -1,9 +1,9 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiUpload, FiX } from "react-icons/fi";
 
-const CreateItemModal = ({ isOpen, onClose, onSave }) => {
+const EditItemModal = ({ isOpen, onClose, item, onSave }) => {
   const [itemData, setItemData] = useState({
     name: "",
     description: "",
@@ -24,6 +24,28 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
     { value: "estrutura", label: "Estruturas" },
     { value: "funcionarios", label: "Funcionários" },
   ];
+
+  useEffect(() => {
+    if (isOpen && item) {
+      setItemData({
+        name: item.name || "",
+        description: item.description || "",
+        category: item.category || "",
+        price: formatPriceDisplay(item.price),
+        image: item.image,
+      });
+      setImagePreview(item.image);
+    }
+  }, [isOpen, item]);
+
+  const formatPriceDisplay = (priceInReais) => {
+    if (!priceInReais && priceInReais !== 0) return '';
+    const price = Number(priceInReais);
+    return price.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,11 +77,13 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
     });
   };
 
-  // Função para converter o valor formatado de volta para número
+  // Função para converter o valor formatado de volta para número com 2 casas decimais
   const parsePriceValue = (formattedValue) => {
-    if (!formattedValue) return 0;
+    if (!formattedValue) return "0.00";
     // Remove pontos de milhares e converte vírgula para ponto
-    return parseFloat(formattedValue.replace(/\./g, '').replace(',', '.')) || 0;
+    const numValue = parseFloat(formattedValue.replace(/\./g, '').replace(',', '.')) || 0;
+    // Sempre retorna string com 2 casas decimais
+    return numValue.toFixed(2);
   };
 
   const handleFileSelect = (file) => {
@@ -114,28 +138,21 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
     setIsSubmitting(true);
     
     try {
+      const priceAsString = parsePriceValue(itemData.price);
+      
       await onSave({
         ...itemData,
-        price: parsePriceValue(itemData.price), // Converte preço formatado para número
-        status: "Ativo", // Items são criados como ativos por padrão
+        price: priceAsString, // Envia como string "20.30"
       });
-      handleClose();
+      onClose();
     } catch (error) {
-      console.error('Erro ao criar item:', error);
+      console.error('Erro ao atualizar item:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
-    setItemData({
-      name: "",
-      description: "",
-      category: "",
-      price: "",
-      image: null,
-    });
-    setImagePreview(null);
     setIsDragActive(false);
     setIsSubmitting(false);
     if (fileInputRef.current) {
@@ -191,7 +208,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
           {/* Header com X */}
           <div className="sticky top-0 z-10 bg-[#1C2431] px-6 py-4 border-b border-gray-700 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-[#E0CEAA] font-serif">
-              Criar Novo Item
+              Editar Item
             </h2>
             <button
               onClick={handleClose}
@@ -363,10 +380,10 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
                   {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Criando...
+                      Salvando...
                     </>
                   ) : (
-                    "Criar Item"
+                    "Salvar Alterações"
                   )}
                 </button>
               </div>
@@ -378,4 +395,4 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
   );
 };
 
-export default CreateItemModal;
+export default EditItemModal;

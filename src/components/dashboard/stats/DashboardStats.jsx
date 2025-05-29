@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import StatCardWithInfo from "./StatCardWithInfo";
 import { FiDollarSign, FiUsers, FiClock, FiCalendar } from "react-icons/fi";
-import { useDashboardData } from "@/hooks/useDashboardData";
+import { useDashboardData } from "@/hooks/useDataManager"; // USANDO SISTEMA UNIFICADO
 
 const DashboardStats = () => {
   const { stats, loading } = useDashboardData();

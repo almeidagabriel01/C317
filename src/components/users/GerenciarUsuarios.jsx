@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from 'react-toastify';
 import { updateUser, updateUserStatus } from "@/services/api";
-import { useUsers } from "@/hooks/useAdminData";
+import { useUsers } from "@/hooks/useDataManager"; // USANDO SISTEMA UNIFICADO
 import Navbar from "../navbar/Navbar";
 import EditUserModal from "./modals/EditUserModal";
 import ConfirmationModal from "./modals/ConfirmationModal";
@@ -16,7 +16,7 @@ export default function GerenciarUsuarios() {
   const { user, role, isAuthenticated, logout, loading: authLoading } = useAuth();
   const router = useRouter();
   
-  // Usar o hook personalizado para dados de usuários
+  // Usar o hook unificado para dados de usuários
   const { 
     data: users, 
     loading: loadingUsers, 
@@ -156,7 +156,7 @@ export default function GerenciarUsuarios() {
           />
         </div>
 
-        {/* User table component - agora com ordenação */}
+        {/* User table component */}
         <UserTable
           users={filteredUsers}
           onEditUser={handleEditUser}

@@ -69,17 +69,17 @@ const normalizeString = (value) => {
 const getStatusPriority = (status) => {
   const statusOrder = {
     // Para pedidos
+    'orcado': 0,
     'pendente': 1,
-    'aprovado': 2,
-    'pagamento': 3,
+    'pagamento': 2,
+    'aprovado': 3,
     'concluido': 4,
     'reprovado': 5,
-    'orcado': 0,
     // Para usuários/itens
     'ativo': 1,
     'inativo': 2
   };
-  
+
   return statusOrder[normalizeString(status)] || 999;
 };
 
@@ -161,7 +161,7 @@ const getNestedValue = (obj, path) => {
       value = altPath.split('.').reduce((current, key) => {
         return current && current[key] !== undefined ? current[key] : null;
       }, obj);
-      
+
       if (value !== null && value !== undefined && value !== '') {
         break;
       }
@@ -229,8 +229,8 @@ export const useSorting = (initialData = []) => {
    * @param {string} type - Tipo de dados
    */
   const handleSort = (field, type = SORT_TYPES.STRING) => {
-    const nextDirection = field === sortField 
-      ? getNextSortDirection(sortDirection) 
+    const nextDirection = field === sortField
+      ? getNextSortDirection(sortDirection)
       : SORT_DIRECTIONS.ASC;
 
     setSortField(nextDirection ? field : null);
@@ -284,7 +284,7 @@ export const useSorting = (initialData = []) => {
  */
 const getSortType = (field) => {
   const fieldLower = field.toLowerCase();
-  
+
   if (fieldLower.includes('price') || fieldLower.includes('total') || fieldLower.includes('preco')) {
     return SORT_TYPES.CURRENCY;
   }
@@ -297,6 +297,6 @@ const getSortType = (field) => {
   if (fieldLower.includes('id') || fieldLower.includes('phone') || fieldLower.includes('telefone')) {
     return SORT_TYPES.NUMBER;
   }
-  
+
   return SORT_TYPES.STRING;
 };

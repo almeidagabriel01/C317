@@ -35,8 +35,8 @@ export const useAdminData = (dataType) => {
     }
 
     // Verifica cache se não for refresh forçado
-    if (!forceRefresh && cache.data && cache.timestamp && 
-        (Date.now() - cache.timestamp) < CACHE_DURATION) {
+    if (!forceRefresh && cache.data && cache.timestamp &&
+      (Date.now() - cache.timestamp) < CACHE_DURATION) {
       if (mountedRef.current) {
         setData(cache.data);
         setLoading(false);
@@ -80,11 +80,11 @@ export const useAdminData = (dataType) => {
         default:
           throw new Error(`Tipo de dados desconhecido: ${dataType}`);
       }
-      
+
       // Cria promise única para evitar chamadas duplicadas
       const promise = fetchFunction();
       cache.promise = promise;
-      
+
       const result = await promise;
 
       // Atualiza cache
@@ -96,19 +96,19 @@ export const useAdminData = (dataType) => {
         setData(result);
         setLoading(false);
       }
-      
+
       return result;
     } catch (err) {
       console.error(`Erro ao carregar ${dataType}:`, err);
       cache.loading = false;
       cache.promise = null;
-      
+
       if (mountedRef.current) {
         setError(err.message);
         setLoading(false);
         toast.error(`Erro ao carregar ${dataType}: ${err.message}`);
       }
-      
+
       throw err;
     }
   }, [isAuthenticated, role, authLoading, dataType]);
@@ -184,7 +184,7 @@ export const useUsers = () => {
         ? { ...user, ...updatedData }
         : user
     ));
-    
+
     // Atualiza também o cache global
     const cache = globalCache.users;
     if (cache.data) {
@@ -216,13 +216,20 @@ export const useOrders = () => {
   }, [result.data, localData]);
 
   const updateOrderInCache = useCallback((orderId, updatedData) => {
-    setLocalData(prev => prev.map(order =>
-      order.id === orderId
-        ? { ...order, ...updatedData }
-        : order
-    ));
+    console.log('🔄 Atualizando order cache:', orderId, updatedData);
     
-    // Atualiza também o cache global
+    // ← Força atualização imediata do estado local usando callback
+    setLocalData(prev => {
+      const newData = prev.map(order =>
+        order.id === orderId
+          ? { ...order, ...updatedData }
+          : order
+      );
+      console.log('✅ Cache local atualizado');
+      return newData;
+    });
+
+    // Atualiza também o cache global de forma síncrona
     const cache = globalCache.orders;
     if (cache.data) {
       cache.data = cache.data.map(order =>
@@ -230,6 +237,7 @@ export const useOrders = () => {
           ? { ...order, ...updatedData }
           : order
       );
+      console.log('✅ Cache global atualizado');
     }
   }, []);
 
@@ -258,7 +266,7 @@ export const useItems = () => {
         ? { ...item, ...updatedData }
         : item
     ));
-    
+
     // Atualiza também o cache global
     const cache = globalCache.items;
     if (cache.data) {
@@ -272,7 +280,7 @@ export const useItems = () => {
 
   const addItemToCache = useCallback((newItem) => {
     setLocalData(prev => [...prev, newItem]);
-    
+
     // Atualiza também o cache global
     const cache = globalCache.items;
     if (cache.data) {
