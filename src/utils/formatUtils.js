@@ -285,3 +285,19 @@ export const centavosToReais = (centavos) => {
 export const reaisToCentavos = (reais) => {
   return Math.round(reais * 100);
 };
+
+/**
+ * Formata um número para exibição, adicionando separador de milhar se necessário
+ * @param {number|string} num - Número a ser formatado
+ * @returns {string} Número formatado
+ */
+
+export const formatNumber = (num) => {
+  const numericValue = typeof num === 'number' ? num : parseInt(num) || 0;
+
+  if (numericValue >= 1000) {
+    return new Intl.NumberFormat('pt-BR').format(numericValue);
+  }
+
+  return numericValue.toString();
+};

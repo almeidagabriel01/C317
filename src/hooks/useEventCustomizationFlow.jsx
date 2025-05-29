@@ -41,12 +41,13 @@ const saveToStorage = (data) => {
   }
 };
 
-// Cache global simples para evitar chamadas duplicadas
-let itemsCache = {
+// Cache global para itens com controle de uma única requisição
+let globalItemsCache = {
   data: null,
   loading: false,
   error: null,
-  timestamp: null
+  timestamp: null,
+  promise: null
 };
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
@@ -54,7 +55,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 export function useEventCustomizationFlow(STEPS, toast) {
   const saved = initializeFromStorage();
   const mountedRef = useRef(true);
-  const fetchedRef = useRef(false); // Ref para controlar se já fez fetch
+  const hasInitialized = useRef(false);
 
   const [currentStep, setCurrentStep] = useState(saved.currentStep ?? 0);
   const [animatedStep, setAnimatedStep] = useState(saved.currentStep ?? 0);
@@ -84,7 +85,7 @@ export function useEventCustomizationFlow(STEPS, toast) {
   const [backendPrice, setBackendPrice] = useState(NaN);
   const [calculatingPrice, setCalculatingPrice] = useState(false);
 
-  // Effect para salvar no localStorage sempre que o estado mudar
+  // Effect para salvar no localStorage apenas quando necessário
   useEffect(() => {
     const toSave = {
       currentStep,
@@ -97,61 +98,81 @@ export function useEventCustomizationFlow(STEPS, toast) {
       selectedStructure,
       staffQuantities
     };
-    saveToStorage(toSave);
+    
+    // Só salva se realmente mudou
+    const currentSaved = initializeFromStorage();
+    if (JSON.stringify(currentSaved) !== JSON.stringify(toSave)) {
+      saveToStorage(toSave);
+    }
   }, [
     currentStep, selectedEventType, formData, selectedDrinks,
     selectedNonAlcoholicDrinks, beverageQuantities, shotQuantities,
     selectedStructure, staffQuantities
   ]);
 
-  // Effect para carregar itens da API (com cache e controle de duplicação)
+  // Função para buscar itens com cache global e promise única
+  const fetchItemsWithCache = async () => {
+    // Verifica cache válido
+    if (globalItemsCache.data && globalItemsCache.timestamp && 
+        (Date.now() - globalItemsCache.timestamp) < CACHE_DURATION) {
+      return globalItemsCache.data;
+    }
+
+    // Se já está carregando, aguarda a promise existente
+    if (globalItemsCache.loading && globalItemsCache.promise) {
+      return await globalItemsCache.promise;
+    }
+
+    // Inicia nova requisição
+    globalItemsCache.loading = true;
+    globalItemsCache.error = null;
+
+    try {
+      const promise = fetchItems();
+      globalItemsCache.promise = promise;
+      
+      const data = await promise;
+      
+      // Atualiza cache
+      globalItemsCache.data = data;
+      globalItemsCache.timestamp = Date.now();
+      globalItemsCache.loading = false;
+      globalItemsCache.error = null;
+      
+      return data;
+    } catch (error) {
+      globalItemsCache.loading = false;
+      globalItemsCache.error = error.message;
+      globalItemsCache.promise = null;
+      throw error;
+    }
+  };
+
+  // Effect para carregar itens - executa apenas uma vez
   useEffect(() => {
-    // Se já fez fetch ou está carregando, não faz novamente
-    if (fetchedRef.current || itemsCache.loading) {
-      if (itemsCache.data) {
-        setItems(itemsCache.data);
-        setCategorizedItems(groupItemsByCategory(itemsCache.data));
-        setLoading(false);
-      }
-      return;
-    }
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
 
-    // Se tem cache válido, usa ele
-    if (itemsCache.data && itemsCache.timestamp && 
-        (Date.now() - itemsCache.timestamp) < CACHE_DURATION) {
-      setItems(itemsCache.data);
-      setCategorizedItems(groupItemsByCategory(itemsCache.data));
+    // Se já tem dados no cache, usa imediatamente
+    if (globalItemsCache.data) {
+      setItems(globalItemsCache.data);
+      setCategorizedItems(groupItemsByCategory(globalItemsCache.data));
       setLoading(false);
-      fetchedRef.current = true;
       return;
     }
 
-    // Marca como já tentou fazer fetch
-    fetchedRef.current = true;
-    itemsCache.loading = true;
-
-    fetchItems()
+    // Busca dados da API
+    fetchItemsWithCache()
       .then((data) => {
         if (mountedRef.current) {
-          // Atualiza cache
-          itemsCache.data = data;
-          itemsCache.timestamp = Date.now();
-          itemsCache.loading = false;
-          itemsCache.error = null;
-
-          // Atualiza estado
           setItems(data);
           setCategorizedItems(groupItemsByCategory(data));
         }
       })
       .catch((error) => {
         console.error("Erro ao carregar itens:", error);
-        if (mountedRef.current) {
-          itemsCache.loading = false;
-          itemsCache.error = error.message;
-          if (toast) {
-            toast.error("Erro ao carregar itens do catálogo");
-          }
+        if (mountedRef.current && toast) {
+          toast.error("Erro ao carregar itens do catálogo");
         }
       })
       .finally(() => {
@@ -159,7 +180,7 @@ export function useEventCustomizationFlow(STEPS, toast) {
           setLoading(false);
         }
       });
-  }, []); // Dependências vazias para rodar apenas uma vez
+  }, [toast]);
 
   // Cleanup
   useEffect(() => {
@@ -169,27 +190,34 @@ export function useEventCustomizationFlow(STEPS, toast) {
     };
   }, []);
 
-  // Função para calcular o preço no backend
+  // Função para calcular o preço no backend com debounce
   const calculateBackendPrice = async (itens) => {
     if (!itens || itens.length === 0) {
       setBackendPrice(NaN);
       return NaN;
     }
+    
     setCalculatingPrice(true);
     try {
       const price = await calculateOrderPrice(itens);
       const validPrice = typeof price === 'number' && !isNaN(price) ? price : NaN;
-      setBackendPrice(validPrice);
+      if (mountedRef.current) {
+        setBackendPrice(validPrice);
+      }
       return validPrice;
     } catch (error) {
       console.error("Erro ao calcular preço:", error);
-      if (toast) {
-        toast.error("Erro ao calcular preço do pedido");
+      if (mountedRef.current) {
+        if (toast) {
+          toast.error("Erro ao calcular preço do pedido");
+        }
+        setBackendPrice(NaN);
       }
-      setBackendPrice(NaN);
       return NaN;
     } finally {
-      setCalculatingPrice(false);
+      if (mountedRef.current) {
+        setCalculatingPrice(false);
+      }
     }
   };
 
@@ -198,7 +226,6 @@ export function useEventCustomizationFlow(STEPS, toast) {
     const { name, date, startTime, guestCount, eventDuration } = formData;
     const dateOk = date && /^\d{4}-\d{2}-\d{2}$/.test(date);
     const timeOk = startTime && /^\d{2}:\d{2}$/.test(startTime);
-    // Permite que a duração seja vazia ou "00:00" inicialmente, mas valida se preenchida
     const durationOk = eventDuration && /^\d{2}:\d{2}$/.test(eventDuration) && eventDuration !== "00:00";
 
     return (
