@@ -13,9 +13,10 @@ import OrderTable from "@/components/orders/list/OrderTable";
 import OrderDetailsModal from "@/components/orders/modals/OrderDetailsModal";
 
 const STATUS_FILTER = [
-  "Pendente",
-  "Aprovado",
+  "Orcado",
+  "Pendente", 
   "Pagamento",
+  "Aprovado",
   "Concluido",
   "Reprovado",
 ];
@@ -40,7 +41,6 @@ export default function GerenciarPedidos() {
   const [selectedStatus, setSelectedStatus] = useState("Todos");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   /* ───────────────────────────── filtro local ──────────────────────────── */
   const filteredOrders = orders.filter((o) => {
@@ -57,35 +57,22 @@ export default function GerenciarPedidos() {
 
   /* ─────────────────────── atualiza status via API ──────────────────────── */
   const updateOrderStatusHandler = async (id, newStatus) => {
-    if (isUpdatingStatus) return; // Previne cliques múltiplos
-
-    setIsUpdatingStatus(true);
-    const toastId = toast.loading(`Alterando status para ${newStatus}...`);
-
+    console.log(`🔄 Iniciando atualização: Pedido ${id} para ${newStatus}`);
+    
     try {
-      // Chama a API para atualizar o status
+      // Chama APENAS a API - o estado local será gerenciado pelo OrderTableRow
       await updateOrderStatus(id, newStatus);
-
-      // Atualiza o pedido no cache local
+      
+      // Atualiza o cache global após sucesso
       updateOrderInCache(id, { status: newStatus });
-
-      toast.update(toastId, {
-        render: `Pedido #${id} alterado para ${newStatus} com sucesso!`,
-        type: "success",
-        isLoading: false,
-        autoClose: 3000
-      });
-
+      
+      toast.success(`Pedido #${id} alterado para ${newStatus} com sucesso!`);
+      console.log(`✅ Pedido ${id} atualizado com sucesso`);
+      
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
-      toast.update(toastId, {
-        render: `Erro ao alterar status: ${error.message}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 5000
-      });
-    } finally {
-      setIsUpdatingStatus(false);
+      console.error(`❌ Erro ao atualizar pedido ${id}:`, error);
+      toast.error(`Erro ao alterar status: ${error.message}`);
+      throw error; // Re-throw para que o OrderTableRow possa reverter o estado local
     }
   };
 
@@ -174,7 +161,6 @@ export default function GerenciarPedidos() {
             setIsDetailsModalOpen(true);
           }}
           onUpdateStatus={updateOrderStatusHandler}
-          isUpdatingStatus={isUpdatingStatus}
         />
       </main>
 

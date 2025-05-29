@@ -158,24 +158,25 @@ export const unformatPhone = (phone) => {
 
 /**
  * Retorna a cor do status baseado no valor (para pedidos/orçamentos)
+ * NOVO FLUXO: Orçamento → Pendente → Pagamento → Aprovado → Concluído
  * @param {string} status - Status do pedido
  * @returns {string} Classe CSS para a cor
  */
 export const getStatusColor = (status) => {
   if (!status) return "bg-gray-500";
   switch (status.toLowerCase()) {
+    case "orcado":
+      return "bg-blue-500";
     case "pendente":
       return "bg-orange-500";
-    case "aprovado":
-      return "bg-green-500";
     case "pagamento":
       return "bg-lime-600";
+    case "aprovado":
+      return "bg-green-500";
     case "concluido":
       return "bg-purple-500";
     case "reprovado":
       return "bg-red-500";
-    case "orcado":
-      return "bg-blue-500";
     default:
       return "bg-gray-500";
   }
@@ -291,7 +292,6 @@ export const reaisToCentavos = (reais) => {
  * @param {number|string} num - Número a ser formatado
  * @returns {string} Número formatado
  */
-
 export const formatNumber = (num) => {
   const numericValue = typeof num === 'number' ? num : parseInt(num) || 0;
 

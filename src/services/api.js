@@ -15,7 +15,7 @@ apiClient.interceptors.request.use(
     } else {
       console.warn("Token não encontrado para requisição:", config.url);
     }
-  return config;
+    return config;
   },
   (error) => {
     return Promise.reject(error);
@@ -23,6 +23,13 @@ apiClient.interceptors.request.use(
 );
 
 export { apiClient };
+
+// Cache para evitar múltiplas chamadas simultâneas
+let userOrdersCache = {
+  promise: null,
+  data: null,
+  timestamp: null
+};
 
 const getErrorMessage = (error) => {
   if (error.response && error.response.data) {
@@ -107,25 +114,58 @@ export const fetchCurrentUser = async () => {
 
 // Nova função para buscar pedidos do usuário logado
 export const fetchUserOrders = async () => {
-  try {
-    const response = await apiClient.get('/pedido/all');
-    return response.data.map(pedido => ({
-      id: pedido.ID,
-      nomeEvento: pedido.Nome_Evento,
-      dataEvento: pedido.Data_Evento,
-      dataCompra: pedido.Data_Compra,
-      horarioInicio: pedido.Horario_Inicio,
-      horarioFim: pedido.Horario_Fim,
-      numConvidados: pedido.Num_Convidado,
-      preco: pedido.Preço,
-      status: pedido.Status,
-      ativo: pedido.Ativo,
-      idComprador: pedido.ID_Comprador,
-      originalData: pedido,
-    }));
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
+  // Se já tem dados recentes (menos de 30 segundos), retorna do cache
+  if (userOrdersCache.data && userOrdersCache.timestamp &&
+    (Date.now() - userOrdersCache.timestamp) < 30000) {
+    return userOrdersCache.data;
   }
+
+  // Se já tem uma requisição em andamento, aguarda ela
+  if (userOrdersCache.promise) {
+    try {
+      return await userOrdersCache.promise;
+    } catch (error) {
+      // Se deu erro, limpa o cache e tenta novamente
+      userOrdersCache.promise = null;
+    }
+  }
+
+  // Cria função para processar os dados
+  const processData = async () => {
+    try {
+      const response = await apiClient.get('/pedido/all');
+
+      const data = response.data.map(pedido => ({
+        id: pedido.ID,
+        nomeEvento: pedido.Nome_Evento,
+        dataEvento: pedido.Data_Evento,
+        dataCompra: pedido.Data_Compra,
+        horarioInicio: pedido.Horario_Inicio,
+        horarioFim: pedido.Horario_Fim,
+        numConvidados: pedido.Num_Convidado,
+        preco: pedido.Preço,
+        status: pedido.Status,
+        ativo: pedido.Ativo,
+        idComprador: pedido.ID_Comprador,
+        originalData: pedido,
+      }));
+
+      // Armazena no cache
+      userOrdersCache.data = data;
+      userOrdersCache.timestamp = Date.now();
+      userOrdersCache.promise = null;
+
+      return data;
+
+    } catch (error) {
+      userOrdersCache.promise = null;
+      throw new Error(getErrorMessage(error));
+    }
+  };
+
+  // Armazena a promise no cache e retorna
+  userOrdersCache.promise = processData();
+  return userOrdersCache.promise;
 };
 
 // Função para atualizar o status de um pedido
@@ -152,8 +192,8 @@ export const fetchUsers = async () => {
       email: user.Email,
       phone: (() => {
         const d = user.NumCel.replace(/\D/g, '');
-        if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-        if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+        if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+        if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
         return user.NumCel;
       })(),
       role: normalizeRole(user.role),
@@ -204,18 +244,18 @@ export const fetchItems = async () => {
 // Função auxiliar para adicionar cache buster apenas quando necessário
 const addCacheBusterToImage = (imageUrl, forceRefresh = false) => {
   if (!imageUrl) return null;
-  
+
   // Se forceRefresh for true, sempre adiciona novo timestamp
   if (forceRefresh) {
     const baseUrl = imageUrl.split('?')[0]; // Remove parâmetros existentes
     return `${baseUrl}?t=${Date.now()}`;
   }
-  
+
   // Se já tem cache buster, mantém
   if (imageUrl.includes('?t=')) {
     return imageUrl;
   }
-  
+
   // Adiciona cache buster inicial
   return `${imageUrl}?t=${Date.now()}`;
 };
@@ -314,7 +354,7 @@ export const createPedido = async (payload) => {
     if (payload.pedido && payload.pedido.eventAddress) {
       delete payload.pedido.eventAddress;
     }
-    
+
     const response = await apiClient.post('/pedido/create/', payload);
     return response.data;
   } catch (error) {
