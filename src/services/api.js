@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://127.0.0.1:8000';
+const BASE_URL = 'http://127.0.0.1:8002';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -223,6 +223,19 @@ export const updateUser = async (userId, userData) => {
   }
 };
 
+/**
+ * Atualiza perfil de Cliente
+ * @param {{ ID: number, userName: string, NumCel: string }} payload
+ */
+export const updateUserProfile = async (payload) => {
+  try {
+    const response = await apiClient.put('/users/update/', payload);
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+};
+
 export const updateUserStatus = async (userId) => {
   try {
     const response = await apiClient.put(`/users/toogle/Status?user_id=${userId}`);
@@ -268,7 +281,7 @@ export const fetchItemsForAdmin = async (forceImageRefresh = false) => {
       name: itemData.item.Nome,
       description: itemData.item.Descricao,
       category: itemData.item.Categoria,
-      price: itemData.item.Preco, // Mantém em centavos
+      price: itemData.item.Preco,
       status: itemData.item.Ativo ? 'Ativo' : 'Inativo',
       image: addCacheBusterToImage(itemData.imageURL, forceImageRefresh),
       originalData: itemData.item,
@@ -289,7 +302,7 @@ export const createItem = async (itemData) => {
     formData.append('Nome', itemData.name);
     formData.append('Descricao', itemData.description);
     formData.append('Categoria', itemData.category);
-    formData.append('Preco', Math.round(itemData.price * 100)); // Converter para centavos
+    formData.append('Preco', itemData.price);
     formData.append('Ativo', itemData.status === 'Ativo');
     if (itemData.image) {
       formData.append('image', itemData.image);
@@ -311,8 +324,8 @@ export const updateItem = async (itemId, itemData) => {
     formData.append('Nome', itemData.name);
     formData.append('Descricao', itemData.description);
     formData.append('Categoria', itemData.category);
-    formData.append('Preco', Math.round(itemData.price * 100)); // Converter para centavos
-    formData.append('Ativo', true); // Mantém ativo ao editar
+    formData.append('Preco', itemData.price);
+    formData.append('Ativo', true);
     if (itemData.image && typeof itemData.image !== 'string') {
       formData.append('image', itemData.image);
     }

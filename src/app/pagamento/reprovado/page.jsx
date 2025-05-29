@@ -6,11 +6,6 @@ import { FiXCircle, FiRefreshCw, FiHome, FiHelpCircle } from 'react-icons/fi';
 export default function PaymentFailedPage() {
   const router = useRouter();
 
-  const handleTryAgain = () => {
-    // Redireciona para o perfil mantendo o status de "Pagamento"
-    router.push('/profile');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
@@ -29,9 +24,9 @@ export default function PaymentFailedPage() {
           <h1 className="text-3xl font-bold text-white mb-4 font-serif">
             Pagamento Não Processado
           </h1>
-          
+
           <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-            Não foi possível processar seu pagamento. 
+            Não foi possível processar seu pagamento.
             Isso pode acontecer por diversos motivos.
           </p>
 

@@ -31,18 +31,17 @@ const EditItemModal = ({ isOpen, onClose, item, onSave }) => {
         name: item.name || "",
         description: item.description || "",
         category: item.category || "",
-        price: formatPriceDisplay(item.price), // Formatar preço para exibição
+        price: formatPriceDisplay(item.price),
         image: item.image,
       });
       setImagePreview(item.image);
     }
   }, [isOpen, item]);
 
-  // Função para formatar preço para exibição (centavos -> R$ formatado)
-  const formatPriceDisplay = (priceInCents) => {
-    if (!priceInCents) return '';
-    const priceInReais = priceInCents / 100;
-    return priceInReais.toLocaleString('pt-BR', {
+  const formatPriceDisplay = (priceInReais) => {
+    if (!priceInReais && priceInReais !== 0) return '';
+    const price = Number(priceInReais);
+    return price.toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
@@ -78,11 +77,13 @@ const EditItemModal = ({ isOpen, onClose, item, onSave }) => {
     });
   };
 
-  // Função para converter o valor formatado de volta para número
+  // Função para converter o valor formatado de volta para número com 2 casas decimais
   const parsePriceValue = (formattedValue) => {
-    if (!formattedValue) return 0;
+    if (!formattedValue) return "0.00";
     // Remove pontos de milhares e converte vírgula para ponto
-    return parseFloat(formattedValue.replace(/\./g, '').replace(',', '.')) || 0;
+    const numValue = parseFloat(formattedValue.replace(/\./g, '').replace(',', '.')) || 0;
+    // Sempre retorna string com 2 casas decimais
+    return numValue.toFixed(2);
   };
 
   const handleFileSelect = (file) => {
@@ -137,9 +138,11 @@ const EditItemModal = ({ isOpen, onClose, item, onSave }) => {
     setIsSubmitting(true);
     
     try {
+      const priceAsString = parsePriceValue(itemData.price);
+      
       await onSave({
         ...itemData,
-        price: parsePriceValue(itemData.price), // Converte preço formatado para número
+        price: priceAsString, // Envia como string "20.30"
       });
       onClose();
     } catch (error) {

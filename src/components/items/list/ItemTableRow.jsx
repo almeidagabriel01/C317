@@ -7,6 +7,7 @@ import {
   FiEye,
 } from "react-icons/fi";
 import StatusToggle from "../toggle/StatusToggle";
+import { formatCurrency } from "@/utils/formatUtils";
 
 const ItemTableRow = ({
   item,
@@ -16,8 +17,7 @@ const ItemTableRow = ({
   onToggleStatus,
 }) => {
   const getCategoryColor = (category) => {
-    const normalizedCategory = category?.toLowerCase();
-    switch (normalizedCategory) {
+    switch (category?.toLowerCase()) {
       case "alcoolicos":
         return "bg-red-900 text-red-300";
       case "nao_alcoolicos":
@@ -54,7 +54,6 @@ const ItemTableRow = ({
     }
   };
 
-  // Handler para o toggle que só passa o ID do item
   const handleToggleStatus = () => {
     onToggleStatus(item.id);
   };
@@ -90,7 +89,7 @@ const ItemTableRow = ({
       <td className="px-6 py-4 text-center">
         <div className="flex items-center justify-center">
           <span className="text-green-400 font-medium">
-            R$ {item.price ? (item.price / 100).toFixed(2).replace('.', ',') : "0,00"}
+            {formatCurrency(item.price)}
           </span>
         </div>
       </td>
@@ -119,7 +118,7 @@ const ItemTableRow = ({
           </button>
           <button
             onClick={() => onEdit(item)}
-            className="p-2 text-amber-400 hover:text-amber-300 hover:bg-gray-700 rounded-full"
+            className="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-gray-700 rounded-full"
             title="Editar item"
           >
             <FiEdit2 size={18} />

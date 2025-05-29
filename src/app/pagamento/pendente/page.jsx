@@ -7,13 +7,11 @@ export default function PaymentPendingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Opcional: redirecionar automaticamente após alguns segundos
-    const timer = setTimeout(() => {
-      router.push('/profile');
-    }, 15000); // 15 segundos
-
-    return () => clearTimeout(timer);
-  }, [router]);
+      const timer = setTimeout(() => {
+        router.push('/profile');
+      }, 15000);
+      return () => clearTimeout(timer);
+    }, [router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center p-4">
@@ -33,7 +31,7 @@ export default function PaymentPendingPage() {
           <h1 className="text-3xl font-bold text-white mb-4 font-serif">
             Pagamento Pendente
           </h1>
-          
+
           <p className="text-gray-300 mb-6 text-lg leading-relaxed">
             Seu pagamento está sendo processado. Isso pode levar alguns minutos.
           </p>
@@ -56,7 +54,7 @@ export default function PaymentPendingPage() {
               📧 Acompanhe seu pagamento:
             </p>
             <p className="text-amber-200 text-sm">
-              Você receberá um e-mail de confirmação assim que o pagamento for processado. 
+              Você receberá um e-mail de confirmação assim que o pagamento for processado.
               Fique atento à sua caixa de entrada!
             </p>
           </div>

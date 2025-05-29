@@ -54,12 +54,14 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
       maximumFractionDigits: 2
     });
   };
-
+  
   // Função para converter o valor formatado de volta para número
   const parsePriceValue = (formattedValue) => {
-    if (!formattedValue) return 0;
+    if (!formattedValue) return "0.00";
     // Remove pontos de milhares e converte vírgula para ponto
-    return parseFloat(formattedValue.replace(/\./g, '').replace(',', '.')) || 0;
+    const numValue = parseFloat(formattedValue.replace(/\./g, '').replace(',', '.')) || 0;
+    // Sempre retorna string com 2 casas decimais
+    return numValue.toFixed(2);
   };
 
   const handleFileSelect = (file) => {
@@ -114,10 +116,12 @@ const CreateItemModal = ({ isOpen, onClose, onSave }) => {
     setIsSubmitting(true);
     
     try {
+      const priceAsString = parsePriceValue(itemData.price);
+      
       await onSave({
         ...itemData,
-        price: parsePriceValue(itemData.price), // Converte preço formatado para número
-        status: "Ativo", // Items são criados como ativos por padrão
+        price: priceAsString, // Envia como string "20.30"
+        status: "Ativo",
       });
       handleClose();
     } catch (error) {

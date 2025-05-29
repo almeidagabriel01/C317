@@ -14,20 +14,20 @@ const ItemTable = ({
   const {
     handleSort,
     getSortedData,
-    getSortIcon,
     sortField,
     sortDirection
   } = useSorting(items);
 
   const sortedItems = getSortedData();
 
+  // Larguras iguais para alinhar colunas
   const columns = [
-    { field: 'name', label: 'Item' },
-    { field: 'description', label: 'Descrição' },
-    { field: 'category', label: 'Categoria' },
-    { field: 'price', label: 'Preço' },
-    { field: 'status', label: 'Status' },
-    { field: 'actions', label: 'Ações', sortable: false }
+    { field: 'name',        label: 'Item',       width: 'w-1/6' },
+    { field: 'description', label: 'Descrição',  width: 'w-1/6' },
+    { field: 'category',    label: 'Categoria',  width: 'w-1/6' },
+    { field: 'price',       label: 'Preço',      width: 'w-1/6' },
+    { field: 'status',      label: 'Status',     width: 'w-1/6' },
+    { field: 'actions',     label: 'Ações',      width: 'w-1/6', sortable: false }
   ];
 
   return (
@@ -37,37 +37,44 @@ const ItemTable = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Container unificado para header e body */}
-      <div className="overflow-x-auto max-h-[600px] overflow-y-auto custom-scrollbar">
-        <table className="w-full text-sm">
-          <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
+      <div className="overflow-x-auto">
+        {/* Cabeçalho fixo */}
+        <table className="table-fixed w-full text-sm">
+          <thead className="text-xs uppercase bg-gray-700 text-gray-300">
             <tr>
-              {columns.map((column) => (
+              {columns.map((col) => (
                 <SortableTableHeader
-                  key={column.field}
-                  field={column.field}
-                  label={column.label}
+                  key={col.field}
+                  field={col.field}
+                  label={col.label}
                   onSort={handleSort}
                   sortDirection={sortDirection}
                   activeSortField={sortField}
-                  sortable={column.sortable !== false}
+                  sortable={col.sortable !== false}
+                  className={col.width}
                 />
               ))}
             </tr>
           </thead>
-          <tbody>
-            {sortedItems.map((item, index) => (
-              <ItemTableRow
-                key={item.id}
-                item={item}
-                index={index}
-                onEdit={onEditItem}
-                onView={onViewItem}
-                onToggleStatus={onToggleStatus}
-              />
-            ))}
-          </tbody>
         </table>
+
+        {/* Corpo rolável */}
+        <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+          <table className="table-fixed w-full text-sm">
+            <tbody>
+              {sortedItems.map((item, idx) => (
+                <ItemTableRow
+                  key={item.id}
+                  item={item}
+                  index={idx}
+                  onEdit={onEditItem}
+                  onView={onViewItem}
+                  onToggleStatus={onToggleStatus}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {sortedItems.length === 0 && (

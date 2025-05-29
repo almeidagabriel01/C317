@@ -5,11 +5,10 @@ import { useSorting } from "@/utils/sortUtils";
 import SortableTableHeader from "@/components/common/SortableTableHeader";
 import OrderTableRow from "./OrderTableRow";
 
-const OrderTable = ({ orders, onViewOrder, onUpdateStatus, statusOrder }) => {
+const OrderTable = ({ orders, onViewOrder, onUpdateStatus }) => {
   const {
     handleSort,
     getSortedData,
-    getSortIcon,
     sortField,
     sortDirection
   } = useSorting(orders);
@@ -17,12 +16,12 @@ const OrderTable = ({ orders, onViewOrder, onUpdateStatus, statusOrder }) => {
   const sortedOrders = getSortedData();
 
   const columns = [
-    { field: 'id', label: 'Pedido', width: 'w-[120px]' },
+    { field: 'id',         label: 'Pedido',  width: 'w-[120px]' },
     { field: 'nomeEvento', label: 'Cliente', width: 'w-[200px]' },
-    { field: 'dataCompra', label: 'Data', width: 'w-[140px]' },
-    { field: 'preco', label: 'Total', width: 'w-[120px]' },
-    { field: 'status', label: 'Status', width: 'w-[140px]' },
-    { field: 'actions', label: 'Ações', width: 'w-[180px]', sortable: false }
+    { field: 'dataCompra', label: 'Data',    width: 'w-[140px]' },
+    { field: 'preco',      label: 'Total',   width: 'w-[120px]' },
+    { field: 'status',     label: 'Status',  width: 'w-[140px]' },
+    { field: 'actions',    label: 'Ações',   width: 'w-[180px]', sortable: false }
   ];
 
   return (
@@ -33,36 +32,42 @@ const OrderTable = ({ orders, onViewOrder, onUpdateStatus, statusOrder }) => {
       transition={{ duration: 0.5 }}
     >
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-xs uppercase bg-gray-700 text-gray-300 sticky top-0 z-10">
+        {/* Cabeçalho fixo */}
+        <table className="table-fixed w-full text-sm">
+          <thead className="text-xs uppercase bg-gray-700 text-gray-300">
             <tr>
-              {columns.map((column) => (
+              {columns.map((col) => (
                 <SortableTableHeader
-                  key={column.field}
-                  field={column.field}
-                  label={column.label}
+                  key={col.field}
+                  field={col.field}
+                  label={col.label}
                   onSort={handleSort}
                   sortDirection={sortDirection}
                   activeSortField={sortField}
-                  className={column.width}
-                  sortable={column.sortable !== false}
+                  sortable={col.sortable !== false}
+                  className={col.width}
                 />
               ))}
             </tr>
           </thead>
-          <tbody>
-            {sortedOrders.map((order, i) => (
-              <OrderTableRow
-                key={order.id}
-                order={order}
-                index={i}
-                onView={() => onViewOrder(order)}
-                onUpdateStatus={onUpdateStatus}
-                statusOrder={statusOrder}
-              />
-            ))}
-          </tbody>
         </table>
+
+        {/* Corpo rolável */}
+        <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+          <table className="table-fixed w-full text-sm">
+            <tbody>
+              {sortedOrders.map((order, idx) => (
+                <OrderTableRow
+                  key={order.id}
+                  order={order}
+                  index={idx}
+                  onView={() => onViewOrder(order)}
+                  onUpdateStatus={onUpdateStatus}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {sortedOrders.length === 0 && (

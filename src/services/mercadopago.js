@@ -7,12 +7,10 @@ import { apiClient } from './api';
  */
 export const initiateMercadoPagoPayment = async (orderId) => {
   try {
-    const response = await apiClient.get('/payment/mercadopago/create-preference', {
+    const response = await apiClient.get('/payment/getPayment', {
       params: { id: orderId }
     });
-
-    // O backend retorna a URL de pagamento do Mercado Pago
-    return response.data.payment_url || response.data.init_point || response.data;
+    return response.data.payment_url || response.data;
   } catch (error) {
     console.error('Erro ao criar preferência de pagamento:', error);
     throw new Error('Não foi possível iniciar o pagamento. Tente novamente.');
@@ -47,12 +45,12 @@ export const processPayment = async (orderId, { onSuccess, onError } = {}) => {
   try {
     // Busca a URL de pagamento do backend
     const paymentUrl = await initiateMercadoPagoPayment(orderId);
-    
+
     // Abre o pop-up
     const popup = openMercadoPagoPopup(paymentUrl);
 
     if (onSuccess) onSuccess({ popup, paymentUrl });
-    
+
     return popup;
   } catch (error) {
     if (onError) onError(error);

@@ -7,11 +7,9 @@ export default function PaymentSuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Opcional: redirecionar automaticamente após alguns segundos
     const timer = setTimeout(() => {
       router.push('/profile');
-    }, 10000); // 10 segundos
-
+    }, 10000);
     return () => clearTimeout(timer);
   }, [router]);
 
@@ -33,9 +31,9 @@ export default function PaymentSuccessPage() {
           <h1 className="text-3xl font-bold text-white mb-4 font-serif">
             Pagamento Aprovado!
           </h1>
-          
+
           <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-            Obrigado por escolher a <span className="text-amber-400 font-semibold">Elo Drinks</span>! 
+            Obrigado por escolher a <span className="text-amber-400 font-semibold">Elo Drinks</span>!
             Seu pagamento foi processado com sucesso.
           </p>
 
@@ -44,7 +42,7 @@ export default function PaymentSuccessPage() {
               📧 Próximos passos:
             </p>
             <p className="text-gray-300 text-sm">
-              Em breve entraremos em contato para finalizar os detalhes do seu evento. 
+              Em breve entraremos em contato para finalizar os detalhes do seu evento.
               Fique atento ao seu e-mail e WhatsApp!
             </p>
           </div>

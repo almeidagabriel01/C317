@@ -4,7 +4,7 @@ import { FiFileText, FiCalendar, FiDollarSign, FiUsers, FiEye, FiPlus, FiSend, F
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { fetchUserOrders, updateOrderStatus } from '@/services/api';
-import { processPayment } from '@/services/mercadopago';
+import { initiateMercadoPagoPayment } from '@/services/mercadopago';
 import { formatDate, formatCurrency, getStatusColor } from '@/utils/formatUtils';
 import OrderDetailModal from '@/components/orders/modals/OrderDetailsModal';
 
@@ -66,34 +66,12 @@ export default function UserOrders() {
 
   const handlePayment = async (orderId) => {
     setProcessingPayment(orderId);
-
     try {
-      await processPayment(orderId, {
-        onSuccess: ({ popup, paymentUrl }) => {
-          console.log('Pop-up de pagamento aberto:', paymentUrl);
-          toast.success('Redirecionando para o Mercado Pago...');
-          
-          // Monitora quando o pop-up é fechado para recarregar os pedidos
-          const checkClosed = setInterval(() => {
-            if (popup.closed) {
-              clearInterval(checkClosed);
-              toast.info('Verificando status do pagamento...');
-              
-              // Recarrega os pedidos após fechar o pop-up
-              setTimeout(() => {
-                loadOrders();
-              }, 2000);
-            }
-          }, 1000);
-        },
-        onError: (error) => {
-          console.error('Erro no pagamento:', error);
-          toast.error(error.message || 'Erro ao processar pagamento.');
-        }
-      });
+      const paymentUrl = await initiateMercadoPagoPayment(orderId);
+      router.push(paymentUrl);
     } catch (error) {
       console.error('Erro ao iniciar pagamento:', error);
-      toast.error('Erro ao iniciar pagamento. Tente novamente.');
+      toast.error(error.message || 'Erro ao processar pagamento.');
     } finally {
       setProcessingPayment(null);
     }
@@ -177,7 +155,7 @@ export default function UserOrders() {
                     >
                       <FiEye size={16} /> <span>Ver Detalhes</span>
                     </button>
-                    
+
                     {order.status === 'Orcado' && (
                       <button
                         onClick={() => handleSendOrder(order.id)}

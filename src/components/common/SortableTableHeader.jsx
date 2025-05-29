@@ -2,18 +2,6 @@
 
 import { FiChevronUp, FiChevronDown } from "react-icons/fi";
 
-/**
- * Componente de cabeçalho de tabela com ordenação
- * @param {Object} props - Propriedades do componente
- * @param {string} props.field - Campo para ordenação
- * @param {string} props.label - Texto do cabeçalho
- * @param {Function} props.onSort - Função chamada ao clicar no cabeçalho
- * @param {string|null} props.sortDirection - Direção atual da ordenação
- * @param {string|null} props.activeSortField - Campo atualmente sendo ordenado
- * @param {string} props.className - Classes CSS adicionais
- * @param {boolean} props.sortable - Se a coluna é ordenável
- * @returns {JSX.Element} - Elemento do cabeçalho
- */
 const SortableTableHeader = ({
   field,
   label,
@@ -45,7 +33,7 @@ const SortableTableHeader = ({
       onClick={handleClick}
       title={sortable ? `Clique para ordenar por ${label}` : undefined}
     >
-      <div className="flex items-center justify-center w-full">
+      <div className="flex items-center justify-center w-full h-full">
         <span className="select-none text-center">{label}</span>
         {sortable && (
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col items-center justify-center w-5 h-5">
