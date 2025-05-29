@@ -6,55 +6,44 @@ import SortableTableHeader from "@/components/common/SortableTableHeader";
 import OrderTableRow from "./OrderTableRow";
 
 const OrderTable = ({ orders, onViewOrder, onUpdateStatus }) => {
-  const {
-    handleSort,
-    getSortedData,
-    sortField,
-    sortDirection
-  } = useSorting(orders);
-
+  const { handleSort, getSortedData, sortField, sortDirection } = useSorting(orders);
   const sortedOrders = getSortedData();
 
   const columns = [
-    { field: 'id',         label: 'Pedido',  width: 'w-[120px]' },
-    { field: 'nomeEvento', label: 'Cliente', width: 'w-[200px]' },
-    { field: 'dataCompra', label: 'Data',    width: 'w-[140px]' },
-    { field: 'preco',      label: 'Total',   width: 'w-[120px]' },
-    { field: 'status',     label: 'Status',  width: 'w-[140px]' },
-    { field: 'actions',    label: 'Ações',   width: 'w-[180px]', sortable: false }
+    { field: "id",         label: "Pedido",  minW: 120 },
+    { field: "nomeEvento", label: "Cliente", minW: 200 },
+    { field: "dataCompra", label: "Data",    minW: 140 },
+    { field: "preco",      label: "Total",   minW: 120 },
+    { field: "status",     label: "Status",  minW: 140 },
+    { field: "actions",    label: "Ações",   minW: 180, sortable: false }
   ];
 
   return (
-    <motion.div
-      className="bg-gray-800 rounded-xl overflow-hidden shadow-lg lg:ml-12 lg:mr-12"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
+    <motion.div className="w-full bg-gray-800 rounded-xl overflow-hidden shadow-lg">
       <div className="overflow-x-auto">
-        {/* Cabeçalho fixo */}
-        <table className="table-fixed w-full text-sm">
-          <thead className="text-xs uppercase bg-gray-700 text-gray-300">
-            <tr>
-              {columns.map((col) => (
-                <SortableTableHeader
-                  key={col.field}
-                  field={col.field}
-                  label={col.label}
-                  onSort={handleSort}
-                  sortDirection={sortDirection}
-                  activeSortField={sortField}
-                  sortable={col.sortable !== false}
-                  className={col.width}
-                />
-              ))}
-            </tr>
-          </thead>
-        </table>
-
-        {/* Corpo rolável */}
         <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-          <table className="table-fixed w-full text-sm">
+          <motion.table
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="table-auto min-w-full text-sm"
+          >
+            <thead className="sticky top-0 z-10 text-xs uppercase bg-gray-700 text-gray-300">
+              <tr>
+                {columns.map(col => (
+                  <SortableTableHeader
+                    key={col.field}
+                    field={col.field}
+                    label={col.label}
+                    onSort={handleSort}
+                    sortDirection={sortDirection}
+                    activeSortField={sortField}
+                    sortable={col.sortable !== false}
+                    className={`px-4 py-2 text-center align-middle font-medium min-w-[${col.minW}px]`}
+                  />
+                ))}
+              </tr>
+            </thead>
             <tbody>
               {sortedOrders.map((order, idx) => (
                 <OrderTableRow
@@ -66,7 +55,7 @@ const OrderTable = ({ orders, onViewOrder, onUpdateStatus }) => {
                 />
               ))}
             </tbody>
-          </table>
+          </motion.table>
         </div>
       </div>
 

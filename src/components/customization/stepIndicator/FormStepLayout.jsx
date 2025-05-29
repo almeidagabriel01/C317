@@ -51,7 +51,10 @@ export default function FormStepLayout({
       <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center flex-col">
         <div
           className="w-full max-w-screen-xl bg-[#1C2431] rounded-2xl shadow-xl flex flex-col mb-6"
-          style={{ height: 'auto', maxHeight: '75vh' }}
+          style={{
+            height: '75vh',
+            maxHeight: '75vh'
+          }}
         >
           {/* Cabeçalho fixo */}
           <div className="p-4 sm:p-5 pb-3 bg-[#1C2431] rounded-t-2xl">
@@ -70,7 +73,7 @@ export default function FormStepLayout({
           {/* Conteúdo com scroll */}
           <div
             className="p-4 sm:px-5 pt-2 pb-2 overflow-y-auto custom-scrollbar"
-            style={{ maxHeight: 'calc(75vh - 160px)' }}
+            style={{ height: 'calc(75vh - 160px)' }}
           >
             {children}
           </div>
@@ -84,15 +87,14 @@ export default function FormStepLayout({
               >
                 <span className="text-lg">←</span>
               </button>
-              
               {isLastStep ? (
                 <button
                   type="button"
                   onClick={onNext}
                   disabled={!isValid}
                   className={`px-6 py-2 font-bold border-2 rounded-full flex items-center justify-center transition-all duration-200 ${isValid
-                      ? "border-[#E0CEAA] text-[#E0CEAA] hover:bg-[#9D4815] hover:text-white"
-                      : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
+                    ? "border-[#E0CEAA] text-[#E0CEAA] hover:bg-[#9D4815] hover:text-white"
+                    : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
                     }`}
                 >
                   <span className="text-sm font-semibold">{nextButtonText}</span>
@@ -103,8 +105,8 @@ export default function FormStepLayout({
                   onClick={onNext}
                   disabled={!isValid}
                   className={`rounded-full w-10 h-10 sm:w-12 sm:h-12 font-bold border-2 flex items-center justify-center transition-all duration-200 ${isValid
-                      ? "border-[#E0CEAA] text-[#E0CEAA] hover:bg-[#9D4815] hover:text-white"
-                      : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
+                    ? "border-[#E0CEAA] text-[#E0CEAA] hover:bg-[#9D4815] hover:text-white"
+                    : "border-gray-500 text-gray-500 opacity-50 cursor-not-allowed"
                     }`}
                 >
                   <span className="text-lg">{nextButtonText}</span>

@@ -19,7 +19,6 @@ const fadeVariants = {
   },
 };
 
-// Definindo os 3 pacotes fixos com itens detalhados
 const packages = [
   {
     id: 1,
@@ -52,14 +51,19 @@ export default function PackagesPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Verificar se o usuário está autenticado
     if (!loading && !isAuthenticated) {
-      toast.warning('Você precisa estar logado para acessar os pacotes.');
+      const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
+
+      if (!isVoluntaryLogout) {
+        toast.warning('Você precisa estar logado para acessar os pacotes.');
+      } else {
+        sessionStorage.removeItem('voluntaryLogout');
+      }
+
       router.push('/login');
     }
   }, [isAuthenticated, loading, router]);
 
-  // Mostrar um loader enquanto verifica autenticação
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#101820] text-white justify-center items-center">
@@ -71,7 +75,6 @@ export default function PackagesPage() {
     );
   }
 
-  // Se não estiver autenticado, não renderiza o conteúdo
   if (!isAuthenticated) {
     return null;
   }

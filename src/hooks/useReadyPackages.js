@@ -150,12 +150,10 @@ export const useReadyPackages = (packageInfo) => {
       const items = await fetchPackageItems(id);
       
       if (Array.isArray(items)) {
-        console.log("Itens do pacote recebidos:", items);
         setPackageItems(items);
         
         // Agrupa os itens por categoria usando a categoria que vem da API
         const grouped = groupPackageItems(items);
-        console.log("Itens categorizados:", grouped);
         setCategorizedItems(grouped);
       } else {
         console.error("fetchPackageItems não retornou um array:", items);

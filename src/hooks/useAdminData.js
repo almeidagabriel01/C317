@@ -216,7 +216,6 @@ export const useOrders = () => {
   }, [result.data, localData]);
 
   const updateOrderInCache = useCallback((orderId, updatedData) => {
-    console.log('🔄 Atualizando order cache:', orderId, updatedData);
     
     // ← Força atualização imediata do estado local usando callback
     setLocalData(prev => {
@@ -225,7 +224,6 @@ export const useOrders = () => {
           ? { ...order, ...updatedData }
           : order
       );
-      console.log('✅ Cache local atualizado');
       return newData;
     });
 
@@ -237,7 +235,6 @@ export const useOrders = () => {
           ? { ...order, ...updatedData }
           : order
       );
-      console.log('✅ Cache global atualizado');
     }
   }, []);
 

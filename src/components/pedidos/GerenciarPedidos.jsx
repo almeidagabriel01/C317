@@ -57,7 +57,6 @@ export default function GerenciarPedidos() {
 
   /* ─────────────────────── atualiza status via API ──────────────────────── */
   const updateOrderStatusHandler = async (id, newStatus) => {
-    console.log(`🔄 Iniciando atualização: Pedido ${id} para ${newStatus}`);
     
     try {
       // Chama APENAS a API - o estado local será gerenciado pelo OrderTableRow
@@ -67,7 +66,6 @@ export default function GerenciarPedidos() {
       updateOrderInCache(id, { status: newStatus });
       
       toast.success(`Pedido #${id} alterado para ${newStatus} com sucesso!`);
-      console.log(`✅ Pedido ${id} atualizado com sucesso`);
       
     } catch (error) {
       console.error(`❌ Erro ao atualizar pedido ${id}:`, error);

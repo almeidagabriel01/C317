@@ -1,3 +1,4 @@
+// ItemTableRow.jsx
 "use client";
 
 import {
@@ -16,51 +17,35 @@ const ItemTableRow = ({
   onView,
   onToggleStatus,
 }) => {
-  const getCategoryColor = (category) => {
-    switch (category?.toLowerCase()) {
-      case "alcoolicos":
-        return "bg-red-900 text-red-300";
-      case "nao_alcoolicos":
-        return "bg-green-900 text-green-300";
-      case "shots":
-        return "bg-purple-900 text-purple-300";
-      case "outras_bebidas":
-        return "bg-blue-900 text-blue-300";
-      case "estrutura":
-        return "bg-yellow-900 text-yellow-300";
-      case "funcionarios":
-        return "bg-gray-900 text-gray-300";
-      default:
-        return "bg-gray-900 text-gray-300";
+  const getCategoryColor = (cat) => {
+    switch (cat?.toLowerCase()) {
+      case "alcoolicos":     return "bg-red-900 text-red-300";
+      case "nao_alcoolicos": return "bg-green-900 text-green-300";
+      case "shots":          return "bg-purple-900 text-purple-300";
+      case "outras_bebidas": return "bg-blue-900 text-blue-300";
+      case "estrutura":      return "bg-yellow-900 text-yellow-300";
+      case "funcionarios":   return "bg-gray-900 text-gray-300";
+      default:               return "bg-gray-900 text-gray-300";
     }
   };
 
-  const formatCategoryName = (category) => {
-    switch (category?.toLowerCase()) {
-      case "alcoolicos":
-        return "Alcoólicos";
-      case "nao_alcoolicos":
-        return "Não Alcoólicos";
-      case "shots":
-        return "Shots";
-      case "outras_bebidas":
-        return "Outras Bebidas";
-      case "estrutura":
-        return "Estruturas";
-      case "funcionarios":
-        return "Funcionários";
-      default:
-        return category || "Não definido";
+  const formatCategoryName = (cat) => {
+    switch (cat?.toLowerCase()) {
+      case "alcoolicos":     return "Alcoólicos";
+      case "nao_alcoolicos": return "Não Alcoólicos";
+      case "shots":          return "Shots";
+      case "outras_bebidas": return "Outras Bebidas";
+      case "estrutura":      return "Estruturas";
+      case "funcionarios":   return "Funcionários";
+      default:               return cat || "Não definido";
     }
   };
 
-  const handleToggleStatus = () => {
-    onToggleStatus(item);
-  };
+  const handleToggle = () => onToggleStatus(item);
 
   return (
     <tr
-      className={`border-b border-gray-700 ${
+      className={`table-fixed w-full border-b border-gray-700 ${
         index % 2 === 0
           ? "bg-gray-700 bg-opacity-20 hover:bg-gray-800 hover:bg-opacity-30"
           : "bg-gray-700 bg-opacity-10 hover:bg-gray-800 hover:bg-opacity-30"
@@ -77,11 +62,7 @@ const ItemTableRow = ({
       <td className="px-6 py-4 text-center">
         <div className="flex items-center justify-center">
           <FiTag className="mr-2" />
-          <span
-            className={`text-xs font-medium px-2.5 py-0.5 rounded ${getCategoryColor(
-              item.category
-            )}`}
-          >
+          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${getCategoryColor(item.category)}`}>
             {formatCategoryName(item.category)}
           </span>
         </div>
@@ -96,13 +77,11 @@ const ItemTableRow = ({
       <td className="px-6 py-4 text-center">
         <div className="flex items-center justify-center">
           <FiActivity className="mr-2" />
-          <span
-            className={`text-xs font-medium px-2.5 py-0.5 rounded ${
-              item.status === "Ativo"
-                ? "bg-green-900 text-green-300"
-                : "bg-red-900 text-red-300"
-            }`}
-          >
+          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
+            item.status === "Ativo"
+              ? "bg-green-900 text-green-300"
+              : "bg-red-900 text-red-300"
+          }`}>
             {item.status}
           </span>
         </div>
@@ -125,7 +104,7 @@ const ItemTableRow = ({
           </button>
           <StatusToggle
             isActive={item.status === "Ativo"}
-            onChange={handleToggleStatus}
+            onChange={handleToggle}
           />
         </div>
       </td>

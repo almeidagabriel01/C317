@@ -10,14 +10,14 @@ import React, {
 } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { loginUser, fetchCurrentUser } from '@/services/api';
-import { useClearAllCache } from '@/hooks/useDataManager'; // Importa a função de limpar cache
+import { useClearAllCache } from '@/hooks/useDataManager';
 import { toast } from 'react-toastify';
 
 const AuthContext = createContext(null);
 
-const BUYER_ROUTES = ['/profile','/pagamento','/personalizar','/pacotes'];
-const ORGANIZER_ROUTES = ['/dashboard','/users','/pedidos','/itens'];
-const ORGANIZER_RESTRICTED = [...BUYER_ROUTES,'/'];
+const BUYER_ROUTES = ['/profile', '/pagamento', '/personalizar', '/pacotes'];
+const ORGANIZER_ROUTES = ['/dashboard', '/users', '/pedidos', '/itens'];
+const ORGANIZER_RESTRICTED = [...BUYER_ROUTES, '/'];
 const BUYER_RESTRICTED = ORGANIZER_ROUTES;
 
 export const AuthProvider = ({ children }) => {
@@ -47,20 +47,16 @@ export const AuthProvider = ({ children }) => {
     return false;
   }, [role]);
 
-  // Função para normalizar dados do usuário
-  const normalizeUser = useCallback((userData) => {
-    return {
-      ID: userData.ID || userData.id,
-      nome: userData.nome || userData.userName || userData.name,
-      email: userData.email || userData.Email,
-      role: userData.role,
-      celular: userData.celular || userData.NumCel,
-      ativo: userData.ativo !== undefined ? userData.ativo : userData.Ativo,
-      originalData: userData.originalData || userData,
-    };
-  }, []);
+  const normalizeUser = useCallback((userData) => ({
+    ID: userData.ID || userData.id,
+    nome: userData.nome || userData.userName || userData.name,
+    email: userData.email || userData.Email,
+    role: userData.role,
+    celular: userData.celular || userData.NumCel,
+    ativo: userData.ativo !== undefined ? userData.ativo : userData.Ativo,
+    originalData: userData.originalData || userData,
+  }), []);
 
-  // Inicialização - executa apenas uma vez
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
@@ -71,7 +67,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         return;
       }
-      
+
       setToken(t);
       try {
         const me = await fetchCurrentUser();
@@ -81,95 +77,57 @@ export const AuthProvider = ({ children }) => {
           setRole(normalizedUser.role);
         }
       } catch (error) {
-        console.error('Erro ao buscar usuário atual:', error);
-        if (mountedRef.current) {
-          localStorage.removeItem('authToken');
-          setToken(null);
-          setUser(null);
-          setRole(null);
-          // Limpa cache se houve erro de autenticação
-          clearAllCache();
-        }
+        localStorage.removeItem('authToken');
+        setToken(null);
+        setUser(null);
+        setRole(null);
+        clearAllCache();
       } finally {
-        if (mountedRef.current) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
-    
+
     init();
   }, [normalizeUser, clearAllCache]);
 
-  // Proteção de rotas - usando useEffect para evitar setState durante render
   useEffect(() => {
-    // Limpa timeout anterior se existir
-    if (routeProtectionTimeoutRef.current) {
-      clearTimeout(routeProtectionTimeoutRef.current);
-    }
-
-    // Só executa proteção se não estiver carregando e tiver inicializado
     if (loading || !hasInitialized.current) return;
-    
-    const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
 
-    // Usa timeout para evitar múltiplas execuções e problemas de setState durante render
     routeProtectionTimeoutRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
 
-      // Rota restrita para o role atual - SOMENTE se não estivermos já na rota correta
+      const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
+
       if (isRestrictedRoute(pathname) && token && role) {
-        const targetRoute = role === 'Administrador' ? '/dashboard' : '/';
-        if (pathname !== targetRoute) {
-          router.replace(targetRoute); // Usa replace em vez de push
-        }
+        router.replace(role === 'Administrador' ? '/dashboard' : '/');
         return;
       }
-      
-      // Rota privada sem autenticação
+
       if (isPrivateRoute(pathname) && !token) {
         if (!isVoluntaryLogout) {
           toast.warning('Você precisa estar logado para acessar esta página.');
         } else {
           sessionStorage.removeItem('voluntaryLogout');
         }
-        if (pathname !== '/login') {
-          router.replace('/login'); // Usa replace em vez de push
-        }
+        router.replace('/login');
       }
-    }, 50); // Reduzido para 50ms para ser mais responsivo
+    }, 50);
 
-    // Cleanup do timeout
-    return () => {
-      if (routeProtectionTimeoutRef.current) {
-        clearTimeout(routeProtectionTimeoutRef.current);
-      }
-    };
+    return () => clearTimeout(routeProtectionTimeoutRef.current);
   }, [pathname, token, role, loading, router, isPrivateRoute, isRestrictedRoute]);
 
   const login = async (email, password) => {
     const idToast = toast.loading("Entrando...");
     try {
       const data = await loginUser(email, password);
-      const t = data.access_token;
-      const me = data.user;
+      const normalizedUser = normalizeUser(data.user);
 
-      // Normalizar dados do usuário
-      const normalizedUser = normalizeUser(me);
-
-      // Limpa todo o cache antes de fazer login com novo usuário
       clearAllCache();
 
-      // Determina a rota de destino ANTES de atualizar o estado
-      const targetRoute = normalizedUser.role === 'Administrador' ? '/dashboard' : '/';
-
-      if (mountedRef.current) {
-        setToken(t);
-        setUser(normalizedUser);
-        setRole(normalizedUser.role);
-
-        // Salva apenas o token, dados serão buscados via API
-        localStorage.setItem('authToken', t);
-      }
+      setToken(data.access_token);
+      setUser(normalizedUser);
+      setRole(normalizedUser.role);
+      localStorage.setItem('authToken', data.access_token);
 
       toast.update(idToast, {
         render: "Login realizado!",
@@ -178,10 +136,7 @@ export const AuthProvider = ({ children }) => {
         autoClose: 2000
       });
 
-      // Navega IMEDIATAMENTE para a rota correta, sem timeout
-      if (mountedRef.current) {
-        router.replace(targetRoute); // Usa replace em vez de push para evitar histórico
-      }
+      router.replace(normalizedUser.role === 'Administrador' ? '/dashboard' : '/');
     } catch (err) {
       toast.update(idToast, {
         render: `Erro: ${err.message}`,
@@ -192,60 +147,39 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = useCallback(() => {
-    // Limpa qualquer timeout pendente
-    if (routeProtectionTimeoutRef.current) {
-      clearTimeout(routeProtectionTimeoutRef.current);
-    }
-
-    console.log('🚪 Fazendo logout e limpando caches');
-    sessionStorage.setItem('voluntaryLogout','true');
-    
-    // Limpa todo o cache no logout
+  const logout = useCallback(async () => {
+    sessionStorage.setItem('voluntaryLogout', 'true');
     clearAllCache();
-    
-    if (mountedRef.current) {
-      setUser(null);
-      setToken(null);
-      setRole(null);
-    }
-    
+
+    setUser(null);
+    setToken(null);
+    setRole(null);
     localStorage.removeItem('authToken');
     toast.info('Logout realizado.');
-    
-    // Navega imediatamente para login
-    if (mountedRef.current) {
-      router.replace('/login'); // Usa replace em vez de push
-    }
+
+    // Aguarde estado atualizar antes de redirecionar
+    await new Promise(res => setTimeout(res, 100));
+    router.replace('/login');
   }, [router, clearAllCache]);
 
-  // Função para recarregar dados do usuário
   const refreshUser = useCallback(async () => {
     if (!token) return null;
     try {
       const me = await fetchCurrentUser();
-      if (mountedRef.current) {
-        const normalizedUser = normalizeUser(me);
-        setUser(normalizedUser);
-        setRole(normalizedUser.role);
-        return normalizedUser;
-      }
-      return null;
+      const normalizedUser = normalizeUser(me);
+      setUser(normalizedUser);
+      setRole(normalizedUser.role);
+      return normalizedUser;
     } catch (error) {
-      console.error('Erro ao recarregar dados do usuário:', error);
       return null;
     }
   }, [token, normalizeUser]);
 
-  // Cleanup
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      // Limpa timeout ao desmontar
-      if (routeProtectionTimeoutRef.current) {
-        clearTimeout(routeProtectionTimeoutRef.current);
-      }
+      clearTimeout(routeProtectionTimeoutRef.current);
     };
   }, []);
 

@@ -13,13 +13,11 @@ const PackagesGrid = ({ packages }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [prevEl, setPrevEl] = useState(null);
+  const [nextEl, setNextEl] = useState(null);
 
-  // Detecta se é tela pequena para usar carousel
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 1024); // lg breakpoint
-    };
-    
+    const checkScreenSize = () => setIsSmallScreen(window.innerWidth < 1024);
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
     return () => window.removeEventListener("resize", checkScreenSize);
@@ -35,7 +33,6 @@ const PackagesGrid = ({ packages }) => {
     setSelectedPackage(null);
   };
 
-  // Componente do card individual
   const PackageCard = ({ pkg }) => (
     <div className="cursor-pointer bg-white text-black rounded-xl overflow-hidden shadow-lg w-full max-w-sm mx-auto">
       <div className="relative w-full h-48">
@@ -50,13 +47,9 @@ const PackagesGrid = ({ packages }) => {
       </div>
       <div className="p-4">
         <h3 className="text-xl font-semibold mb-2">{pkg.title}</h3>
-        <p className="flex items-center gap-2">
-          <span>👥 {pkg.guests} convidados</span>
-        </p>
-        <p className="flex items-center gap-2">
-          <span>⏱ {pkg.hours} horas de open bar</span>
-        </p>
-        <p 
+        <p className="flex items-center gap-2"><span>👥 {pkg.guests} convidados</span></p>
+        <p className="flex items-center gap-2"><span>⏱ {pkg.hours} horas de open bar</span></p>
+        <p
           className="text-[#a85532] mt-2 mb-4 cursor-pointer hover:underline"
           onClick={() => handleShowDetails(pkg)}
         >
@@ -70,24 +63,55 @@ const PackagesGrid = ({ packages }) => {
   return (
     <div className="relative overflow-hidden px-4 w-full">
       {isSmallScreen ? (
-        // Carousel para telas menores
-        <div className="max-w-screen-2xl mx-auto">
+        <div className="max-w-screen-2xl mx-auto relative overflow-visible px-16">
+          {/* Botões de navegação ajustados ao lado */}
+          <div
+            ref={setPrevEl}
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white rounded-full shadow-md cursor-pointer hover:bg-[#FFF8E7] transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4 text-[#CC5E00]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 18L9 12L15 6" />
+            </svg>
+          </div>
+          <div
+            ref={setNextEl}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white rounded-full shadow-md cursor-pointer hover:bg-[#FFF8E7] transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4 text-[#CC5E00]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6L15 12L9 18" />
+            </svg>
+          </div>
+
           <Swiper
             modules={[Navigation]}
             spaceBetween={20}
             slidesPerView={1}
             centeredSlides={true}
             loop={packages.length > 1}
-            navigation={true}
+            navigation={{ prevEl, nextEl }}
+            onInit={(swiper) => {
+              swiper.params.navigation.prevEl = prevEl;
+              swiper.params.navigation.nextEl = nextEl;
+              swiper.navigation.init();
+              swiper.navigation.update();
+            }}
             breakpoints={{
-              640: {
-                slidesPerView: 2,
-                centeredSlides: false,
-              },
-              768: {
-                slidesPerView: 2,
-                centeredSlides: false,
-              }
+              640: { slidesPerView: 2, centeredSlides: false },
+              768: { slidesPerView: 2, centeredSlides: false }
             }}
             className="py-4"
           >
@@ -99,7 +123,6 @@ const PackagesGrid = ({ packages }) => {
           </Swiper>
         </div>
       ) : (
-        // Grid para telas maiores
         <div className="max-w-screen-xl mx-auto">
           <div className="grid grid-cols-3 gap-8 justify-items-center">
             {packages.map((pkg) => (
@@ -108,12 +131,10 @@ const PackagesGrid = ({ packages }) => {
           </div>
         </div>
       )}
-
-      {/* Modal para exibir detalhes e formulário do pacote */}
-      <PackageModal 
-        isOpen={modalOpen} 
-        onClose={closeModal} 
-        packageInfo={selectedPackage} 
+      <PackageModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        packageInfo={selectedPackage}
       />
     </div>
   );

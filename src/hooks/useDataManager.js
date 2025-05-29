@@ -130,7 +130,6 @@ export const useDataManager = (dataType) => {
     
     // Se já tem uma requisição idêntica em andamento, aguarda ela
     if (currentRequests.has(requestKey)) {
-      console.log(`⏳ ${componentId.current}: Aguardando requisição em andamento para ${dataType}`);
       try {
         const result = await currentRequests.get(requestKey);
         if (mountedRef.current) {
@@ -144,8 +143,6 @@ export const useDataManager = (dataType) => {
       }
     }
 
-    console.log(`🔄 ${componentId.current}: NOVA requisição para ${dataType} - User: ${user?.email} - Role: ${role}`);
-
     setLoading(true);
     setError(null);
 
@@ -154,19 +151,15 @@ export const useDataManager = (dataType) => {
 
       switch (dataType) {
         case 'users':
-          console.log(`📊 ${componentId.current}: Buscando usuários (Admin)`);
           fetchFunction = fetchUsers;
           break;
         case 'orders':
-          console.log(`📋 ${componentId.current}: Buscando pedidos - Role: ${role}`);
           fetchFunction = fetchUserOrders;
           break;
         case 'items':
-          console.log(`📦 ${componentId.current}: Buscando itens (Admin)`);
           fetchFunction = () => fetchItemsForAdmin(true);
           break;
         case 'dashboard':
-          console.log(`📊 ${componentId.current}: Buscando dados dashboard`);
           fetchFunction = processDashboardData;
           break;
         default:
@@ -181,8 +174,6 @@ export const useDataManager = (dataType) => {
       
       // Remove a requisição quando termina
       currentRequests.delete(requestKey);
-      
-      console.log(`✅ ${componentId.current}: ${dataType} carregado com sucesso:`, result?.length || 'dados', 'itens/dados');
 
       if (mountedRef.current) {
         setData(result || []);
@@ -210,7 +201,6 @@ export const useDataManager = (dataType) => {
 
   // Função para refresh manual
   const refreshData = useCallback(() => {
-    console.log(`🔄 ${componentId.current}: Refresh manual solicitado para ${dataType}`);
     // Remove qualquer requisição em andamento para forçar nova
     const requestKey = `${dataType}_${user?.ID}_${role}`;
     currentRequests.delete(requestKey);
@@ -219,7 +209,6 @@ export const useDataManager = (dataType) => {
 
   // Função para limpar dados
   const clearData = useCallback(() => {
-    console.log(`🧹 ${componentId.current}: Limpando dados de ${dataType}`);
     setData([]);
     setError(null);
     setLoading(false);
@@ -229,7 +218,6 @@ export const useDataManager = (dataType) => {
 
   // Effect para carregar dados SEMPRE que o componente monta
   useEffect(() => {
-    console.log(`🚀 ${componentId.current}: Componente ${dataType} montado - iniciando fetch`);
     
     if (!authLoading && isAuthenticated) {
       // Para orders, sempre carrega independente do role
@@ -247,7 +235,6 @@ export const useDataManager = (dataType) => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      console.log(`🏁 ${componentId.current}: Componente ${dataType} desmontado`);
     };
   }, []);
 
@@ -270,7 +257,6 @@ export const useUsers = () => {
   }, [result.data]);
 
   const updateUserInCache = useCallback((userId, updatedData) => {
-    console.log('🔄 Atualizando user cache:', userId);
     setLocalData(prev => prev.map(user =>
       user.id === userId ? { ...user, ...updatedData } : user
     ));
@@ -294,12 +280,10 @@ export const useOrders = () => {
   }, [result.data]);
 
   const updateOrderInCache = useCallback((orderId, updatedData) => {
-    console.log('🔄 Atualizando order cache:', orderId, updatedData);
     setLocalData(prev => {
       const newData = prev.map(order =>
         order.id === orderId ? { ...order, ...updatedData } : order
       );
-      console.log('✅ Cache local de orders atualizado');
       return newData;
     });
   }, []);
@@ -321,14 +305,12 @@ export const useItems = () => {
   }, [result.data]);
 
   const updateItemInCache = useCallback((itemId, updatedData) => {
-    console.log('🔄 Atualizando item cache:', itemId);
     setLocalData(prev => prev.map(item =>
       item.id === itemId ? { ...item, ...updatedData } : item
     ));
   }, []);
 
   const addItemToCache = useCallback((newItem) => {
-    console.log('➕ Adicionando item ao cache:', newItem.id);
     setLocalData(prev => [...prev, newItem]);
   }, []);
 
@@ -385,7 +367,6 @@ export const useDashboardData = () => {
 // Hook para limpar requisições ativas (útil no logout)
 export const useClearAllCache = () => {
   return useCallback(() => {
-    console.log('🧹 Limpando todas as requisições ativas');
     clearCurrentRequests();
   }, []);
 };

@@ -43,8 +43,6 @@ export default function OrcamentoStep({ resumo, onBack, direction, backendPrice 
     setSavingBudget(true);
     const payload = createPayload("Orcado");
 
-    console.log("Payload para salvar orçamento:", payload);
-
     try {
       await createPedido(payload);
       toast.success("Orçamento salvo com sucesso!");
@@ -65,8 +63,6 @@ export default function OrcamentoStep({ resumo, onBack, direction, backendPrice 
 
     setLoading(true);
     const payload = createPayload("Pendente");
-
-    console.log("Payload para enviar pedido:", payload);
 
     try {
       await createPedido(payload);

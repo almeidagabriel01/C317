@@ -130,8 +130,6 @@ export default function PackageModal({ isOpen, onClose, packageInfo }) {
       Status: "Orcado",
     };
 
-    console.log("Payload para salvar orçamento:", payload);
-
     try {
       await createPackageOrder(payload);
       toast.success("Orçamento salvo com sucesso!");
@@ -158,8 +156,6 @@ export default function PackageModal({ isOpen, onClose, packageInfo }) {
       ...createBasePayload(),
       Status: "Pendente",
     };
-
-    console.log("Payload para enviar pedido:", payload);
 
     try {
       await createPackageOrder(payload);
