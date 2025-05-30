@@ -5,7 +5,12 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata = {
   title: "Elo Drinks",
-  description: "Open Bar e coquetelaria para seu evento"
+  description: "Open Bar e coquetelaria para seu evento",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+    shortcut: "/logo.png"
+  }
 };
 
 export default function RootLayout({ children }) {
