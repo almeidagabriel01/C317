@@ -15,6 +15,7 @@ const PackagesCarousel = ({ packages }) => {
   const [nextEl, setNextEl] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [imageErrors, setImageErrors] = useState(new Set());
 
   // Ajusta slidesPerView conforme largura
   useEffect(() => {
@@ -42,6 +43,19 @@ const PackagesCarousel = ({ packages }) => {
     setModalOpen(false);
   };
 
+  // Função para lidar com erro de imagem
+  const handleImageError = (imageName) => {
+    setImageErrors(prev => new Set([...prev, imageName]));
+  };
+
+  // Função para obter o src da imagem com fallback
+  const getImageSrc = (imageName) => {
+    if (imageErrors.has(imageName)) {
+      return '/assets/default-event.jpg';
+    }
+    return `/assets/${imageName}?v=${Date.now()}`; // Cache busting
+  };
+
   return (
     <div className="relative overflow-hidden px-4">
       <div className="max-w-screen-2xl mx-auto px-16 relative">
@@ -65,12 +79,14 @@ const PackagesCarousel = ({ packages }) => {
               <div className="cursor-pointer bg-white text-black rounded-xl overflow-hidden shadow-lg w-full">
                 <div className="relative w-full h-48">
                   <Image
-                    src={`/assets/${pkg.image}`}
-                    alt={pkg.title}
+                    src={getImageSrc(pkg.image)}
+                    alt={pkg.title || 'Evento'}
                     fill
-                    priority
-                    sizes="(min-width:1024px) 25vw, (min-width:768px) 33vw, (min-width:640px) 50vw, 100vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    priority={idx < 2}
                     className="object-cover"
+                    onError={() => handleImageError(pkg.image)}
+                    unoptimized={imageErrors.has(pkg.image)}
                   />
                 </div>
                 <div className="p-4">

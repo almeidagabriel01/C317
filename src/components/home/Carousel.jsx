@@ -14,9 +14,8 @@ const drinks = [
   { img: 'mojito.jpg', name: 'MOJITO' },
   { img: 'pina-colada.jpg', name: 'PINA COLADA' },
   { img: 'bloody-mary.jpg', name: 'BLOODY MARY' },
-  { img: 'mojito.jpg', name: 'MOJITO' },
-  { img: 'pina-colada.jpg', name: 'PINA COLADA' },
-  { img: 'bloody-mary.jpg', name: 'BLOODY MARY' },
+  { img: 'caipirinha.jpg', name: 'CAIPIRINHA' },
+  { img: 'cosmopolitan.jpg', name: 'COSMOPOLITAN' },
 ];
 
 const fadeVariants = {

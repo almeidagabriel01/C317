@@ -45,6 +45,7 @@ export default function PackageModal({ isOpen, onClose, packageInfo }) {
   const [currentView, setCurrentView] = useState('details'); // 'details' ou 'form'
   const [loading, setLoading] = useState(false);
   const [savingBudget, setSavingBudget] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // Estados de validação
   const [dateTouched, setDateTouched] = useState(false);
@@ -57,6 +58,7 @@ export default function PackageModal({ isOpen, onClose, packageInfo }) {
       setCurrentView('details');
       setDateTouched(false);
       setTimeTouched(false);
+      setImageError(false);
     }
   }, [isOpen, packageInfo?.id]);
 
@@ -87,6 +89,19 @@ export default function PackageModal({ isOpen, onClose, packageInfo }) {
       scale: 0.95,
       transition: { duration: 0.15 }
     },
+  };
+
+  // Função para obter o src da imagem com fallback
+  const getImageSrc = () => {
+    if (imageError) {
+      return '/assets/default-event.jpg';
+    }
+    return `/assets/${packageInfo.image}?v=${Date.now()}`;
+  };
+
+  // Função para lidar com erro de imagem
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   // Funções do formulário
@@ -189,6 +204,7 @@ export default function PackageModal({ isOpen, onClose, packageInfo }) {
     packageHook.resetForm();
     setDateTouched(false);
     setTimeTouched(false);
+    setImageError(false);
     onClose();
   };
 
@@ -211,14 +227,17 @@ export default function PackageModal({ isOpen, onClose, packageInfo }) {
           {currentView === 'details' ? (
             // Vista de detalhes do pacote
             <>
-              {/* Cabeçalho com imagem */}
+              {/* Cabeçalho com imagem - SEÇÃO CORRIGIDA */}
               <div className="relative w-full h-48 sm:h-64">
                 <Image
-                  src={`/assets/${packageInfo.image}`}
-                  alt={packageInfo.title}
+                  src={getImageSrc()}
+                  alt={packageInfo.title || 'Pacote de evento'}
                   fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 80vw"
                   priority
                   className="object-cover"
+                  onError={handleImageError}
+                  unoptimized={imageError}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#101820] to-transparent opacity-80"></div>
                 <button

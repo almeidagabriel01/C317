@@ -15,6 +15,7 @@ const PackagesGrid = ({ packages }) => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [prevEl, setPrevEl] = useState(null);
   const [nextEl, setNextEl] = useState(null);
+  const [imageErrors, setImageErrors] = useState(new Set());
 
   useEffect(() => {
     const checkScreenSize = () => setIsSmallScreen(window.innerWidth < 1024);
@@ -33,16 +34,31 @@ const PackagesGrid = ({ packages }) => {
     setSelectedPackage(null);
   };
 
-  const PackageCard = ({ pkg }) => (
+  // Função para lidar com erro de imagem
+  const handleImageError = (imageName) => {
+    setImageErrors(prev => new Set([...prev, imageName]));
+  };
+
+  // Função para obter o src da imagem com fallback
+  const getImageSrc = (imageName) => {
+    if (imageErrors.has(imageName)) {
+      return '/assets/default-event.jpg';
+    }
+    return `/assets/${imageName}?v=${Date.now()}`; // Cache busting
+  };
+
+  const PackageCard = ({ pkg, index = 0 }) => (
     <div className="cursor-pointer bg-white text-black rounded-xl overflow-hidden shadow-lg w-full max-w-sm mx-auto">
       <div className="relative w-full h-48">
         <Image
-          src={`/assets/${pkg.image}`}
-          alt={pkg.title}
+          src={getImageSrc(pkg.image)}
+          alt={pkg.title || 'Evento'}
           fill
-          priority
-          sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          priority={index < 3}
           className="object-cover"
+          onError={() => handleImageError(pkg.image)}
+          unoptimized={imageErrors.has(pkg.image)}
         />
       </div>
       <div className="p-4">
@@ -115,9 +131,9 @@ const PackagesGrid = ({ packages }) => {
             }}
             className="py-4"
           >
-            {packages.map((pkg) => (
+            {packages.map((pkg, index) => (
               <SwiperSlide key={pkg.id} className="flex justify-center">
-                <PackageCard pkg={pkg} />
+                <PackageCard pkg={pkg} index={index} />
               </SwiperSlide>
             ))}
           </Swiper>
@@ -125,8 +141,8 @@ const PackagesGrid = ({ packages }) => {
       ) : (
         <div className="max-w-screen-xl mx-auto">
           <div className="grid grid-cols-3 gap-8 justify-items-center">
-            {packages.map((pkg) => (
-              <PackageCard key={pkg.id} pkg={pkg} />
+            {packages.map((pkg, index) => (
+              <PackageCard key={pkg.id} pkg={pkg} index={index} />
             ))}
           </div>
         </div>
