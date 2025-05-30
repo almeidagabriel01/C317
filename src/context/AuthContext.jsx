@@ -96,7 +96,9 @@ export const AuthProvider = ({ children }) => {
     routeProtectionTimeoutRef.current = setTimeout(() => {
       if (!mountedRef.current) return;
 
+      // Verifica se foi logout voluntário ou automático
       const isVoluntaryLogout = sessionStorage.getItem('voluntaryLogout') === 'true';
+      const wasLoggedIn = sessionStorage.getItem('wasLoggedIn') === 'true';
 
       if (isRestrictedRoute(pathname) && token && role) {
         router.replace(role === 'Administrador' ? '/dashboard' : '/');
@@ -104,11 +106,14 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (isPrivateRoute(pathname) && !token) {
-        if (!isVoluntaryLogout) {
+        if (!isVoluntaryLogout && wasLoggedIn) {
           toast.warning('Você precisa estar logado para acessar esta página.');
-        } else {
-          sessionStorage.removeItem('voluntaryLogout');
         }
+        
+        // Limpa os flags após usar
+        sessionStorage.removeItem('voluntaryLogout');
+        sessionStorage.removeItem('wasLoggedIn');
+        
         router.replace('/login');
       }
     }, 50);
@@ -128,6 +133,10 @@ export const AuthProvider = ({ children }) => {
       setUser(normalizedUser);
       setRole(normalizedUser.role);
       localStorage.setItem('authToken', data.access_token);
+      
+      // Marca que o usuário está logado
+      sessionStorage.setItem('wasLoggedIn', 'true');
+      sessionStorage.removeItem('voluntaryLogout');
 
       toast.update(idToast, {
         render: "Login realizado!",
@@ -149,6 +158,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     sessionStorage.setItem('voluntaryLogout', 'true');
+    sessionStorage.removeItem('wasLoggedIn');
+    
     clearAllCache();
 
     setUser(null);

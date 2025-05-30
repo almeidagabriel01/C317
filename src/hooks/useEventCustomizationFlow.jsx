@@ -241,19 +241,18 @@ export function useEventCustomizationFlow(STEPS, toast) {
   function isStepValid(step) {
     switch (step) {
       case 0: return !!selectedEventType; // Step seleção de evento obrigatório
-      case 1: return isFormValid(); // Step informações do evento obrigatório
-      case 2: return true; // Bebidas alcoólicas - opcional
-      case 3: return true; // Bebidas não alcoólicas - opcional
-      case 4: return true; // Outras bebidas - opcional
-      case 5: return true; // Shots - opcional
-      case 6: return true; // Estrutura - opcional
-      case 7: return true; // Staff - opcional
+      case 1: return isFormValid();
+      case 2: return true;
+      case 3: return true;
+      case 4: return true;
+      case 5: return true;
+      case 6: return true;
+      case 7: return true;
       default: return true;
     }
   }
 
-  // Função para verificar se todos os steps anteriores são válidos
-  // Só verifica steps obrigatórios (0 e 1)
+  // Função para verificar se todos os steps anteriores são válidos. Só verifica steps obrigatórios (0 e 1)
   function areAllPreviousStepsValid(to) {
     // Se está tentando ir para step 1 ou posterior, verifica se step 0 está válido
     if (to >= 1 && !isStepValid(0)) return false;
@@ -285,15 +284,15 @@ export function useEventCustomizationFlow(STEPS, toast) {
     animateNext();
   }
 
-  // Função para gerar os itens do pedido
+  // Função para gerar os itens do pedido - MUDANÇA: usar Nome em vez de Descricao
   const generateOrderItems = () => {
     const itemsList = [
       ...selectedDrinks.map((d) => {
-        const f = items.find((i) => i.item.Descricao === d);
+        const f = items.find((i) => i.item.Nome === d); // MUDANÇA: usar Nome
         return f && { ID: f.item.ID, quantidade: 1 };
       }).filter(Boolean),
       ...selectedNonAlcoholicDrinks.map((d) => {
-        const f = items.find((i) => i.item.Descricao === d);
+        const f = items.find((i) => i.item.Nome === d); // MUDANÇA: usar Nome
         return f && { ID: f.item.ID, quantidade: 1 };
       }).filter(Boolean),
       ...Object.entries(beverageQuantities)
@@ -349,7 +348,7 @@ export function useEventCustomizationFlow(STEPS, toast) {
   const handleInputChange = (e) =>
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  // Funções para toggle de drinks
+  // Funções para toggle de drinks - MUDANÇA: usar Nome
   const toggleDrink = (d) =>
     setSelectedDrinks((prev) =>
       prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]

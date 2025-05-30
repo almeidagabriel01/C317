@@ -23,7 +23,7 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
   const handleToggleDrink = (itemId) => {
     const item = items.find(i => i.item.ID === itemId);
     if (item) {
-      toggleDrink(item.item.Descricao);
+      toggleDrink(item.item.Nome);
     }
   };
 
@@ -60,18 +60,18 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
         {items.map((item) => (
           <div
             key={item.item.ID}
-            className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all duration-200 ${selectedDrinks.includes(item.item.Descricao)
+            className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-all duration-200 ${selectedDrinks.includes(item.item.Nome)
               ? "border-[#9D4815] bg-[#FFF8E7]/5"
               : "border-gray-700/40 hover:border-gray-600/60"
               }`}
             onClick={() => handleToggleDrink(item.item.ID)}
           >
             <div className="min-w-[24px] pt-1">
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedDrinks.includes(item.item.Descricao)
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedDrinks.includes(item.item.Nome)
                 ? "border-[#9D4815] bg-[#9D4815]"
                 : "border-gray-500"
                 }`}>
-                {selectedDrinks.includes(item.item.Descricao) && (
+                {selectedDrinks.includes(item.item.Nome) && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -87,7 +87,7 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
               {item.imageURL ? (
                 <Image
                   src={item.imageURL}
-                  alt={item.item.Descricao}
+                  alt={item.item.Nome}
                   fill
                   style={{ objectFit: "cover" }}
                   sizes="(max-width: 768px) 100vw, 400px"
@@ -102,8 +102,9 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
               )}
             </div>
             <div className="flex flex-col flex-1">
-              <div className="font-bold text-[#E0CEAA] text-xs md:text-sm lg:text-base">{item.item.Descricao}</div>
-              <div className="text-xs text-gray-300/80 md:leading-snug">
+              <div className="font-bold text-[#E0CEAA] text-xs md:text-sm lg:text-base">{item.item.Nome}</div>
+              <div className="text-xs text-gray-300/80 md:leading-snug mt-1">{item.item.Descricao}</div>
+              <div className="text-xs text-gray-300/80 md:leading-snug mt-1">
                 {item.item.Preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </div>
             </div>
@@ -122,10 +123,10 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
           <h3 className="text-[#E0CEAA] font-semibold mb-3">Resumo das bebidas selecionadas:</h3>
           <div className="space-y-2 mb-4">
             {items
-              .filter(item => selectedDrinks.includes(item.item.Descricao))
+              .filter(item => selectedDrinks.includes(item.item.Nome))
               .map(item => (
                 <div key={item.item.ID} className="flex justify-between text-white">
-                  <span>{item.item.Descricao}</span>
+                  <span>{item.item.Nome}</span>
                   <span>
                     {item.item.Preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
@@ -137,7 +138,7 @@ export default function DrinkSelector({ items = [], selectedDrinks, toggleDrink,
             <span>
               {
                 items
-                  .filter(item => selectedDrinks.includes(item.item.Descricao))
+                  .filter(item => selectedDrinks.includes(item.item.Nome))
                   .reduce((sum, item) => sum + item.item.Preco, 0)
                   .toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
               }

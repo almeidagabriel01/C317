@@ -72,7 +72,7 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
                 {item.imageURL ? (
                   <Image
                     src={item.imageURL}
-                    alt={item.item.Descricao}
+                    alt={item.item.Nome}
                     fill
                     style={{ objectFit: "cover" }}
                     sizes="(max-width: 768px) 100vw, 400px"
@@ -88,7 +88,8 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
               </div>
 
               <div className="flex-1">
-                <div className="font-bold text-[#E0CEAA] text-sm md:text-base">{item.item.Descricao}</div>
+                <div className="font-bold text-[#E0CEAA] text-sm md:text-base">{item.item.Nome}</div>
+                <div className="text-xs text-gray-300/80 mt-1">{item.item.Descricao}</div>
                 <div className="text-sm text-[#9D4815] font-semibold mt-1">{formatCurrency(item.item.Preco)} / unidade</div>
               </div>
 
@@ -145,7 +146,7 @@ export default function ShotsSelector({ items, shotQuantities, setShotQuantity, 
               .filter(item => shotQuantities[item.item.ID] > 0)
               .map(item => (
                 <div key={item.item.ID} className="flex justify-between text-white">
-                  <span>{item.item.Descricao} <span className="text-gray-400">x {shotQuantities[item.item.ID]}</span></span>
+                  <span>{item.item.Nome} <span className="text-gray-400">x {shotQuantities[item.item.ID]}</span></span>
                   <span>{formatCurrency(item.item.Preco * shotQuantities[item.item.ID])}</span>
                 </div>
               ))}

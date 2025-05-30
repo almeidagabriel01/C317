@@ -72,7 +72,7 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
                 {item.imageURL ? (
                   <Image
                     src={item.imageURL}
-                    alt={item.item.Descricao}
+                    alt={item.item.Nome}
                     fill
                     style={{ objectFit: "cover" }}
                     sizes="(max-width: 768px) 100vw, 400px"
@@ -108,8 +108,9 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
                     ? "text-[#E0CEAA]"
                     : "text-white"
                   }`}>
-                  {item.item.Descricao}
+                  {item.item.Nome}
                 </h3>
+                <p className="text-xs text-gray-300/80 mt-1">{item.item.Descricao}</p>
                 <p className={`mt-1 text-lg font-semibold transition-colors duration-300 ${selectedStructure === item.item.ID
                     ? "text-[#9D4815]"
                     : "text-[#E0CEAA]/70"
@@ -131,7 +132,7 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
           >
             <h3 className="text-[#E0CEAA] font-semibold mb-3">Estrutura selecionada:</h3>
             <div className="flex justify-between text-lg text-white">
-              <span>{items.find(item => item.item.ID === selectedStructure)?.item.Descricao}</span>
+              <span>{items.find(item => item.item.ID === selectedStructure)?.item.Nome}</span>
               <span className="font-semibold text-[#E0CEAA]">
                 {formatCurrency(items.find(item => item.item.ID === selectedStructure)?.item.Preco || 0)}
               </span>

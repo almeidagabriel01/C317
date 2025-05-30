@@ -71,7 +71,7 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
                 {item.imageURL ? (
                   <Image
                     src={item.imageURL}
-                    alt={item.item.Descricao}
+                    alt={item.item.Nome}
                     fill
                     style={{ objectFit: "cover" }}
                     sizes="(max-width: 768px) 100vw, 400px"
@@ -90,7 +90,8 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
               </div>
 
               <div className="p-4">
-                <h3 className="font-bold text-[#E0CEAA] text-lg">{item.item.Descricao}</h3>
+                <h3 className="font-bold text-[#E0CEAA] text-lg">{item.item.Nome}</h3>
+                <p className="text-xs text-gray-300/80 mt-1">{item.item.Descricao}</p>
                 <p className="text-[#9D4815] font-semibold mt-1">{formatCurrency(item.item.Preco)} / profissional</p>
 
                 <div className="flex items-center justify-between mt-4">
@@ -149,7 +150,7 @@ export default function StaffSelector({ items, staffQuantities, setStaffQuantity
               .map(item => (
                 <div key={item.item.ID} className="flex justify-between text-white">
                   <span>
-                    {item.item.Descricao} <span className="text-gray-400">x {staffQuantities[item.item.ID]}</span>
+                    {item.item.Nome} <span className="text-gray-400">x {staffQuantities[item.item.ID]}</span>
                   </span>
                   <span>{formatCurrency(item.item.Preco * staffQuantities[item.item.ID])}</span>
                 </div>
