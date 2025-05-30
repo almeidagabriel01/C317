@@ -25,7 +25,7 @@ const packages = [
     title: "Aniversário",
     guests: 80,
     hours: 5,
-    price: "R$ 7.500,00",
+    price: "R$ 9.500,00",
     image: "aniversario.jpg",
   },
   {
@@ -33,7 +33,7 @@ const packages = [
     title: "Casamento",
     guests: 120,
     hours: 6,
-    price: "R$ 12.000,00",
+    price: "R$ 12.500,00",
     image: "casamento.jpg",
   },
   {
@@ -41,7 +41,7 @@ const packages = [
     title: "Festa Corporativa",
     guests: 100,
     hours: 4,
-    price: "R$ 8.500,00",
+    price: "R$ 9.500,00",
     image: "coorporativo.jpg",
   }
 ];
