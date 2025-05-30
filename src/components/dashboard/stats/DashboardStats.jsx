@@ -15,11 +15,11 @@ const DashboardStats = () => {
       description: "Valor total arrecadado com todos os pedidos confirmados e pagos. Esta métrica é fundamental para avaliar o desempenho financeiro geral da empresa e acompanhar o crescimento da receita."
     },
     {
-      title: "Clientes Ativos",
-      value: loading ? "..." : stats.clientesAtivos,
+      title: "Pedidos a Serem Pagos",
+      value: loading ? "..." : stats.pedidosParaPagar,
       icon: <FiUsers className="w-6 h-6" />,
       color: "bg-purple-700",
-      description: "Número de clientes cadastrados e ativos no sistema. Clientes ativos são aqueles que fizeram pelo menos um pedido ou interagiram recentemente com a plataforma, indicando o tamanho da base de clientes engajados."
+      description: "Quantidade de pedidos realizados que ainda aguardam confirmação de pagamento. Ajuda a monitorar o fluxo financeiro e identificar possíveis atrasos nas transações."
     },
     {
       title: "Pedidos Pendentes",

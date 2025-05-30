@@ -16,7 +16,7 @@ export const useDashboardData = () => {
   const { isAuthenticated, role, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({
     receita: 0,
-    clientesAtivos: 0,
+    pedidosParaPagar: 0,
     pedidosPendentes: 0,
     pedidosMes: 0,
   });
@@ -48,13 +48,13 @@ export const useDashboardData = () => {
       apiClient.get('/dash/get/thisMonth'),
     ]);
 
-    const newStats = { receita: 0, clientesAtivos: 0, pedidosPendentes: 0, pedidosMes: 0 };
+    const newStats = { receita: 0, pedidosParaPagar: 0, pedidosPendentes: 0, pedidosMes: 0 };
 
     if (rRec.status === 'fulfilled') {
       newStats.receita = processReceitaValue(rRec.value.data);
     }
     if (rAtivos.status === 'fulfilled') {
-      newStats.clientesAtivos = rAtivos.value.data || 0;
+      newStats.pedidosParaPagar = rAtivos.value.data || 0;
     }
     if (rPend.status === 'fulfilled') {
       newStats.pedidosPendentes = rPend.value.data || 0;
@@ -153,7 +153,7 @@ export const useDashboardData = () => {
   return {
     stats: {
       receita: formatCurrency(stats.receita),
-      clientesAtivos: formatNumber(stats.clientesAtivos),
+      pedidosParaPagar: formatNumber(stats.pedidosParaPagar),
       pedidosPendentes: formatNumber(stats.pedidosPendentes),
       pedidosMes: formatNumber(stats.pedidosMes),
     },

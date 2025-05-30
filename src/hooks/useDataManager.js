@@ -36,7 +36,7 @@ export const useDataManager = (dataType) => {
     // Processa estatísticas básicas
     const stats = {
       receita: 0,
-      clientesAtivos: 0,
+      pedidosParaPagar: 0,
       pedidosPendentes: 0,
       pedidosMes: 0,
     };
@@ -47,7 +47,7 @@ export const useDataManager = (dataType) => {
       stats.receita = isNaN(numValue) ? 0 : Math.round(numValue * 100) / 100;
     }
     if (rAtivos.status === 'fulfilled') {
-      stats.clientesAtivos = rAtivos.value.data || 0;
+      stats.pedidosParaPagar = rAtivos.value.data || 0;
     }
     if (rPend.status === 'fulfilled') {
       stats.pedidosPendentes = rPend.value.data || 0;
@@ -328,7 +328,7 @@ export const useDashboardData = () => {
   const result = useDataManager('dashboard');
   const [stats, setStats] = useState({
     receita: 0,
-    clientesAtivos: 0,
+    pedidosParaPagar: 0,
     pedidosPendentes: 0,
     pedidosMes: 0,
   });
@@ -353,7 +353,7 @@ export const useDashboardData = () => {
   return {
     stats: {
       receita: formatCurrency(stats.receita),
-      clientesAtivos: formatNumber(stats.clientesAtivos),
+      pedidosParaPagar: formatNumber(stats.pedidosParaPagar),
       pedidosPendentes: formatNumber(stats.pedidosPendentes),
       pedidosMes: formatNumber(stats.pedidosMes),
     },
