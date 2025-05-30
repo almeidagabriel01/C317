@@ -127,7 +127,7 @@ const DashboardCharts = () => {
                 dataKey="pendentes" 
                 stroke="#EF4444" 
                 strokeWidth={3} 
-                name="Pendentes/Orçados"
+                name="Pendentes"
                 dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
                 activeDot={{ r: 6, stroke: '#EF4444', strokeWidth: 2 }}
                 animationDuration={1000}
