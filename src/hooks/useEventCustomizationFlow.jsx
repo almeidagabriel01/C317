@@ -237,26 +237,31 @@ export function useEventCustomizationFlow(STEPS, toast) {
     );
   }
 
-  // Função para validar cada step
+  // Função para validar cada step - APENAS step 0 e 1 são obrigatórios
   function isStepValid(step) {
     switch (step) {
-      case 0: return !!selectedEventType;
-      case 1: return isFormValid();
-      case 2: return selectedDrinks.length > 0;
-      case 3: return selectedNonAlcoholicDrinks.length > 0;
-      case 4: return Object.values(beverageQuantities).some(q => q > 0);
-      case 5: return Object.values(shotQuantities).some(q => q > 0);
-      case 6: return !!selectedStructure;
-      case 7: return Object.values(staffQuantities).some(q => q > 0);
+      case 0: return !!selectedEventType; // Step seleção de evento obrigatório
+      case 1: return isFormValid(); // Step informações do evento obrigatório
+      case 2: return true; // Bebidas alcoólicas - opcional
+      case 3: return true; // Bebidas não alcoólicas - opcional
+      case 4: return true; // Outras bebidas - opcional
+      case 5: return true; // Shots - opcional
+      case 6: return true; // Estrutura - opcional
+      case 7: return true; // Staff - opcional
       default: return true;
     }
   }
 
   // Função para verificar se todos os steps anteriores são válidos
+  // Só verifica steps obrigatórios (0 e 1)
   function areAllPreviousStepsValid(to) {
-    for (let i = 0; i < to; i++) {
-      if (!isStepValid(i)) return false;
-    }
+    // Se está tentando ir para step 1 ou posterior, verifica se step 0 está válido
+    if (to >= 1 && !isStepValid(0)) return false;
+    
+    // Se está tentando ir para step 2 ou posterior, verifica se step 1 está válido
+    if (to >= 2 && !isStepValid(1)) return false;
+    
+    // Todos os outros steps são opcionais, então sempre permite navegação
     return true;
   }
 
@@ -307,12 +312,14 @@ export function useEventCustomizationFlow(STEPS, toast) {
 
   // Função para avançar para o próximo step
   function handleNext() {
-    if (!isStepValid(currentStep)) {
+    // Só valida se é um step obrigatório (0 ou 1)
+    if ((currentStep === 0 || currentStep === 1) && !isStepValid(currentStep)) {
       if (toast) {
         toast.error("Preencha este passo antes de avançar!");
       }
       return;
     }
+    
     if (currentStep === 7) {
       const itens = generateOrderItems();
       calculateBackendPrice(itens);

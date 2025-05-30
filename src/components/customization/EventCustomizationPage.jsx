@@ -27,11 +27,20 @@ export default function EventCustomizationPage() {
 
   function handleStepClick(i) {
     if (i === flow.currentStep) return;
-    // Só permite pular para o step se TODOS os anteriores estão válidos
+    
+    // Verifica se pode navegar para o step desejado
     if (!flow.areAllPreviousStepsValid(i)) {
-      toast.error("Preencha os passos anteriores antes de avançar!");
+      // Mensagem específica baseada no step
+      if (i >= 1 && !flow.isStepValid(0)) {
+        toast.error("Selecione o tipo de evento antes de avançar!");
+      } else if (i >= 2 && !flow.isStepValid(1)) {
+        toast.error("Preencha as informações do evento antes de avançar!");
+      } else {
+        toast.error("Preencha os passos obrigatórios antes de avançar!");
+      }
       return;
     }
+    
     flow.setDirection(i > flow.currentStep ? 1 : -1);
     flow.animateStepChange(flow.currentStep, i);
   }
