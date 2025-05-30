@@ -9,14 +9,134 @@ import { initiateMercadoPagoPayment } from '@/services/mercadopago';
 import { formatDate, formatCurrency, getStatusColor } from '@/utils/formatUtils';
 import OrderDetailModal from '@/components/pedidos/modals/OrderDetailsModal';
 
+// Função auxiliar para converter data em timestamp de forma segura
+const getDateTimestamp = (dateString) => {
+  if (!dateString) return 0;
+  
+  try {
+    console.log('Processando data:', dateString); // Debug
+    
+    let date = new Date(dateString);
+    
+    // Se a data é inválida, tenta diferentes formatos
+    if (isNaN(date.getTime())) {
+      // Tenta formato DD/MM/YYYY
+      if (dateString.includes('/')) {
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+          const [day, month, year] = parts.map(p => parseInt(p));
+          
+          // Validações mais rigorosas
+          if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+            console.log('Data inválida (fora do range):', dateString);
+            return 0;
+          }
+          
+          date = new Date(year, month - 1, day);
+        }
+      }
+      // Tenta formato YYYY-MM-DD
+      else if (dateString.includes('-')) {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+          const [year, month, day] = parts.map(p => parseInt(p));
+          
+          // Validações mais rigorosas
+          if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+            console.log('Data inválida (fora do range):', dateString);
+            return 0;
+          }
+          
+          date = new Date(year, month - 1, day);
+        }
+      }
+    }
+    
+    // Validação final mais rigorosa
+    const timestamp = date.getTime();
+    const year = date.getFullYear();
+    
+    if (isNaN(timestamp) || year < 2000 || year > 2100) {
+      console.log('Data final inválida:', dateString, 'ano:', year);
+      return 0; // Retorna 0 para datas inválidas
+    }
+    
+    console.log('Data válida:', dateString, '→', date.toISOString(), 'timestamp:', timestamp);
+    return timestamp;
+  } catch (error) {
+    console.warn('Erro ao processar data:', dateString, error);
+    return 0;
+  }
+};
+
+// Função para obter a prioridade do status
+const getStatusPriority = (status) => {
+  const priorities = {
+    'Pagamento': 1,
+    'Aprovado': 2,
+    'Pendente': 3,
+    'Orcado': 4,
+    'Reprovado': 5,
+    'Concluido': 6
+  };
+  
+  return priorities[status] || 999; // Status desconhecidos vão para o final
+};
+
+// Função para ordenar pedidos por prioridade de status e depois por data
+const sortOrdersByPriority = (orders) => {
+  return [...orders].sort((a, b) => {
+    console.log('Comparando:', a.nomeEvento, '(', a.status, a.dataCompra, ') vs', b.nomeEvento, '(', b.status, b.dataCompra, ')'); // Debug
+    
+    // 1. Primeiro ordena por prioridade de status
+    const priorityA = getStatusPriority(a.status);
+    const priorityB = getStatusPriority(b.status);
+    
+    if (priorityA !== priorityB) {
+      console.log('Diferentes status:', priorityA, 'vs', priorityB);
+      return priorityA - priorityB; // Menor prioridade = mais importante
+    }
+    
+    // 2. Se o status é o mesmo, ordena por data de criação (mais recente primeiro)
+    const timestampA = getDateTimestamp(a.dataCompra);
+    const timestampB = getDateTimestamp(b.dataCompra);
+    
+    console.log('Timestamps:', timestampA, 'vs', timestampB);
+    
+    // Se ambas as datas são inválidas, mantém ordem original
+    if (timestampA === 0 && timestampB === 0) {
+      console.log('Ambas datas inválidas, mantendo ordem');
+      return 0;
+    }
+    
+    // Se uma das datas é inválida, coloca ela por último
+    if (timestampA === 0 && timestampB !== 0) {
+      console.log('Data A inválida, B válida - A vai para o final');
+      return 1;
+    }
+    if (timestampB === 0 && timestampA !== 0) {
+      console.log('Data B inválida, A válida - B vai para o final');
+      return -1;
+    }
+    
+    // Ambas válidas - mais recente primeiro
+    const result = timestampB - timestampA;
+    console.log('Resultado da comparação de datas:', result > 0 ? 'B mais recente' : result < 0 ? 'A mais recente' : 'iguais');
+    return result;
+  });
+};
+
 export default function UserOrders() {
   // Usando o hook unificado que SEMPRE faz nova requisição
-  const { data: orders, loading, updateOrderInCache } = useOrders();
+  const { data: ordersRaw, loading, updateOrderInCache } = useOrders();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sendingOrder, setSendingOrder] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(null);
   const router = useRouter();
+
+  // Aplica a ordenação nos pedidos
+  const orders = sortOrdersByPriority(ordersRaw);
 
   const handleSendOrder = async (orderId) => {
     setSendingOrder(orderId);
@@ -99,7 +219,16 @@ export default function UserOrders() {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {orders.map(order => (
-                <div key={order.id} className="bg-gray-700 rounded-lg p-6 border border-gray-600 hover:border-amber-400 transition-colors flex flex-col min-h-[280px]">
+                <div 
+                  key={order.id} 
+                  className={`bg-gray-700 rounded-lg p-6 border transition-colors flex flex-col min-h-[280px] ${
+                    order.status === 'Pagamento' 
+                      ? 'border-blue-400 bg-blue-900 bg-opacity-20'
+                      : order.status === 'Aprovado'
+                      ? 'border-green-400 bg-green-900 bg-opacity-10'
+                      : 'border-gray-600 hover:border-amber-400'
+                  }`}
+                >
                   {/* Header do card - altura fixa para evitar desalinhamento */}
                   <div className="flex justify-between items-start mb-4 gap-3 min-h-[60px]">
                     <div className="flex-1 min-w-0"> {/* min-w-0 permite que o texto seja truncado */}
@@ -109,11 +238,33 @@ export default function UserOrders() {
                       <p className="text-sm text-gray-400">#{order.id}</p>
                     </div>
                     <div className="flex-shrink-0"> {/* Impede que a tag seja comprimida */}
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium text-white whitespace-nowrap ${getStatusColor(order.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium text-white whitespace-nowrap ${getStatusColor(order.status)} ${
+                        order.status === 'Pagamento' ? 'animate-pulse' : ''
+                      }`}>
                         {order.status}
                       </span>
                     </div>
                   </div>
+
+                  {/* Badge especial para pedidos de pagamento */}
+                  {order.status === 'Pagamento' && (
+                    <div className="mb-3 bg-blue-600 bg-opacity-30 border border-blue-400 rounded-lg p-2">
+                      <div className="flex items-center gap-2">
+                        <FiCreditCard className="text-blue-300 animate-pulse" size={14} />
+                        <span className="text-blue-200 text-xs font-medium">Pronto para pagamento!</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Badge especial para pedidos aprovados */}
+                  {order.status === 'Aprovado' && (
+                    <div className="mb-3 bg-green-600 bg-opacity-30 border border-green-400 rounded-lg p-2">
+                      <div className="flex items-center gap-2">
+                        <FiUsers className="text-green-300" size={14} />
+                        <span className="text-green-200 text-xs font-medium">Pagamento confirmado!</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Informações do pedido - área flexível */}
                   <div className="space-y-3 mb-4 flex-1">

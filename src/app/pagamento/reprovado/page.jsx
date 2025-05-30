@@ -47,7 +47,7 @@ export default function PaymentFailedPage() {
           {/* Botões de ação */}
           <div className="space-y-3">
             <button
-              onClick={handleTryAgain}
+              onClick={() => router.push('/profile')}
               className="w-full bg-amber-500 hover:bg-amber-600 text-gray-900 font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
               <FiRefreshCw className="w-5 h-5" />

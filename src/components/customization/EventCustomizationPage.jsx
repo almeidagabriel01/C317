@@ -60,10 +60,10 @@ export default function EventCustomizationPage() {
     const calcularValorTotal = () => {
       let total = 0;
       total += categorizedItems.alcoolicos
-        .filter((i) => selectedDrinks.includes(i.item.Descricao))
+        .filter((i) => selectedDrinks.includes(i.item.Nome))
         .reduce((sum, i) => sum + i.item.Preco, 0);
       total += categorizedItems.nao_alcoolicos
-        .filter((i) => selectedNonAlcoholicDrinks.includes(i.item.Descricao))
+        .filter((i) => selectedNonAlcoholicDrinks.includes(i.item.Nome))
         .reduce((sum, i) => sum + i.item.Preco, 0);
       total += categorizedItems.outras_bebidas
         .reduce((sum, i) => sum + (beverageQuantities[i.item.ID] || 0) * i.item.Preco, 0);
@@ -82,7 +82,6 @@ export default function EventCustomizationPage() {
       tipoEvento: selectedEventType,
       nome: formData.name,
       data: formatDateToDDMMYYYY(formData.date),
-      // Removido eventAddress
       numConvidados: formData.guestCount,
       horarioInicio: formData.startTime,
       horarioFim: calcularHorarioFim(),
@@ -90,15 +89,15 @@ export default function EventCustomizationPage() {
       softDrinks: selectedNonAlcoholicDrinks,
       bebidasAdicionais: categorizedItems.outras_bebidas
         .filter((i) => beverageQuantities[i.item.ID] > 0)
-        .map((i) => i.item.Descricao),
+        .map((i) => i.item.Nome),
       shots: categorizedItems.shots
         .filter((i) => shotQuantities[i.item.ID] > 0)
-        .map((i) => i.item.Descricao),
+        .map((i) => i.item.Nome),
       staff: categorizedItems.funcionarios
         .filter((i) => staffQuantities[i.item.ID] > 0)
-        .map((i) => ({ nome: i.item.Descricao, qtd: staffQuantities[i.item.ID] })),
+        .map((i) => ({ nome: i.item.Nome, qtd: staffQuantities[i.item.ID] })),
       estrutura:
-        categorizedItems.estrutura.find((i) => i.item.ID === selectedStructure)?.item.Descricao || "",
+        categorizedItems.estrutura.find((i) => i.item.ID === selectedStructure)?.item.Nome || "",
       valorTotal: calcularValorTotal(),
       itens: flow.generateOrderItems(),
     };
