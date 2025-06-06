@@ -21,7 +21,12 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
   };
 
   const handleSelectStructure = (id) => {
-    setSelectedStructure(id);
+    // Se clicar na estrutura já selecionada, deseleciona
+    if (selectedStructure === id) {
+      setSelectedStructure(null);
+    } else {
+      setSelectedStructure(id);
+    }
   };
 
   // Se não há itens ainda, mostrar um indicador de carregamento
@@ -48,12 +53,29 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
       stepKey="step6"
       direction={direction}
       title="ESTRUTURA"
-      subtitle="SELECIONE A ESTRUTURA DESEJADA PARA O SEU EVENTO"
+      subtitle="SELECIONE A ESTRUTURA DESEJADA PARA O SEU EVENTO (OPCIONAL)"
       onBack={onBack}
       onNext={onNext}
       isValid={typeof isValid === "boolean" ? isValid : true}
     >
       <div className="flex flex-col items-center px-2 md:px-0 mt-4 space-y-8">
+        {/* Botão para remover seleção */}
+        {selectedStructure && (
+          <motion.div
+            className="w-full max-w-4xl"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <button
+              onClick={() => setSelectedStructure(null)}
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-200 text-sm"
+            >
+              Remover seleção de estrutura
+            </button>
+          </motion.div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
           {items.map((item) => (
             <motion.div
@@ -139,6 +161,16 @@ export default function StructureSelector({ items, selectedStructure, setSelecte
             </div>
           </motion.div>
         )}
+
+        {/* Informação sobre a opcionalidade */}
+        <motion.div
+          className="text-center text-gray-400 text-sm max-w-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <p>A seleção de estrutura é opcional. Você pode prosseguir sem selecionar nenhuma estrutura ou clicar novamente em uma estrutura selecionada para removê-la.</p>
+        </motion.div>
       </div>
     </FormStepLayout>
   );
