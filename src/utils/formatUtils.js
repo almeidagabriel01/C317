@@ -5,8 +5,27 @@
  */
 export const formatDate = (dateString) => {
   if (!dateString) return '';
+  
   try {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    // Se a data já está no formato DD/MM/AAAA, retorna como está
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      return dateString;
+    }
+    
+    // Para datas no formato ISO (YYYY-MM-DD), cria data local para evitar problemas de fuso horário
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+      const [year, month, day] = dateString.split('T')[0].split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return date.toLocaleDateString('pt-BR');
+    }
+    
+    // Para outros formatos, tenta a conversão normal
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    
+    return date.toLocaleDateString('pt-BR');
   } catch {
     return dateString;
   }
